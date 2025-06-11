@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .history-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        margin: 0 auto;
+    }
+    
+    .header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .header h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 28px;
+    }
+    
+    .search-controls {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .search-input {
+        flex: 1;
+        min-width: 200px;
+        padding: 10px 15px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .filter-select {
+        padding: 10px 15px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+        background: white;
+    }
+    
+    .records-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .records-table th,
+    .records-table td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .records-table th {
+        background: rgba(102, 126, 234, 0.1);
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .records-table tr:hover {
+        background: rgba(248, 249, 255, 0.8);
+    }
+    
+    .risk-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+    }
+    
+    .risk-high {
+        background: #ff4757;
+    }
+    
+    .risk-medium {
+        background: #ffa502;
+    }
+    
+    .risk-low {
+        background: #2ed573;
+    }
+    
+    .confidence-bar {
+        width: 100px;
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+        display: inline-block;
+    }
+    
+    .confidence-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        border-radius: 4px;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .status-completed {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-failed {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .btn-small {
+        padding: 5px 12px;
+        border: none;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #5a6fd8;
+    }
+    
+    .btn-secondary {
+        background: #f5f5f5;
+        color: #666;
+    }
+    
+    .btn-secondary:hover {
+        background: #eee;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+    }
+    
+    .empty-icon {
+        font-size: 48px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .page-btn {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        background: white;
+        color: #666;
+        text-decoration: none;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+    
+    .page-btn:hover,
+    .page-btn.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+    
+    @media (max-width: 768px) {
+        .search-controls {
+            flex-direction: column;
+        }
+        
+        .search-input {
+            min-width: 100%;
+        }
+        
+        .records-table {
+            font-size: 12px;
+        }
+        
+        .records-table th,
+        .records-table td {
+            padding: 10px 8px;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="history-container">
+    <div class="header">
+        <h1>检测历史记录</h1>
+        <p>查看和管理您的安全检测历史</p>
+    </div>
+    
+    <div class="search-controls">
+        <input type="text" class="search-input" placeholder="搜索文件名..." id="searchInput">
+        <select class="filter-select" id="riskFilter">
+            <option value="">所有风险等级</option>
+            <option value="high">高风险</option>
+            <option value="medium">中等风险</option>
+            <option value="low">低风险</option>
+        </select>
+        <select class="filter-select" id="statusFilter">
+            <option value="">所有状态</option>
+            <option value="completed">已完成</option>
+            <option value="pending">检测中</option>
+            <option value="failed">失败</option>
+        </select>
+    </div>
+    
+    {% if records %}
+    <table class="records-table" id="recordsTable">
+        <thead>
+            <tr>
+                <th>文件名</th>
+                <th>大小</th>
+                <th>风险等级</th>
+                <th>置信度</th>
+                <th>状态</th>
+                <th>检测时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in records %}
+            <tr data-risk="{{ record[3] or '' }}" data-status="{{ record[5] }}" data-filename="{{ record[1] }}">
+                <td>
+                    <div style="font-weight: 600; color: #333;">{{ record[1] }}</div>
+                </td>
+                <td>{{ "%.1f"|format(record[2] / 1024 / 1024) }} MB</td>
+                <td>
+                    {% if record[3] == 'high' %}
+                        <span class="risk-badge risk-high">高风险</span>
+                    {% elif record[3] == 'medium' %}
+                        <span class="risk-badge risk-medium">中等风险</span>
+                    {% elif record[3] == 'low' %}
+                        <span class="risk-badge risk-low">低风险</span>
+                    {% else %}
+                        <span style="color: #999;">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if record[4] %}
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: {{ (record[4] * 100)|round }}%"></div>
+                        </div>
+                        <span style="font-size: 12px; color: #666; margin-left: 8px;">{{ "%.0f"|format(record[4] * 100) }}%</span>
+                    {% else %}
+                        <span style="color: #999;">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if record[5] == 'completed' %}
+                        <span class="status-badge status-completed">✓ 已完成</span>
+                    {% elif record[5] == 'pending' %}
+                        <span class="status-badge status-pending">⏳ 检测中</span>
+                    {% elif record[5] == 'failed' %}
+                        <span class="status-badge status-failed">✗ 失败</span>
+                    {% else %}
+                        <span class="status-badge status-pending">{{ record[5] }}</span>
+                    {% endif %}
+                </td>
+                <td style="font-size: 12px; color: #666;">
+                    {{ record[6][:16] if record[6] else '-' }}
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        {% if record[5] == 'completed' %}
+                            <a href="/results/{{ record[0] }}" class="btn-small btn-primary">查看结果</a>
+                        {% elif record[5] == 'pending' %}
+                            <a href="/progress/{{ record[0] }}" class="btn-small btn-secondary">查看进度</a>
+                        {% else %}
+                            <span style="color: #999; font-size: 12px;">无可用操作</span>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <h3>暂无检测记录</h3>
+        <p>您还没有上传过任何文件进行检测</p>
+        <a href="/" class="btn-primary" style="margin-top: 20px; padding: 12px 30px; border-radius: 8px; text-decoration: none;">开始检测</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 搜索和过滤功能
+function filterRecords() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const riskFilter = document.getElementById('riskFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    
+    const rows = document.querySelectorAll('#recordsTable tbody tr');
+    
+    rows.forEach(row => {
+        const filename = row.dataset.filename.toLowerCase();
+        const risk = row.dataset.risk;
+        const status = row.dataset.status;
+        
+        const matchesSearch = filename.includes(searchTerm);
+        const matchesRisk = !riskFilter || risk === riskFilter;
+        const matchesStatus = !statusFilter || status === statusFilter;
+        
+        if (matchesSearch && matchesRisk && matchesStatus) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// 绑定事件监听器
+document.getElementById('searchInput').addEventListener('input', filterRecords);
+document.getElementById('riskFilter').addEventListener('change', filterRecords);
+document.getElementById('statusFilter').addEventListener('change', filterRecords);
+
+// 定时刷新pending状态的记录
+setInterval(function() {
+    const pendingRows = document.querySelectorAll('tr[data-status="pending"]');
+    if (pendingRows.length > 0) {
+        location.reload();
+    }
+}, 30000); // 30秒刷新一次
+</script>
+{% endblock %} 

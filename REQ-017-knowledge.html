@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开源组件包检测 - 知识库</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .search-header {
+            flex: 1;
+            max-width: 500px;
+            margin: 0 30px;
+        }
+        
+        .search-box {
+            position: relative;
+            width: 100%;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 50px 12px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 25px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .search-btn {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #667eea;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 20px;
+        }
+        
+        .sidebar {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 25px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        
+        .sidebar-title {
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        
+        .category-list {
+            list-style: none;
+        }
+        
+        .category-item {
+            margin-bottom: 15px;
+        }
+        
+        .category-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 15px;
+            color: #666;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .category-link:hover,
+        .category-link.active {
+            background: #f8f9ff;
+            color: #667eea;
+        }
+        
+        .category-icon {
+            font-size: 16px;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .breadcrumb {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .breadcrumb-list {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .breadcrumb-item {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .breadcrumb-separator {
+            color: #ccc;
+        }
+        
+        .content-header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .content-title {
+            color: #333;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .content-subtitle {
+            color: #666;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        
+        .quick-links {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .quick-links-title {
+            color: #333;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .link-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .link-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+            border-color: #667eea;
+        }
+        
+        .link-icon {
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+        
+        .link-title {
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .link-desc {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .tutorials-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            color: #333;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .tutorial-list {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .tutorial-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .tutorial-item:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        
+        .tutorial-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .tutorial-info {
+            flex: 1;
+        }
+        
+        .tutorial-title {
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .tutorial-meta {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .tutorial-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            padding: 4px 8px;
+            background: #f8f9ff;
+            color: #667eea;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .tutorial-difficulty {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .difficulty-beginner {
+            background: #2ed573;
+        }
+        
+        .difficulty-intermediate {
+            background: #ffa502;
+        }
+        
+        .difficulty-advanced {
+            background: #ff4757;
+        }
+        
+        .tutorial-desc {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .tutorial-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+        
+        .faq-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .faq-list {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .faq-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .faq-question {
+            padding: 20px;
+            background: #f8f9ff;
+            color: #333;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s ease;
+        }
+        
+        .faq-question:hover {
+            background: #f0f3ff;
+        }
+        
+        .faq-toggle {
+            color: #667eea;
+            font-size: 16px;
+            transition: transform 0.3s ease;
+        }
+        
+        .faq-answer {
+            padding: 20px;
+            color: #555;
+            line-height: 1.6;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                position: static;
+                order: 2;
+            }
+            
+            .main-content {
+                order: 1;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .search-header {
+                order: 2;
+                margin: 0;
+                max-width: none;
+            }
+            
+            .links-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">📚 知识库</div>
+            <div class="search-header">
+                <div class="search-box">
+                    <input type="text" class="search-input" placeholder="搜索教程、FAQ或技术文档...">
+                    <button class="search-btn">🔍</button>
+                </div>
+            </div>
+            <div class="user-menu">
+                <a href="#" style="color: #667eea; text-decoration: none;">返回主站</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="sidebar">
+            <h3 class="sidebar-title">分类导航</h3>
+            <ul class="category-list">
+                <li class="category-item">
+                    <a href="#" class="category-link active">
+                        <span class="category-icon">🏠</span>
+                        <span>首页</span>
+                    </a>
+                </li>
+                <li class="category-item">
+                    <a href="#" class="category-link">
+                        <span class="category-icon">🚀</span>
+                        <span>快速入门</span>
+                    </a>
+                </li>
+                <li class="category-item">
+                    <a href="#" class="category-link">
+                        <span class="category-icon">📖</span>
+                        <span>使用教程</span>
+                    </a>
+                </li>
+                <li class="category-item">
+                    <a href="#" class="category-link">
+                        <span class="category-icon">🔧</span>
+                        <span>技术文档</span>
+                    </a>
+                </li>
+                <li class="category-item">
+                    <a href="#" class="category-link">
+                        <span class="category-icon">❓</span>
+                        <span>常见问题</span>
+                    </a>
+                </li>
+                <li class="category-item">
+                    <a href="#" class="category-link">
+                        <span class="category-icon">🎯</span>
+                        <span>最佳实践</span>
+                    </a>
+                </li>
+                <li class="category-item">
+                    <a href="#" class="category-link">
+                        <span class="category-icon">🛡️</span>
+                        <span>安全指南</span>
+                    </a>
+                </li>
+                <li class="category-item">
+                    <a href="#" class="category-link">
+                        <span class="category-icon">📊</span>
+                        <span>API文档</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="main-content">
+            <div class="breadcrumb">
+                <div class="breadcrumb-list">
+                    <a href="#" class="breadcrumb-item">知识库</a>
+                    <span class="breadcrumb-separator">></span>
+                    <span>首页</span>
+                </div>
+            </div>
+            
+            <div class="content-header">
+                <h1 class="content-title">开源组件安全检测知识库</h1>
+                <p class="content-subtitle">
+                    欢迎来到安全检测平台知识库！这里为您提供详细的使用教程、技术文档和最佳实践指南，
+                    帮助您更好地理解和使用我们的开源组件安全检测服务。
+                </p>
+            </div>
+            
+            <div class="quick-links">
+                <h2 class="quick-links-title">🚀 快速开始</h2>
+                <div class="links-grid">
+                    <a href="#" class="link-card">
+                        <div class="link-icon">📁</div>
+                        <div class="link-title">如何上传文件</div>
+                        <div class="link-desc">学习如何正确上传开源组件包文件进行安全检测，支持多种文件格式。</div>
+                    </a>
+                    
+                    <a href="#" class="link-card">
+                        <div class="link-icon">📊</div>
+                        <div class="link-title">理解检测结果</div>
+                        <div class="link-desc">详细解读检测报告中的各项指标、风险等级和置信度含义。</div>
+                    </a>
+                    
+                    <a href="#" class="link-card">
+                        <div class="link-icon">⚙️</div>
+                        <div class="link-title">系统配置指南</div>
+                        <div class="link-desc">管理员如何配置检测模型参数、提示词和系统设置。</div>
+                    </a>
+                    
+                    <a href="#" class="link-card">
+                        <div class="link-icon">🔐</div>
+                        <div class="link-title">权限管理</div>
+                        <div class="link-desc">了解用户角色、权限分配和账户管理功能的使用方法。</div>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="tutorials-section">
+                <h2 class="section-title">
+                    📖 热门教程
+                </h2>
+                <div class="tutorial-list">
+                    <div class="tutorial-item">
+                        <div class="tutorial-header">
+                            <div class="tutorial-info">
+                                <h3 class="tutorial-title">新用户入门指南</h3>
+                                <div class="tutorial-meta">更新时间：2024-01-15 | 阅读时间：10分钟</div>
+                                <div class="tutorial-tags">
+                                    <span class="tag">入门</span>
+                                    <span class="tag">基础操作</span>
+                                    <span class="tag">新手必读</span>
+                                </div>
+                            </div>
+                            <div class="tutorial-difficulty difficulty-beginner">初级</div>
+                        </div>
+                        <p class="tutorial-desc">
+                            从零开始学习如何使用开源组件安全检测平台，包括账户注册、文件上传、结果查看等基本操作流程。
+                        </p>
+                        <div class="tutorial-actions">
+                            <a href="#" class="btn btn-primary">开始学习</a>
+                            <a href="#" class="btn btn-secondary">收藏</a>
+                        </div>
+                    </div>
+                    
+                    <div class="tutorial-item">
+                        <div class="tutorial-header">
+                            <div class="tutorial-info">
+                                <h3 class="tutorial-title">检测结果深度解析</h3>
+                                <div class="tutorial-meta">更新时间：2024-01-12 | 阅读时间：15分钟</div>
+                                <div class="tutorial-tags">
+                                    <span class="tag">结果解读</span>
+                                    <span class="tag">风险评估</span>
+                                    <span class="tag">技术解析</span>
+                                </div>
+                            </div>
+                            <div class="tutorial-difficulty difficulty-intermediate">中级</div>
+                        </div>
+                        <p class="tutorial-desc">
+                            深入理解检测报告中的技术指标，学会分析XGBoost模型输出和大语言模型分析结果，掌握风险评估方法。
+                        </p>
+                        <div class="tutorial-actions">
+                            <a href="#" class="btn btn-primary">开始学习</a>
+                            <a href="#" class="btn btn-secondary">收藏</a>
+                        </div>
+                    </div>
+                    
+                    <div class="tutorial-item">
+                        <div class="tutorial-header">
+                            <div class="tutorial-info">
+                                <h3 class="tutorial-title">企业级部署与配置</h3>
+                                <div class="tutorial-meta">更新时间：2024-01-10 | 阅读时间：25分钟</div>
+                                <div class="tutorial-tags">
+                                    <span class="tag">企业部署</span>
+                                    <span class="tag">系统配置</span>
+                                    <span class="tag">高级设置</span>
+                                </div>
+                            </div>
+                            <div class="tutorial-difficulty difficulty-advanced">高级</div>
+                        </div>
+                        <p class="tutorial-desc">
+                            面向企业用户的高级配置指南，包括私有化部署、批量检测、API集成和自定义安全策略配置。
+                        </p>
+                        <div class="tutorial-actions">
+                            <a href="#" class="btn btn-primary">开始学习</a>
+                            <a href="#" class="btn btn-secondary">收藏</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-section">
+                <h2 class="section-title">
+                    ❓ 常见问题
+                </h2>
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>支持检测哪些类型的文件？</span>
+                            <span class="faq-toggle">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            我们的平台支持多种常见的开源组件包格式，包括：ZIP、TAR.GZ、JAR、NPM、TGZ等。
+                            文件大小限制为100MB，如需处理更大的文件，请联系我们的技术支持团队。
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>检测需要多长时间？</span>
+                            <span class="faq-toggle">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            检测时间取决于文件大小和复杂度。一般来说：
+                            - 小型包（<1MB）：1-2分钟
+                            - 中型包（1-10MB）：3-8分钟  
+                            - 大型包（10-100MB）：10-20分钟
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>如何理解置信度分数？</span>
+                            <span class="faq-toggle">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            置信度分数表示我们对检测结果的信心程度：
+                            - 90%以上：高置信度，结果非常可靠
+                            - 70-90%：中等置信度，建议进一步验证
+                            - 70%以下：低置信度，需要人工审核
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>检测结果出现误报怎么办？</span>
+                            <span class="faq-toggle">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            如果您认为检测结果存在误报，可以：
+                            1. 重新上传文件进行二次检测
+                            2. 联系技术支持提供人工审核
+                            3. 通过反馈系统报告误报情况
+                            我们会持续优化模型以减少误报率。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

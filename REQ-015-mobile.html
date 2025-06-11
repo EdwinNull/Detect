@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开源组件包检测 - 移动端</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .mobile-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        
+        .logo-mobile {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #667eea;
+            cursor: pointer;
+        }
+        
+        .container {
+            padding: 20px;
+            max-width: 100%;
+        }
+        
+        .welcome-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px 25px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .welcome-title {
+            color: #333;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .welcome-subtitle {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .upload-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            background: rgba(248, 249, 255, 0.5);
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:active {
+            background: rgba(240, 243, 255, 0.8);
+            transform: scale(0.98);
+        }
+        
+        .upload-icon {
+            font-size: 40px;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .upload-text {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .upload-hint {
+            color: #666;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .selected-file {
+            background: rgba(232, 245, 232, 0.9);
+            border: 1px solid #4caf50;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .file-icon {
+            font-size: 20px;
+            color: #4caf50;
+        }
+        
+        .file-details h4 {
+            color: #333;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        
+        .file-details p {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-direction: column;
+        }
+        
+        .btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: rgba(245, 245, 245, 0.9);
+            color: #666;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .btn-secondary:active {
+            background: rgba(235, 235, 235, 0.9);
+        }
+        
+        .quick-actions {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .quick-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .quick-item {
+            background: rgba(248, 249, 255, 0.8);
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .quick-item:active {
+            transform: scale(0.95);
+            background: rgba(240, 243, 255, 0.9);
+        }
+        
+        .quick-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .quick-label {
+            color: #333;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .stats-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 15px 10px;
+            background: rgba(248, 249, 255, 0.6);
+            border-radius: 12px;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 11px;
+        }
+        
+        .recent-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .recent-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .recent-item {
+            background: rgba(248, 249, 255, 0.6);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .recent-icon {
+            font-size: 16px;
+        }
+        
+        .recent-info {
+            flex: 1;
+        }
+        
+        .recent-name {
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+        
+        .recent-meta {
+            color: #666;
+            font-size: 11px;
+        }
+        
+        .recent-status {
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .status-safe {
+            background: #2ed573;
+        }
+        
+        .status-danger {
+            background: #ff4757;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px 25px;
+            border-top: 1px solid rgba(229, 231, 235, 0.5);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        
+        .nav-item {
+            text-align: center;
+            color: #666;
+            text-decoration: none;
+            padding: 8px 5px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-item.active {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .nav-icon {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-label {
+            font-size: 10px;
+            font-weight: 600;
+        }
+        
+        .fab {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .fab:active {
+            transform: scale(0.9);
+        }
+        
+        .mobile-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: none;
+            align-items: flex-end;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 25px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+        }
+        
+        /* 增加底部安全距离 */
+        .container {
+            padding-bottom: 100px;
+        }
+        
+        /* 触摸优化 */
+        .upload-area,
+        .btn,
+        .quick-item,
+        .nav-item {
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-header">
+        <div class="logo-mobile">🔒 安全检测</div>
+        <button class="menu-btn">☰</button>
+    </div>
+    
+    <div class="container">
+        <div class="welcome-card">
+            <h1 class="welcome-title">移动端安全检测</h1>
+            <p class="welcome-subtitle">随时随地检测开源组件安全风险<br>简单快捷，结果可靠</p>
+        </div>
+        
+        <div class="upload-section">
+            <h2 class="section-title">
+                📁 文件上传
+            </h2>
+            
+            <div class="upload-area" onclick="document.getElementById('mobileFileInput').click()">
+                <div class="upload-icon">📱</div>
+                <div class="upload-text">点击选择文件</div>
+                <div class="upload-hint">支持 ZIP、JAR、NPM 等格式<br>文件大小限制 100MB</div>
+            </div>
+            
+            <input type="file" id="mobileFileInput" class="file-input" accept=".zip,.tar.gz,.jar,.npm,.tgz">
+            
+            <div class="selected-file" id="mobileSelectedFile">
+                <div class="file-info">
+                    <div class="file-icon">📦</div>
+                    <div class="file-details">
+                        <h4 id="mobileFileName">example.zip</h4>
+                        <p id="mobileFileSize">2.5 MB</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-primary">🚀 开始检测</button>
+                <button class="btn btn-secondary">📋 查看示例</button>
+            </div>
+        </div>
+        
+        <div class="quick-actions">
+            <h2 class="section-title">
+                ⚡ 快捷操作
+            </h2>
+            <div class="quick-grid">
+                <a href="#" class="quick-item">
+                    <span class="quick-icon">📊</span>
+                    <span class="quick-label">检测历史</span>
+                </a>
+                <a href="#" class="quick-item">
+                    <span class="quick-icon">📄</span>
+                    <span class="quick-label">下载报告</span>
+                </a>
+                <a href="#" class="quick-item">
+                    <span class="quick-icon">❓</span>
+                    <span class="quick-label">帮助中心</span>
+                </a>
+                <a href="#" class="quick-item">
+                    <span class="quick-icon">⚙️</span>
+                    <span class="quick-label">设置</span>
+                </a>
+            </div>
+        </div>
+        
+        <div class="stats-section">
+            <h2 class="section-title">
+                📈 今日统计
+            </h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">23</div>
+                    <div class="stat-label">检测次数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">8</div>
+                    <div class="stat-label">安全包</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">风险包</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="recent-section">
+            <h2 class="section-title">
+                🕒 最近检测
+            </h2>
+            <div class="recent-list">
+                <div class="recent-item">
+                    <div class="recent-icon">📦</div>
+                    <div class="recent-info">
+                        <div class="recent-name">react-utils.npm</div>
+                        <div class="recent-meta">2分钟前 • 1.8MB</div>
+                    </div>
+                    <div class="recent-status status-safe">安全</div>
+                </div>
+                
+                <div class="recent-item">
+                    <div class="recent-icon">📦</div>
+                    <div class="recent-info">
+                        <div class="recent-name">security-lib.zip</div>
+                        <div class="recent-meta">15分钟前 • 2.5MB</div>
+                    </div>
+                    <div class="recent-status status-danger">风险</div>
+                </div>
+                
+                <div class="recent-item">
+                    <div class="recent-icon">📦</div>
+                    <div class="recent-info">
+                        <div class="recent-name">data-tool.jar</div>
+                        <div class="recent-meta">1小时前 • 5.2MB</div>
+                    </div>
+                    <div class="recent-status status-safe">安全</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button class="fab">+</button>
+    
+    <div class="bottom-nav">
+        <a href="#" class="nav-item active">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">首页</span>
+        </a>
+        <a href="#" class="nav-item">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">历史</span>
+        </a>
+        <a href="#" class="nav-item">
+            <span class="nav-icon">📄</span>
+            <span class="nav-label">报告</span>
+        </a>
+        <a href="#" class="nav-item">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">我的</span>
+        </a>
+    </div>
+    
+    <div class="mobile-modal" id="mobileModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <div class="modal-header">
+                <h3 class="modal-title">检测进度</h3>
+            </div>
+            <div style="text-align: center; padding: 20px;">
+                <div style="font-size: 48px; margin-bottom: 15px;">⏳</div>
+                <p style="color: #333; font-size: 16px; margin-bottom: 10px;">正在检测中...</p>
+                <p style="color: #666; font-size: 14px;">预计还需要 3 分钟</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 简单的移动端交互逻辑
+        function closeModal() {
+            document.getElementById('mobileModal').style.display = 'none';
+        }
+        
+        // 文件选择
+        document.getElementById('mobileFileInput').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                document.getElementById('mobileFileName').textContent = file.name;
+                document.getElementById('mobileFileSize').textContent = (file.size / 1024 / 1024).toFixed(1) + ' MB';
+                document.getElementById('mobileSelectedFile').style.display = 'block';
+            }
+        });
+        
+        // 防止过度滚动
+        document.body.addEventListener('touchmove', function(e) {
+            if (e.touches.length === 1) {
+                const touch = e.touches[0];
+                if (touch.clientY < 100 || touch.clientY > window.innerHeight - 100) {
+                    e.preventDefault();
+                }
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html> 

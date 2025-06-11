@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .knowledge-container {
+        display: flex;
+        gap: 32px;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px;
+    }
+    .sidebar {
+        width: 360px;
+        flex-shrink: 0;
+        background: #fff;
+        padding: 24px;
+        border-radius: 8px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        height: fit-content;
+        position: sticky;
+        top: 24px;
+    }
+    .main-content {
+        flex: 1;
+        background: #fff;
+        padding: 24px;
+        border-radius: 8px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .knowledge-header {
+        padding: 20px 0 10px 0;
+        border-bottom: 1px solid #e5e7eb;
+        margin-bottom: 20px;
+        text-align: left;
+        background: none;
+        box-shadow: none;
+    }
+    .article-title {
+        color: #222;
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    .article-desc {
+        color: #555;
+        font-size: 14px;
+        line-height: 1.7;
+        margin-bottom: 10px;
+    }
+    .faq-title {
+        color: #333;
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        text-align: left;
+    }
+    .faq-item {
+        border: none;
+        border-radius: 0;
+        margin-bottom: 12px;
+        background: none;
+        box-shadow: none;
+    }
+    .search-box {
+        margin-bottom: 24px;
+    }
+    .search-box input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 15px;
+        transition: all 0.2s;
+    }
+    .search-box input:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    .category-section {
+        margin-bottom: 24px;
+    }
+    .category-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: #333;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    .category-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .category-item {
+        margin-bottom: 8px;
+    }
+    .category-item a {
+        color: #4b5563;
+        text-decoration: none;
+        font-size: 14px;
+        display: block;
+        padding: 8px 12px;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+    .category-item a:hover {
+        color: #2563eb;
+        background: #f3f4f6;
+    }
+    .subcategory-list {
+        list-style: none;
+        padding-left: 24px;
+        margin: 4px 0;
+    }
+    .subcategory-item {
+        margin-bottom: 4px;
+    }
+    .subcategory-item a {
+        color: #6b7280;
+        font-size: 13px;
+    }
+    .subcategory-item a:hover {
+        color: #2563eb;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="knowledge-container">
+    <div class="sidebar">
+        <div class="search-box">
+            <input type="text" placeholder="搜索知识库..." id="knowledgeSearch">
+        </div>
+        
+        <div class="category-section">
+            <div class="category-title">入门指南</div>
+            <ul class="category-list">
+                <li class="category-item">
+                    <a href="#quick-start">快速开始</a>
+                    <ul class="subcategory-list">
+                        <li class="subcategory-item"><a href="#installation">安装说明</a></li>
+                        <li class="subcategory-item"><a href="#configuration">基础配置</a></li>
+                        <li class="subcategory-item"><a href="#first-scan">首次扫描</a></li>
+                    </ul>
+                </li>
+                <li class="category-item">
+                    <a href="#basic-usage">基础使用</a>
+                    <ul class="subcategory-list">
+                        <li class="subcategory-item"><a href="#scan-types">扫描类型</a></li>
+                        <li class="subcategory-item"><a href="#result-analysis">结果分析</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="category-section">
+            <div class="category-title">功能特性</div>
+            <ul class="category-list">
+                <li class="category-item">
+                    <a href="#scan-features">扫描功能</a>
+                    <ul class="subcategory-list">
+                        <li class="subcategory-item"><a href="#dependency-scan">依赖扫描</a></li>
+                        <li class="subcategory-item"><a href="#vulnerability-scan">漏洞扫描</a></li>
+                        <li class="subcategory-item"><a href="#malware-scan">恶意代码检测</a></li>
+                    </ul>
+                </li>
+                <li class="category-item">
+                    <a href="#analysis-tools">分析工具</a>
+                    <ul class="subcategory-list">
+                        <li class="subcategory-item"><a href="#risk-assessment">风险评估</a></li>
+                        <li class="subcategory-item"><a href="#report-generation">报告生成</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="category-section">
+            <div class="category-title">安全说明</div>
+            <ul class="category-list">
+                <li class="category-item">
+                    <a href="#security-best-practices">安全最佳实践</a>
+                </li>
+                <li class="category-item">
+                    <a href="#threat-modeling">威胁建模</a>
+                </li>
+                <li class="category-item">
+                    <a href="#security-standards">安全标准</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="category-section">
+            <div class="category-title">故障排除</div>
+            <ul class="category-list">
+                <li class="category-item">
+                    <a href="#common-issues">常见问题</a>
+                </li>
+                <li class="category-item">
+                    <a href="#error-messages">错误信息</a>
+                </li>
+                <li class="category-item">
+                    <a href="#performance">性能优化</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="category-section">
+            <div class="category-title">API文档</div>
+            <ul class="category-list">
+                <li class="category-item">
+                    <a href="#api-overview">API概述</a>
+                </li>
+                <li class="category-item">
+                    <a href="#api-endpoints">接口说明</a>
+                </li>
+                <li class="category-item">
+                    <a href="#api-examples">使用示例</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="knowledge-header">
+            <h2>知识库</h2>
+        </div>
+        {% for article in articles %}
+        <div class="article-title">{{ article.title }}</div>
+        <div class="article-desc">{{ article.desc }}</div>
+        {% endfor %}
+        {% if faqs %}
+        <div class="faq-section">
+            <div class="faq-title">常见问题</div>
+            {% for faq in faqs %}
+            <div class="faq-item">
+                <div class="article-title">{{ faq.q }}</div>
+                <div class="article-desc">{{ faq.a }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.getElementById('knowledgeSearch').addEventListener('input', function(e) {
+    const searchText = e.target.value.toLowerCase();
+    const articles = document.querySelectorAll('.article-title, .article-desc');
+    const faqs = document.querySelectorAll('.faq-item');
+    
+    articles.forEach(article => {
+        const content = article.textContent.toLowerCase();
+        const parent = article.closest('.article-item, .faq-item');
+        if (content.includes(searchText)) {
+            parent.style.display = '';
+        } else {
+            parent.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %} 

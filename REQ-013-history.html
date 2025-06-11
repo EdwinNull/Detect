@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开源组件包检测 - 历史记录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .header-left h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .header-left p {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .search-input {
+            padding: 10px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 250px;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+        
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .filter-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .filter-label {
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .records-table {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .table-header {
+            background: #f8f9ff;
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .table-title {
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .table-stats {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .table-content {
+            overflow-x: auto;
+        }
+        
+        .records-grid {
+            display: grid;
+            gap: 15px;
+            padding: 20px;
+        }
+        
+        .record-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .record-item:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .record-info {
+            flex: 1;
+        }
+        
+        .record-filename {
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .record-meta {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .record-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .status-safe {
+            background: linear-gradient(135deg, #2ed573 0%, #17a2b8 100%);
+        }
+        
+        .status-danger {
+            background: linear-gradient(135deg, #ff4757 0%, #ff3838 100%);
+        }
+        
+        .status-warning {
+            background: linear-gradient(135deg, #ffa502 0%, #ff6348 100%);
+        }
+        
+        .confidence-text {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .record-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .detail-item {
+            background: #f8f9ff;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .detail-label {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .record-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .page-btn:hover {
+            background: #f8f9ff;
+            border-color: #667eea;
+        }
+        
+        .page-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-input {
+                width: 100%;
+            }
+            
+            .record-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .record-actions {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>检测历史记录</h1>
+                <p>查看您的所有检测历史和结果</p>
+            </div>
+            <div class="header-right">
+                <div class="search-box">
+                    <input type="text" class="search-input" placeholder="搜索文件名或关键字...">
+                    <button class="btn btn-primary">🔍 搜索</button>
+                </div>
+                <button class="btn btn-secondary">📤 新建检测</button>
+            </div>
+        </div>
+        
+        <div class="filters">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <span class="filter-label">状态筛选：</span>
+                    <select class="filter-select">
+                        <option>全部状态</option>
+                        <option>安全</option>
+                        <option>高风险</option>
+                        <option>中风险</option>
+                        <option>检测中</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <span class="filter-label">时间范围：</span>
+                    <select class="filter-select">
+                        <option>最近7天</option>
+                        <option>最近30天</option>
+                        <option>最近3个月</option>
+                        <option>全部时间</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <span class="filter-label">文件类型：</span>
+                    <select class="filter-select">
+                        <option>全部类型</option>
+                        <option>ZIP</option>
+                        <option>JAR</option>
+                        <option>NPM</option>
+                        <option>TAR.GZ</option>
+                    </select>
+                </div>
+                <button class="btn btn-secondary">🔄 重置</button>
+            </div>
+        </div>
+        
+        <div class="records-table">
+            <div class="table-header">
+                <div class="table-title">检测记录</div>
+                <div class="table-stats">共找到 156 条记录</div>
+            </div>
+            
+            <div class="records-grid">
+                <div class="record-item">
+                    <div class="record-header">
+                        <div class="record-info">
+                            <div class="record-filename">📦 example-security-lib.zip</div>
+                            <div class="record-meta">检测时间：2024-01-15 14:30:25 | 文件大小：2.5 MB</div>
+                        </div>
+                        <div class="record-status">
+                            <div class="status-badge status-danger">🚨 高风险</div>
+                            <div class="confidence-text">置信度: 84%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="record-details">
+                        <div class="detail-item">
+                            <div class="detail-label">检测耗时</div>
+                            <div class="detail-value">4分38秒</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">异常特征</div>
+                            <div class="detail-value">23/141</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">安全评分</div>
+                            <div class="detail-value">16/100</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">模型一致性</div>
+                            <div class="detail-value">高度一致</div>
+                        </div>
+                    </div>
+                    
+                    <div class="record-actions">
+                        <button class="btn btn-primary btn-small">📋 查看详情</button>
+                        <button class="btn btn-secondary btn-small">📄 下载报告</button>
+                        <button class="btn btn-secondary btn-small">🔄 重新检测</button>
+                    </div>
+                </div>
+                
+                <div class="record-item">
+                    <div class="record-header">
+                        <div class="record-info">
+                            <div class="record-filename">📦 react-utils-package.npm</div>
+                            <div class="record-meta">检测时间：2024-01-14 09:15:42 | 文件大小：1.8 MB</div>
+                        </div>
+                        <div class="record-status">
+                            <div class="status-badge status-safe">✅ 安全</div>
+                            <div class="confidence-text">置信度: 96%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="record-details">
+                        <div class="detail-item">
+                            <div class="detail-label">检测耗时</div>
+                            <div class="detail-value">2分12秒</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">异常特征</div>
+                            <div class="detail-value">0/141</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">安全评分</div>
+                            <div class="detail-value">94/100</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">模型一致性</div>
+                            <div class="detail-value">完全一致</div>
+                        </div>
+                    </div>
+                    
+                    <div class="record-actions">
+                        <button class="btn btn-primary btn-small">📋 查看详情</button>
+                        <button class="btn btn-secondary btn-small">📄 下载报告</button>
+                        <button class="btn btn-secondary btn-small">🔄 重新检测</button>
+                    </div>
+                </div>
+                
+                <div class="record-item">
+                    <div class="record-header">
+                        <div class="record-info">
+                            <div class="record-filename">📦 data-processor.jar</div>
+                            <div class="record-meta">检测时间：2024-01-13 16:45:18 | 文件大小：5.2 MB</div>
+                        </div>
+                        <div class="record-status">
+                            <div class="status-badge status-warning">⚠️ 中风险</div>
+                            <div class="confidence-text">置信度: 72%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="record-details">
+                        <div class="detail-item">
+                            <div class="detail-label">检测耗时</div>
+                            <div class="detail-value">6分25秒</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">异常特征</div>
+                            <div class="detail-value">8/141</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">安全评分</div>
+                            <div class="detail-value">58/100</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">模型一致性</div>
+                            <div class="detail-value">部分一致</div>
+                        </div>
+                    </div>
+                    
+                    <div class="record-actions">
+                        <button class="btn btn-primary btn-small">📋 查看详情</button>
+                        <button class="btn btn-secondary btn-small">📄 下载报告</button>
+                        <button class="btn btn-secondary btn-small">🔄 重新检测</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="pagination">
+            <button class="page-btn">« 上一页</button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">3</button>
+            <button class="page-btn">4</button>
+            <button class="page-btn">5</button>
+            <button class="page-btn">下一页 »</button>
+        </div>
+    </div>
+</body>
+</html> 
