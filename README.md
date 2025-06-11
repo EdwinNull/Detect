@@ -45,7 +45,7 @@ pip install -r requirements.txt
 
 ### 3. 配置DeepSeek API
 - 在 `app.py` 中更新 `DEEPSEEK_API_KEY` 为您的API密钥
-- 当前使用的密钥: `sk-4d9403ac0e0640328d254c6c6b32bcd0`
+- 当前使用的密钥: `************************`
 
 ### 4. 启动系统
 ```bash
