@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .upload-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .header h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 28px;
+    }
+    
+    .header p {
+        color: #666;
+        font-size: 16px;
+    }
+    
+    .upload-area {
+        border: 2px dashed #667eea;
+        border-radius: 15px;
+        padding: 60px 20px;
+        text-align: center;
+        background: rgba(248, 249, 255, 0.5);
+        margin-bottom: 30px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .upload-area:hover {
+        border-color: #764ba2;
+        background: rgba(240, 243, 255, 0.8);
+    }
+    
+    .upload-area.dragover {
+        border-color: #764ba2;
+        background: rgba(240, 243, 255, 0.8);
+        transform: scale(1.02);
+    }
+    
+    .upload-icon {
+        font-size: 48px;
+        color: #667eea;
+        margin-bottom: 20px;
+    }
+    
+    .upload-text {
+        font-size: 18px;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .upload-hint {
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .file-input {
+        display: none;
+    }
+    
+    .selected-file {
+        background: rgba(232, 245, 232, 0.9);
+        border: 1px solid #4caf50;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        display: none;
+    }
+    
+    .file-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .file-icon {
+        font-size: 24px;
+        color: #4caf50;
+    }
+    
+    .file-details h4 {
+        color: #333;
+        margin-bottom: 5px;
+    }
+    
+    .file-details p {
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+    }
+    
+    .btn-large {
+        padding: 12px 30px;
+        font-size: 16px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #f5f5f5;
+        color: #666;
+    }
+    
+    .btn-secondary:hover {
+        background: #eee;
+    }
+    
+    .supported-formats {
+        margin-top: 20px;
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .loading {
+        display: none;
+        text-align: center;
+        margin-top: 20px;
+    }
+    
+    .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 10px;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <div class="header">
+        <h1>开源组件包安全检测</h1>
+        <p>请上传您要检测的开源组件包文件</p>
+    </div>
+    
+    <form id="uploadForm" enctype="multipart/form-data">
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()" 
+             ondrop="dropHandler(event);" ondragover="dragOverHandler(event);" 
+             ondragenter="dragEnterHandler(event);" ondragleave="dragLeaveHandler(event);">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">点击选择文件或拖拽文件到此处</div>
+            <div class="upload-hint">支持 .zip, .tar.gz, .jar, .npm 等格式</div>
+        </div>
+        
+        <input type="file" id="fileInput" name="file" class="file-input" 
+               accept=".zip,.tar.gz,.jar,.npm,.tgz" onchange="fileSelected(event)">
+        
+        <div class="selected-file" id="selectedFile">
+            <div class="file-info">
+                <div class="file-icon">📦</div>
+                <div class="file-details">
+                    <h4 id="fileName">example-package.zip</h4>
+                    <p id="fileSize">2.5 MB</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <button type="button" class="btn-large btn-secondary" onclick="clearFile()">取消</button>
+            <button type="submit" class="btn-large btn-primary" id="submitBtn" disabled>开始检测</button>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <span>正在上传文件...</span>
+        </div>
+        
+        <div class="supported-formats">
+            <p>支持的文件格式：ZIP、TAR.GZ、JAR、NPM、TGZ</p>
+            <p>最大文件大小：100MB</p>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedFile = null;
+
+// 文件选择处理
+function fileSelected(event) {
+    const file = event.target.files[0];
+    if (file) {
+        selectedFile = file;
+        displaySelectedFile(file);
+    }
+}
+
+// 显示选中的文件
+function displaySelectedFile(file) {
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = formatFileSize(file.size);
+    document.getElementById('selectedFile').style.display = 'block';
+    document.getElementById('submitBtn').disabled = false;
+}
+
+// 格式化文件大小
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// 清除文件
+function clearFile() {
+    selectedFile = null;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('selectedFile').style.display = 'none';
+    document.getElementById('submitBtn').disabled = true;
+}
+
+// 拖拽处理
+function dragOverHandler(ev) {
+    ev.preventDefault();
+}
+
+function dragEnterHandler(ev) {
+    ev.preventDefault();
+    document.querySelector('.upload-area').classList.add('dragover');
+}
+
+function dragLeaveHandler(ev) {
+    ev.preventDefault();
+    document.querySelector('.upload-area').classList.remove('dragover');
+}
+
+function dropHandler(ev) {
+    ev.preventDefault();
+    document.querySelector('.upload-area').classList.remove('dragover');
+    
+    const files = ev.dataTransfer.files;
+    if (files.length > 0) {
+        const file = files[0];
+        document.getElementById('fileInput').files = files;
+        selectedFile = file;
+        displaySelectedFile(file);
+    }
+}
+
+// 表单提交处理
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (!selectedFile) {
+        alert('请先选择文件');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    
+    // 显示加载状态
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('submitBtn').disabled = true;
+    
+    fetch('/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 跳转到进度页面
+            window.location.href = '/progress/' + data.scan_id;
+        } else {
+            alert('上传失败: ' + (data.error || '未知错误'));
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('submitBtn').disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('上传失败，请重试');
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('submitBtn').disabled = false;
+    });
+});
+</script>
+{% endblock %} 

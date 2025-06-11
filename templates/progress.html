@@ -1,0 +1,403 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .progress-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    
+    .header h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 28px;
+    }
+    
+    .progress-section {
+        margin-bottom: 30px;
+    }
+    
+    .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .progress-title {
+        font-size: 18px;
+        color: #333;
+        font-weight: 600;
+    }
+    
+    .progress-percentage {
+        font-size: 24px;
+        color: #667eea;
+        font-weight: 700;
+    }
+    
+    .progress-bar {
+        width: 100%;
+        height: 12px;
+        background: #e0e7ff;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px;
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+    
+    .current-task {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .current-task-title {
+        color: #856404;
+        font-size: 16px;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+    
+    .current-task-desc {
+        color: #856404;
+        font-size: 14px;
+    }
+    
+    .status-list {
+        background: rgba(248, 249, 255, 0.8);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .status-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 10px 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .status-item:last-child {
+        border-bottom: none;
+    }
+    
+    .status-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: white;
+    }
+    
+    .status-completed {
+        background: #4caf50;
+    }
+    
+    .status-current {
+        background: #ff9800;
+        animation: pulse 2s infinite;
+    }
+    
+    .status-pending {
+        background: #ccc;
+    }
+    
+    .status-text {
+        flex: 1;
+        color: #333;
+    }
+    
+    .status-time {
+        color: #666;
+        font-size: 12px;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+    }
+    
+    .btn {
+        padding: 12px 30px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-secondary {
+        background: #f5f5f5;
+        color: #666;
+    }
+    
+    .btn-secondary:hover {
+        background: #eee;
+    }
+    
+    .estimated-time {
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+        margin-top: 20px;
+    }
+    
+    .completed-message {
+        display: none;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .completed-icon {
+        font-size: 48px;
+        color: #4caf50;
+        margin-bottom: 15px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="progress-container">
+    <div class="header">
+        <h1>检测进行中</h1>
+    </div>
+    
+    <div class="completed-message" id="completedMessage">
+        <div class="completed-icon">✅</div>
+        <h2 style="color: #333; margin-bottom: 10px;">检测完成！</h2>
+        <p style="color: #666;">您可以查看详细的检测结果</p>
+    </div>
+    
+    <div class="progress-section">
+        <div class="progress-header">
+            <div class="progress-title">检测进度</div>
+            <div class="progress-percentage" id="progressPercentage">0%</div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+    
+    <div class="current-task" id="currentTask">
+        <div class="current-task-title">正在进行：<span id="currentTaskName">开始检测</span></div>
+        <div class="current-task-desc">正在初始化检测流程...</div>
+    </div>
+    
+    <div class="status-list">
+        <div class="status-item" id="status-upload">
+            <div class="status-icon status-completed">✓</div>
+            <div class="status-text">文件上传完成</div>
+            <div class="status-time">刚刚</div>
+        </div>
+        <div class="status-item" id="status-extract">
+            <div class="status-icon status-pending">○</div>
+            <div class="status-text">解压并提取包结构</div>
+            <div class="status-time">等待中</div>
+        </div>
+        <div class="status-item" id="status-features">
+            <div class="status-icon status-pending">○</div>
+            <div class="status-text">提取141项语言无关特征</div>
+            <div class="status-time">等待中</div>
+        </div>
+        <div class="status-item" id="status-xgboost">
+            <div class="status-icon status-pending">○</div>
+            <div class="status-text">XGBoost模型初筛检测</div>
+            <div class="status-time">等待中</div>
+        </div>
+        <div class="status-item" id="status-llm">
+            <div class="status-icon status-pending">○</div>
+            <div class="status-text">大模型复筛分析</div>
+            <div class="status-time">等待中</div>
+        </div>
+        <div class="status-item" id="status-report">
+            <div class="status-icon status-pending">○</div>
+            <div class="status-text">生成检测报告</div>
+            <div class="status-time">等待中</div>
+        </div>
+    </div>
+    
+    <div class="action-buttons">
+        <button class="btn btn-secondary" onclick="cancelScan()">取消检测</button>
+        <button class="btn btn-primary" id="viewResultsBtn" style="display: none;" onclick="viewResults()">查看结果</button>
+    </div>
+    
+    <div class="estimated-time" id="estimatedTime">
+        预计剩余时间：约5分钟
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const scanId = "{{ scan_id }}";
+let pollInterval;
+
+// 状态映射
+const statusMapping = {
+    'pending': { step: 0, name: '开始检测' },
+    'extracting_features': { step: 2, name: '提取语言无关特征' },
+    'xgboost_analysis': { step: 3, name: 'XGBoost模型初筛' },
+    'llm_analysis': { step: 4, name: '大模型复筛分析' },
+    'completed': { step: 5, name: '检测完成' },
+    'failed': { step: -1, name: '检测失败' }
+};
+
+// 开始轮询状态
+function startPolling() {
+    pollInterval = setInterval(checkStatus, 2000);
+    checkStatus(); // 立即检查一次
+}
+
+// 检查扫描状态
+function checkStatus() {
+    fetch(`/scan_status/${scanId}`)
+        .then(response => response.json())
+        .then(data => {
+            updateProgress(data);
+            
+            if (data.status === 'completed') {
+                clearInterval(pollInterval);
+                showCompleted();
+            } else if (data.status === 'failed') {
+                clearInterval(pollInterval);
+                showFailed();
+            }
+        })
+        .catch(error => {
+            console.error('Error checking status:', error);
+        });
+}
+
+// 更新进度显示
+function updateProgress(data) {
+    const progress = data.progress || 0;
+    const currentTask = data.current_task || '检测中';
+    
+    // 更新进度条
+    document.getElementById('progressFill').style.width = progress + '%';
+    document.getElementById('progressPercentage').textContent = progress + '%';
+    
+    // 更新当前任务
+    document.getElementById('currentTaskName').textContent = currentTask;
+    
+    // 更新状态列表
+    updateStatusList(data.status, progress);
+    
+    // 更新预计时间
+    if (progress > 0 && progress < 100) {
+        const remaining = Math.ceil((100 - progress) / 20); // 简单估算
+        document.getElementById('estimatedTime').textContent = `预计剩余时间：约${remaining}分钟`;
+    }
+}
+
+// 更新状态列表
+function updateStatusList(status, progress) {
+    const steps = ['upload', 'extract', 'features', 'xgboost', 'llm', 'report'];
+    const progressSteps = [0, 10, 25, 50, 75, 100];
+    
+    steps.forEach((step, index) => {
+        const element = document.getElementById(`status-${step}`);
+        const icon = element.querySelector('.status-icon');
+        const time = element.querySelector('.status-time');
+        
+        if (progress >= progressSteps[index]) {
+            icon.className = 'status-icon status-completed';
+            icon.textContent = '✓';
+            time.textContent = '已完成';
+        } else if (progress >= progressSteps[index] - 15 && progress < progressSteps[index]) {
+            icon.className = 'status-icon status-current';
+            icon.textContent = '⏳';
+            time.textContent = '进行中';
+        } else {
+            icon.className = 'status-icon status-pending';
+            icon.textContent = '○';
+            time.textContent = '等待中';
+        }
+    });
+}
+
+// 显示完成状态
+function showCompleted() {
+    document.getElementById('completedMessage').style.display = 'block';
+    document.getElementById('currentTask').style.display = 'none';
+    document.getElementById('viewResultsBtn').style.display = 'inline-block';
+    document.getElementById('estimatedTime').textContent = '检测已完成！';
+}
+
+// 显示失败状态
+function showFailed() {
+    document.getElementById('currentTask').innerHTML = `
+        <div class="current-task-title" style="color: #dc3545;">检测失败</div>
+        <div class="current-task-desc" style="color: #dc3545;">检测过程中发生错误，请重试</div>
+    `;
+    document.getElementById('estimatedTime').textContent = '检测失败，请重新上传文件';
+}
+
+// 取消扫描
+function cancelScan() {
+    if (confirm('确定要取消检测吗？')) {
+        clearInterval(pollInterval);
+        window.location.href = '/';
+    }
+}
+
+// 查看结果
+function viewResults() {
+    window.location.href = `/results/${scanId}`;
+}
+
+// 页面加载时开始轮询
+document.addEventListener('DOMContentLoaded', function() {
+    startPolling();
+});
+
+// 页面卸载时清理定时器
+window.addEventListener('beforeunload', function() {
+    if (pollInterval) {
+        clearInterval(pollInterval);
+    }
+});
+</script>
+{% endblock %} 
