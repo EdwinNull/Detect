@@ -2,39 +2,161 @@
 
 {% block extra_css %}
 <style>
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 0 20px;
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-gap: 20px;
+    }
+    
+    @media (min-width: 768px) {
+        .dashboard-container {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+    
+    .stats-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        text-align: center;
+    }
+    
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 10px 0;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .quick-guide-small-btn {
+        display: inline-block;
+        padding: 8px 15px;
+        background: rgba(75, 108, 183, 0.1);
+        color: #4b6cb7;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        border: 1px solid #4b6cb7;
+    }
+    
+    .quick-guide-small-btn:hover {
+        background: rgba(75, 108, 183, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    .guide-icon {
+        font-size: 15px;
+        margin-right: 5px;
+    }
+    
+    .malicious-packages {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 25px;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+    }
+    
+    .section-header {
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .section-header h2 {
+        color: #333;
+        font-size: 22px;
+        margin-bottom: 8px;
+    }
+    
+    .section-header p {
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .package-list {
+        margin-bottom: 20px;
+    }
+    
+    .package-item {
+        background: rgba(248, 249, 255, 0.7);
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: transform 0.2s ease;
+    }
+    
+    .package-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    .package-info {
+        flex: 1;
+    }
+    
+    .package-name {
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #333;
+    }
+    
+    .package-meta {
+        color: #666;
+        font-size: 13px;
+        display: flex;
+        gap: 15px;
+    }
+    
+    .risk-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+    }
+    
+    .risk-high {
+        background: #ff4757;
+    }
+    
     .upload-container {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
-        padding: 40px;
+        padding: 25px;
         border-radius: 20px;
         box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-        max-width: 600px;
-        margin: 0 auto;
-    }
-    
-    .header {
-        text-align: center;
-        margin-bottom: 30px;
-    }
-    
-    .header h1 {
-        color: #333;
-        margin-bottom: 10px;
-        font-size: 28px;
-    }
-    
-    .header p {
-        color: #666;
-        font-size: 16px;
     }
     
     .upload-area {
         border: 2px dashed #667eea;
         border-radius: 15px;
-        padding: 60px 20px;
+        padding: 40px 20px;
         text-align: center;
         background: rgba(248, 249, 255, 0.5);
-        margin-bottom: 30px;
+        margin-bottom: 20px;
         cursor: pointer;
         transition: all 0.3s ease;
     }
@@ -137,11 +259,38 @@
         background: #eee;
     }
     
-    .supported-formats {
-        margin-top: 20px;
+    .empty-state {
+        padding: 30px;
         text-align: center;
         color: #666;
+    }
+    
+    .empty-icon {
+        font-size: 40px;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+    
+    .more-link {
+        display: inline-block;
+        padding: 8px 15px;
+        color: #667eea;
+        text-decoration: none;
+        border: 1px solid #667eea;
+        border-radius: 6px;
         font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .more-link:hover {
+        background: #667eea;
+        color: white;
+    }
+    
+    .center-text {
+        text-align: center;
+        margin-top: 15px;
     }
     
     .loading {
@@ -165,53 +314,130 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
+    
+    .type-badge {
+        display: inline-block;
+        margin-left: 8px;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #fff;
+    }
+    .type-pypi { background: #3776ab; }
+    .type-npm { background: #cb3837; }
+    .type-unknown { background: #888; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="upload-container">
-    <div class="header">
-        <h1>开源组件包安全检测</h1>
-        <p>请上传您要检测的开源组件包文件</p>
+<div class="dashboard-container">
+    <!-- 快速上手按钮 - 左上角 -->
+    <div style="grid-column: span 2; text-align: left; margin-bottom: 15px;">
+        <a href="{{ url_for('guide') }}" class="quick-guide-small-btn">
+            <i class="guide-icon">📘</i> 快速上手
+        </a>
     </div>
     
-    <form id="uploadForm" enctype="multipart/form-data">
-        <div class="upload-area" onclick="document.getElementById('fileInput').click()" 
-             ondrop="dropHandler(event);" ondragover="dragOverHandler(event);" 
-             ondragenter="dragEnterHandler(event);" ondragleave="dragLeaveHandler(event);">
-            <div class="upload-icon">📁</div>
-            <div class="upload-text">点击选择文件或拖拽文件到此处</div>
-            <div class="upload-hint">支持 .zip, .tar.gz, .jar, .npm 等格式</div>
+    <!-- 统计信息 -->
+    <div class="stats-container" style="grid-column: span 2;">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_scans }}</div>
+            <div class="stat-label">总检测次数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_malicious }}</div>
+            <div class="stat-label">已检测恶意包</div>
+        </div>
+    </div>
+    
+    <!-- 恶意包列表 -->
+    <div class="malicious-packages">
+        <div class="section-header">
+            <h2>最近检测到的恶意包</h2>
+            <p>最近检测到的高风险开源组件包</p>
         </div>
         
-        <input type="file" id="fileInput" name="file" class="file-input" 
-               accept=".zip,.tar.gz,.jar,.npm,.tgz" onchange="fileSelected(event)">
+        <div class="package-list">
+            {% if malicious_packages %}
+                {% for pkg in malicious_packages %}
+                <div class="package-item">
+                    <div class="package-info">
+                        <div class="package-name">
+                            {{ pkg.filename }}
+                            {% if pkg.package_type == 'pypi' %}
+                                <span class="type-badge type-pypi">PyPI</span>
+                            {% elif pkg.package_type == 'npm' %}
+                                <span class="type-badge type-npm">npm</span>
+                            {% else %}
+                                <span class="type-badge type-unknown">未知</span>
+                            {% endif %}
+                        </div>
+                        <div class="package-meta">
+                            <span>大小: {{ pkg.file_size }}</span>
+                            <span>检测时间: {{ pkg.created_at }}</span>
+                            <span>置信度: {{ "%.1f"|format(pkg.confidence) }}%</span>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="risk-badge risk-high">高风险</span>
+                        <a href="{{ url_for('results', scan_id=pkg.id) }}" class="more-link">查看详情</a>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">🔍</div>
+                    <p>暂无检测到的恶意包</p>
+                </div>
+            {% endif %}
+        </div>
         
-        <div class="selected-file" id="selectedFile">
-            <div class="file-info">
-                <div class="file-icon">📦</div>
-                <div class="file-details">
-                    <h4 id="fileName">example-package.zip</h4>
-                    <p id="fileSize">2.5 MB</p>
+        <div class="center-text">
+            <a href="{{ url_for('history') }}" class="more-link">查看所有历史</a>
+        </div>
+    </div>
+    
+    <!-- 上传检测区域 -->
+    <div class="upload-container">
+        <div class="section-header">
+            <h2>上传组件包进行检测</h2>
+            <p>上传开源组件包进行安全检测</p>
+        </div>
+        
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()" 
+                 ondrop="dropHandler(event);" ondragover="dragOverHandler(event);" 
+                 ondragenter="dragEnterHandler(event);" ondragleave="dragLeaveHandler(event);">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">点击选择文件或拖拽文件到此处</div>
+                <div class="upload-hint">支持 .zip, .tar.gz, .jar, .npm 等格式</div>
+            </div>
+            
+            <input type="file" id="fileInput" name="file" class="file-input" 
+                   accept=".zip,.tar.gz,.jar,.npm,.tgz" onchange="fileSelected(event)">
+            
+            <div class="selected-file" id="selectedFile">
+                <div class="file-info">
+                    <div class="file-icon">📦</div>
+                    <div class="file-details">
+                        <h4 id="fileName">example-package.zip</h4>
+                        <p id="fileSize">2.5 MB</p>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="action-buttons">
-            <button type="button" class="btn-large btn-secondary" onclick="clearFile()">取消</button>
-            <button type="submit" class="btn-large btn-primary" id="submitBtn" disabled>开始检测</button>
-        </div>
-        
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <span>正在上传文件...</span>
-        </div>
-        
-        <div class="supported-formats">
-            <p>支持的文件格式：ZIP、TAR.GZ、JAR、NPM、TGZ</p>
-            <p>最大文件大小：100MB</p>
-        </div>
-    </form>
+            
+            <div class="action-buttons">
+                <button type="button" class="btn-large btn-secondary" onclick="clearFile()">取消</button>
+                <button type="submit" class="btn-large btn-primary" id="submitBtn" disabled>开始检测</button>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <span>正在上传文件...</span>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}
 
@@ -253,42 +479,43 @@ function clearFile() {
     document.getElementById('submitBtn').disabled = true;
 }
 
-// 拖拽处理
-function dragOverHandler(ev) {
-    ev.preventDefault();
+// 拖放处理
+function dragOverHandler(event) {
+    event.preventDefault();
 }
 
-function dragEnterHandler(ev) {
-    ev.preventDefault();
+function dragEnterHandler(event) {
+    event.preventDefault();
     document.querySelector('.upload-area').classList.add('dragover');
 }
 
-function dragLeaveHandler(ev) {
-    ev.preventDefault();
+function dragLeaveHandler(event) {
+    event.preventDefault();
     document.querySelector('.upload-area').classList.remove('dragover');
 }
 
-function dropHandler(ev) {
-    ev.preventDefault();
+function dropHandler(event) {
+    event.preventDefault();
     document.querySelector('.upload-area').classList.remove('dragover');
     
-    const files = ev.dataTransfer.files;
-    if (files.length > 0) {
-        const file = files[0];
-        document.getElementById('fileInput').files = files;
-        selectedFile = file;
-        displaySelectedFile(file);
+    if (event.dataTransfer.items) {
+        for (let i = 0; i < event.dataTransfer.items.length; i++) {
+            if (event.dataTransfer.items[i].kind === 'file') {
+                const file = event.dataTransfer.items[i].getAsFile();
+                document.getElementById('fileInput').files = event.dataTransfer.files;
+                selectedFile = file;
+                displaySelectedFile(file);
+                break;
+            }
+        }
     }
 }
 
-// 表单提交处理
-document.getElementById('uploadForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+// 表单提交
+document.getElementById('uploadForm').addEventListener('submit', function(event) {
+    event.preventDefault();
     
-    if (!selectedFile) {
-        alert('请先选择文件');
-        return;
-    }
+    if (!selectedFile) return;
     
     const formData = new FormData();
     formData.append('file', selectedFile);
@@ -297,26 +524,27 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
     document.getElementById('loading').style.display = 'block';
     document.getElementById('submitBtn').disabled = true;
     
+    // 发送请求
     fetch('/upload', {
         method: 'POST',
         body: formData
     })
     .then(response => response.json())
     .then(data => {
+        document.getElementById('loading').style.display = 'none';
+        
         if (data.success) {
-            // 跳转到进度页面
+            // 重定向到进度页面
             window.location.href = '/progress/' + data.scan_id;
         } else {
-            alert('上传失败: ' + (data.error || '未知错误'));
-            document.getElementById('loading').style.display = 'none';
+            alert('上传失败: ' + data.message);
             document.getElementById('submitBtn').disabled = false;
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('上传失败，请重试');
         document.getElementById('loading').style.display = 'none';
         document.getElementById('submitBtn').disabled = false;
+        alert('上传出错: ' + error);
     });
 });
 </script>
