@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登录 - 开源组件包安全检测平台</title>
+    <title>注册 - 开源组件包安全检测平台</title>
     <style>
         * {
             margin: 0;
@@ -21,7 +21,7 @@
             padding: 20px;
         }
         
-        .login-container {
+        .register-container {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             padding: 40px;
@@ -118,37 +118,18 @@
             border: 1px solid #fcc;
         }
         
-        .demo-info {
-            margin-top: 30px;
-            padding: 20px;
-            background: rgba(248, 249, 255, 0.8);
-            border-radius: 10px;
-            border: 1px solid #e5e7eb;
+        .flash-success {
+            background: #dfd;
+            color: #494;
+            border: 1px solid #beb;
         }
         
-        .demo-title {
-            color: #333;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-        
-        .demo-account {
-            color: #666;
-            font-size: 12px;
-            line-height: 1.5;
-        }
-        
-        .demo-account strong {
-            color: #333;
-        }
-        
-        .register-link {
+        .login-link {
             margin-top: 20px;
             text-align: center;
         }
         
-        .register-link a {
+        .login-link a {
             color: #667eea;
             text-decoration: none;
             font-weight: 600;
@@ -156,16 +137,16 @@
             transition: all 0.3s ease;
         }
         
-        .register-link a:hover {
+        .login-link a:hover {
             text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
+    <div class="register-container">
         <div class="logo">
-            <div class="logo-icon">🔒</div>
-            <div class="logo-text">安全检测平台</div>
+            <div class="logo-icon">📝</div>
+            <div class="logo-text">账号注册</div>
             <div class="logo-subtitle">开源组件包安全检测系统</div>
         </div>
         
@@ -179,30 +160,32 @@
             {% endif %}
         {% endwith %}
         
-        <form method="POST">
+        <form method="POST" action="{{ url_for('register') }}">
             <div class="form-group">
                 <label for="username" class="form-label">用户名</label>
-                <input type="text" id="username" name="username" class="form-input" required>
+                <input type="text" id="username" name="username" class="form-input" required minlength="3" maxlength="20">
+            </div>
+            
+            <div class="form-group">
+                <label for="email" class="form-label">电子邮箱</label>
+                <input type="email" id="email" name="email" class="form-input" required>
             </div>
             
             <div class="form-group">
                 <label for="password" class="form-label">密码</label>
-                <input type="password" id="password" name="password" class="form-input" required>
+                <input type="password" id="password" name="password" class="form-input" required minlength="6">
             </div>
             
-            <button type="submit" class="btn btn-primary">登录</button>
+            <div class="form-group">
+                <label for="confirm_password" class="form-label">确认密码</label>
+                <input type="password" id="confirm_password" name="confirm_password" class="form-input" required minlength="6">
+            </div>
+            
+            <button type="submit" class="btn btn-primary">注册</button>
         </form>
         
-        <div class="register-link">
-            没有账号？<a href="{{ url_for('register') }}">注册</a>
-        </div>
-        
-        <div class="demo-info">
-            <div class="demo-title">演示账户</div>
-            <div class="demo-account">
-                <strong>管理员：</strong>用户名 admin，密码 admin123<br>
-                <strong>普通用户：</strong>用户名 user，密码 user123<br>
-            </div>
+        <div class="login-link">
+            已有账号？<a href="{{ url_for('login') }}">登录</a>
         </div>
     </div>
 </body>

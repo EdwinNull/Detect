@@ -380,6 +380,7 @@
                 <th>置信度</th>
                 <th>状态</th>
                 <th>检测时间</th>
+                {% if session.role == 'admin' %}<th>用户</th>{% endif %}
                 <th>操作</th>
             </tr>
         </thead>
@@ -434,6 +435,11 @@
                 <td style="font-size: 12px; color: #666;">
                     {{ record[6][:16] if record[6] else '-' }}
                 </td>
+                {% if session.role == 'admin' %}
+                <td>
+                    <span style="font-size: 12px; padding: 3px 8px; background: #e2e8f0; border-radius: 10px;">{{ record[8] }}</span>
+                </td>
+                {% endif %}
                 <td>
                     <div class="action-buttons">
                         {% if record[5] == 'completed' %}

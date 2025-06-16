@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}编辑用户 - 开源组件包安全检测平台{% endblock %}
+
+{% block content %}
+<div class="edit-user-container" style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto;">
+    <h2 style="margin-bottom: 20px; color: #667eea;">编辑用户</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div style="margin-bottom: 20px;">
+                {% for category, message in messages %}
+                    <div style="padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; 
+                              {% if category == 'error' %}background: #fee; color: #c33; border: 1px solid #fcc;{% else %}background: #dfd; color: #494; border: 1px solid #beb;{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <form method="POST" action="{{ url_for('edit_user', user_id=user.id) }}">
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">用户名</label>
+            <input type="text" name="username" value="{{ user.username }}" required style="width: 100%; padding: 12px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">电子邮箱</label>
+            <input type="email" name="email" value="{{ user.email }}" required style="width: 100%; padding: 12px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">用户角色</label>
+            <select name="role" style="width: 100%; padding: 12px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                <option value="user" {% if user.role == 'user' %}selected{% endif %}>普通用户</option>
+                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>管理员</option>
+            </select>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">注册时间</label>
+            <div style="padding: 12px 15px; border: 2px solid #e5e7eb; border-radius: 8px; background: #f9fafb; color: #666;">{{ user.created_at }}</div>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">上次登录</label>
+            <div style="padding: 12px 15px; border: 2px solid #e5e7eb; border-radius: 8px; background: #f9fafb; color: #666;">{{ user.last_login or '从未登录' }}</div>
+        </div>
+        
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 24px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; flex: 1;">保存更改</button>
+            <a href="{{ url_for('user_management') }}" style="display: flex; align-items: center; justify-content: center; background: #f5f5f5; color: #666; padding: 12px 24px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; text-decoration: none; flex: 1;">取消</a>
+        </div>
+    </form>
+</div>
+{% endblock %} 

@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}用户管理 - 开源组件包安全检测平台{% endblock %}
+
+{% block content %}
+<div class="user-management-container" style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 30px;">
+    <h2 style="margin-bottom: 20px; color: #667eea;">用户管理</h2>
+    
+    <!-- 用户统计 -->
+    <div style="display: flex; gap: 20px; margin-bottom: 30px; flex-wrap: wrap;">
+        <div style="background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 8px; min-width: 150px; text-align: center; flex: 1;">
+            <div style="font-size: 24px; font-weight: bold;">{{ total_users }}</div>
+            <div style="color: #666; font-size: 14px;">总用户数</div>
+        </div>
+        <div style="background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 8px; min-width: 150px; text-align: center; flex: 1;">
+            <div style="font-size: 24px; font-weight: bold;">{{ admin_count }}</div>
+            <div style="color: #666; font-size: 14px;">管理员数</div>
+        </div>
+        <div style="background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 8px; min-width: 150px; text-align: center; flex: 1;">
+            <div style="font-size: 24px; font-weight: bold;">{{ active_users }}</div>
+            <div style="color: #666; font-size: 14px;">活跃用户</div>
+        </div>
+    </div>
+    
+    <!-- 添加用户 -->
+    <div style="margin-bottom: 30px; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+        <h3 style="margin-bottom: 15px; font-size: 18px;">添加新用户</h3>
+        <form method="POST" action="{{ url_for('add_user') }}">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">用户名</label>
+                    <input type="text" name="username" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">邮箱</label>
+                    <input type="email" name="email" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">初始密码</label>
+                    <input type="password" name="password" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">用户角色</label>
+                    <select name="role" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="user">普通用户</option>
+                        <option value="admin">管理员</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">添加用户</button>
+        </form>
+    </div>
+    
+    <!-- 用户列表 -->
+    <div>
+        <h3 style="margin-bottom: 15px; font-size: 18px;">用户列表</h3>
+        
+        <div style="margin-bottom: 15px;">
+            <input type="text" id="userSearchInput" placeholder="搜索用户..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;" onkeyup="filterUsers()">
+        </div>
+        
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;" id="userTable">
+                <thead>
+                    <tr style="background: #f8f9fa;">
+                        <th style="padding: 12px; border-bottom: 1px solid #ddd;">ID</th>
+                        <th style="padding: 12px; border-bottom: 1px solid #ddd;">用户名</th>
+                        <th style="padding: 12px; border-bottom: 1px solid #ddd;">邮箱</th>
+                        <th style="padding: 12px; border-bottom: 1px solid #ddd;">角色</th>
+                        <th style="padding: 12px; border-bottom: 1px solid #ddd;">注册时间</th>
+                        <th style="padding: 12px; border-bottom: 1px solid #ddd;">上次登录</th>
+                        <th style="padding: 12px; border-bottom: 1px solid #ddd;">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid #eee;">{{ user.id }}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #eee;">{{ user.username }}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #eee;">{{ user.email }}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                            {% if user.role == 'admin' %}
+                            <span style="background: #667eea; color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px;">管理员</span>
+                            {% else %}
+                            <span style="background: #e2e8f0; color: #333; padding: 3px 8px; border-radius: 12px; font-size: 12px;">普通用户</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 12px; border-bottom: 1px solid #eee;">{{ user.created_at }}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #eee;">{{ user.last_login or '从未登录' }}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                            <div style="display: flex; gap: 5px;">
+                                <a href="{{ url_for('edit_user', user_id=user.id) }}" style="text-decoration: none; background: #4299e1; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">编辑</a>
+                                {% if user.username != 'admin' %}
+                                <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" onsubmit="return confirm('确定要删除此用户吗？');">
+                                    <button type="submit" style="background: #e53e3e; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">删除</button>
+                                </form>
+                                {% endif %}
+                                <form method="POST" action="{{ url_for('reset_password', user_id=user.id) }}">
+                                    <button type="submit" style="background: #667eea; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">重置密码</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterUsers() {
+    var input, filter, table, tr, td, i, txtValue;
+    input = document.getElementById("userSearchInput");
+    filter = input.value.toUpperCase();
+    table = document.getElementById("userTable");
+    tr = table.getElementsByTagName("tr");
+    
+    // 从索引1开始，跳过表头
+    for (i = 1; i < tr.length; i++) {
+        // 检查用户名和邮箱列
+        let usernameCol = tr[i].getElementsByTagName("td")[1];
+        let emailCol = tr[i].getElementsByTagName("td")[2];
+        
+        if (usernameCol && emailCol) {
+            let usernameValue = usernameCol.textContent || usernameCol.innerText;
+            let emailValue = emailCol.textContent || emailCol.innerText;
+            
+            if (usernameValue.toUpperCase().indexOf(filter) > -1 || emailValue.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
+    }
+}
+</script>
+{% endblock %} 
