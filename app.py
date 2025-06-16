@@ -70,6 +70,7 @@ def init_db():
             risk_explanation TEXT,
             scan_time REAL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            package_type TEXT,
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     ''')
@@ -96,9 +97,17 @@ def init_db():
             description TEXT,
             upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             features TEXT,
-            is_used_for_training BOOLEAN DEFAULT 0
+            is_used_for_training BOOLEAN DEFAULT 0,
+            package_type TEXT DEFAULT 'unknown'
         )
     ''')
+    
+    # 尝试为已存在的表添加package_type列
+    try:
+        cursor.execute('ALTER TABLE samples ADD COLUMN package_type TEXT DEFAULT "unknown"')
+    except sqlite3.OperationalError:
+        # 列可能已存在，忽略错误
+        pass
     
     # 创建默认管理员账户
     admin_password = generate_password_hash('admin123')
@@ -580,7 +589,64 @@ def update_scan_status(scan_id, status):
 def index():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    return render_template('index.html')
+    
+    # 获取最近检测到的恶意包
+    conn = sqlite3.connect('security_scanner.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT id, filename, file_size, risk_level, confidence, created_at, package_type
+        FROM scan_records 
+        WHERE risk_level = 'high' 
+        AND scan_status = 'completed' 
+        ORDER BY created_at DESC 
+        LIMIT 5
+    ''')
+    recent_malicious_packages = cursor.fetchall()
+    
+    # 格式化数据
+    malicious_packages = []
+    for pkg in recent_malicious_packages:
+        malicious_packages.append({
+            'id': pkg[0],
+            'filename': pkg[1],
+            'file_size': format_size(pkg[2]) if pkg[2] else "未知",
+            'risk_level': pkg[3],
+            'confidence': pkg[4] * 100 if pkg[4] else 0,
+            'created_at': pkg[5],
+            'package_type': pkg[6] if len(pkg) > 6 else 'unknown'
+        })
+    
+    # 计算高风险包总数
+    cursor.execute('''
+        SELECT COUNT(*) FROM scan_records 
+        WHERE risk_level = 'high' AND scan_status = 'completed'
+    ''')
+    total_malicious = cursor.fetchone()[0]
+    
+    # 获取最近检测总数
+    cursor.execute('''
+        SELECT COUNT(*) FROM scan_records 
+        WHERE scan_status = 'completed'
+    ''')
+    total_scans = cursor.fetchone()[0]
+    
+    conn.close()
+    
+    return render_template('index.html', 
+                          malicious_packages=malicious_packages,
+                          total_malicious=total_malicious,
+                          total_scans=total_scans)
+
+def format_size(size_in_bytes):
+    """格式化文件大小"""
+    if size_in_bytes < 1024:
+        return f"{size_in_bytes} B"
+    elif size_in_bytes < 1024 * 1024:
+        return f"{size_in_bytes / 1024:.2f} KB"
+    elif size_in_bytes < 1024 * 1024 * 1024:
+        return f"{size_in_bytes / (1024 * 1024):.2f} MB"
+    else:
+        return f"{size_in_bytes / (1024 * 1024 * 1024):.2f} GB"
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -621,49 +687,41 @@ def logout():
 def upload_file():
     if 'user_id' not in session:
         return jsonify({'error': '请先登录'}), 401
-    
     if 'file' not in request.files:
         return jsonify({'error': '没有选择文件'}), 400
-    
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': '没有选择文件'}), 400
-    
     if file:
         filename = secure_filename(file.filename)
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
-        
         # 计算文件哈希
         with open(file_path, 'rb') as f:
             file_hash = hashlib.md5(f.read()).hexdigest()
-        
         file_size = os.path.getsize(file_path)
-        
+        # 检测包类型
+        package_type = detect_package_type(file_path)
         # 创建扫描记录
         conn = sqlite3.connect('security_scanner.db')
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO scan_records (user_id, filename, file_size, file_hash, scan_status)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (session['user_id'], filename, file_size, file_hash, 'pending'))
-        
+            INSERT INTO scan_records (user_id, filename, file_size, file_hash, scan_status, package_type)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (session['user_id'], filename, file_size, file_hash, 'pending', package_type))
         scan_id = cursor.lastrowid
         conn.commit()
         conn.close()
-        
         # 初始化任务状态
         scan_tasks[scan_id] = {
             'status': 'pending',
             'progress': 0,
             'current_task': '开始检测'
         }
-        
         # 启动后台扫描任务
         thread = threading.Thread(target=background_scan, args=(scan_id, file_path, session['user_id']))
         thread.daemon = True
         thread.start()
-        
         return jsonify({
             'success': True,
             'scan_id': scan_id,
@@ -770,6 +828,10 @@ def admin():
 @app.route('/knowledge')
 def knowledge():
     return render_template('knowledge.html')
+
+@app.route('/guide')
+def guide():
+    return render_template('guide.html')
 
 @app.route('/progress/<int:scan_id>')
 def progress(scan_id):
@@ -891,7 +953,8 @@ def sample_management():
             'filename': sample[1],
             'type': sample[5],
             'description': sample[6],
-            'upload_time': sample[7]
+            'upload_time': sample[7],
+            'package_type': sample[10] if len(sample) > 10 else 'unknown'  # 添加包类型字段
         })
     
     return render_template('sample_management.html', samples=sample_list)
@@ -905,7 +968,7 @@ def upload_samples():
         return jsonify({'error': '没有选择文件'}), 400
     
     files = request.files.getlist('samples')
-    sample_type = request.form.get('sample_type')
+    malware_status = request.form.get('sample_type', 'benign')  # 仅保留恶意/良性状态
     description = request.form.get('description', '')
     
     if not files:
@@ -923,7 +986,7 @@ def upload_samples():
     error_messages = []
     
     for file in files:
-        if file.filename.endswith('.tar.gz'):
+        if file.filename.endswith('.tar.gz') or file.filename.endswith('.zip') or file.filename.endswith('.whl') or file.filename.endswith('.tgz'):
             try:
                 # 保存文件
                 filename = secure_filename(file.filename)
@@ -933,20 +996,24 @@ def upload_samples():
                 # 计算文件哈希
                 file_hash = hashlib.sha256(open(file_path, 'rb').read()).hexdigest()
                 
+                # 自动检测包类型
+                package_type = detect_package_type(file_path)
+                
                 # 提取特征
                 extractor = FeatureExtractor()
                 features = extractor.extract_features(file_path)
                 
                 # 保存到数据库
                 cursor.execute('''
-                    INSERT INTO samples (filename, file_path, file_size, file_hash, type, description, features)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO samples (filename, file_path, file_size, file_hash, type, package_type, description, features)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (
                     filename,
                     file_path,
                     os.path.getsize(file_path),
                     file_hash,
-                    sample_type,
+                    malware_status,  # 恶意/良性状态
+                    package_type,    # 包类型（pypi/npm等）
                     description,
                     json.dumps(features)
                 ))
@@ -1091,6 +1158,118 @@ def train_with_samples():
     
     flash(f'模型训练完成！评估结果：准确率={accuracy:.3f}, 精确率={precision:.3f}, 召回率={recall:.3f}, F1分数={f1:.3f}')
     return redirect(url_for('sample_management'))
+
+@app.route('/admin/samples/update_types', methods=['POST'])
+def update_sample_types():
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return jsonify({'error': '需要管理员权限'}), 403
+    
+    conn = sqlite3.connect('security_scanner.db')
+    cursor = conn.cursor()
+    
+    # 获取所有样本的路径
+    cursor.execute('SELECT id, file_path FROM samples')
+    samples = cursor.fetchall()
+    
+    updated_count = 0
+    for sample_id, file_path in samples:
+        if os.path.exists(file_path):
+            try:
+                # 检测包类型
+                package_type = detect_package_type(file_path)
+                # 更新数据库
+                cursor.execute('UPDATE samples SET package_type = ? WHERE id = ?', 
+                               (package_type, sample_id))
+                updated_count += 1
+            except Exception as e:
+                print(f"更新样本 {sample_id} 类型失败: {e}")
+    
+    conn.commit()
+    conn.close()
+    
+    return jsonify({
+        'success': True,
+        'message': f'成功更新 {updated_count} 个样本的包类型'
+    })
+
+def detect_package_type(file_path):
+    filename = os.path.basename(file_path).lower()
+    
+    print(f"正在检测包类型: {file_path}")
+    
+    # 特殊处理 .tar.gz 扩展名，因为 splitext 只能得到 .gz
+    is_targz = filename.endswith('.tar.gz')
+    if is_targz:
+        ext = '.tar.gz'
+    else:
+        ext = os.path.splitext(filename)[-1].lower()
+    
+    print(f"文件扩展名: {ext}")
+    package_type = None
+    
+    # 1. 首先尝试通过内容识别包类型
+    if ext in ['.whl', '.zip', '.egg']:
+        try:
+            with zipfile.ZipFile(file_path, 'r') as zipf:
+                names = zipf.namelist()
+                print(f"ZIP文件内容: {names[:10]}...")
+                # 用endswith更鲁棒地检测
+                if any(n.endswith('setup.py') or n.endswith('pyproject.toml') or n.endswith('setup.cfg') or n.endswith('PKG-INFO') for n in names):
+                    print(f"找到Python包标记文件")
+                    return 'pypi'
+                if any(n.endswith('package.json') for n in names):
+                    print(f"找到NPM包标记文件")
+                    return 'npm'
+                if any(n.endswith('.gemspec') for n in names):
+                    print(f"找到Ruby包标记文件")
+                    return 'rubygems'
+                if any(n.endswith('pom.xml') or n.endswith('build.gradle') for n in names):
+                    print(f"找到Java包标记文件")
+                    return 'maven'
+        except Exception as e:
+            print(f"处理ZIP文件时出错: {e}")
+            pass
+
+    if ext in ['.tar.gz', '.tgz', '.npm', '.tar', '.bz2']:
+        try:
+            print(f"尝试以tar格式打开: {file_path}")
+            with tarfile.open(file_path, 'r:*') as tar:
+                names = tar.getnames()
+                print(f"TAR文件内容: {names[:10]}...")
+                if any(n.endswith('setup.py') or n.endswith('pyproject.toml') or n.endswith('setup.cfg') or n.endswith('PKG-INFO') for n in names):
+                    print(f"找到Python包标记文件")
+                    return 'pypi'
+                if any(n.endswith('package.json') for n in names):
+                    print(f"找到NPM包标记文件")
+                    return 'npm'
+                if any(n.endswith('.gemspec') for n in names):
+                    print(f"找到Ruby包标记文件")
+                    return 'rubygems'
+                if any(n.endswith('pom.xml') or n.endswith('build.gradle') for n in names):
+                    print(f"找到Java包标记文件")
+                    return 'maven'
+        except Exception as e:
+            print(f"处理TAR文件时出错: {e}")
+            pass
+    
+    # 2. 根据文件名判断包类型
+    print(f"文件名分析: {filename}")
+    if 'python' in filename or 'py' in filename.split('-'):
+        print(f"根据文件名判断为Python包")
+        return 'pypi'
+    if 'node' in filename or 'npm' in filename or 'js' in filename.split('-'):
+        print(f"根据文件名判断为NPM包")
+        return 'npm'
+    if 'ruby' in filename or 'gem' in filename:
+        print(f"根据文件名判断为Ruby包")
+        return 'rubygems'
+    if 'java' in filename or 'maven' in filename:
+        print(f"根据文件名判断为Java包")
+        return 'maven'
+    
+    # 3. 只有在上述所有方法都失败时，再返回'unknown'而不是压缩格式
+    print(f"无法识别包类型，返回unknown")
+    return 'unknown'
 
 if __name__ == '__main__':
     init_db()

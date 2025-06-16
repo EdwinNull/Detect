@@ -19,13 +19,13 @@
         <div class="card-body">
             <form method="POST" action="{{ url_for('upload_samples') }}" enctype="multipart/form-data" id="uploadForm">
                 <div class="mb-3">
-                    <label for="samples" class="form-label">选择样本文件（支持.tar.gz格式）</label>
-                    <input type="file" class="form-control" id="samples" name="samples" multiple accept=".tar.gz" required>
+                    <label for="samples" class="form-label">选择样本文件（支持.tar.gz, .zip, .whl, .tgz格式）</label>
+                    <input type="file" class="form-control" id="samples" name="samples" multiple accept=".tar.gz,.zip,.whl,.tgz" required>
                     <div class="form-text">可以选择多个文件，或直接拖拽文件到此处</div>
                 </div>
                 
                 <div class="mb-3">
-                    <label class="form-label">样本类型</label>
+                    <label class="form-label">样本安全性分类</label>
                     <div class="form-check">
                         <input class="form-check-input" type="radio" name="sample_type" id="type_malware" value="malware" checked>
                         <label class="form-check-label" for="type_malware">恶意软件</label>
@@ -56,6 +56,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0">样本列表</h4>
             <div>
+                <button class="btn btn-info btn-sm" id="updateTypes">更新包类型</button>
                 <button class="btn btn-danger btn-sm" id="deleteSelected">删除选中</button>
                 <button class="btn btn-success btn-sm" id="selectAll">全选</button>
             </div>
@@ -67,7 +68,8 @@
                         <tr>
                             <th><input type="checkbox" id="selectAllCheckbox"></th>
                             <th>文件名</th>
-                            <th>类型</th>
+                            <th>安全性</th>
+                            <th>包类型</th>
                             <th>描述</th>
                             <th>上传时间</th>
                             <th>操作</th>
@@ -79,6 +81,11 @@
                             <td><input type="checkbox" class="sample-checkbox" value="{{ sample.id }}"></td>
                             <td>{{ sample.filename }}</td>
                             <td>{{ sample.type }}</td>
+                            <td>
+                                <span class="badge {% if sample.package_type == 'unknown' %}bg-secondary{% elif sample.package_type == 'pypi' %}bg-primary{% elif sample.package_type == 'npm' %}bg-success{% else %}bg-info{% endif %}">
+                                    {{ sample.package_type|default('未知') }}
+                                </span>
+                            </td>
                             <td>{{ sample.description }}</td>
                             <td>{{ sample.upload_time }}</td>
                             <td>
@@ -227,6 +234,34 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 alert('删除出错: ' + error);
+            });
+        }
+    });
+    
+    // 更新包类型功能
+    document.getElementById('updateTypes').addEventListener('click', function() {
+        if (confirm('确定要更新所有样本的包类型吗？')) {
+            this.disabled = true;
+            this.textContent = '更新中...';
+            
+            fetch('{{ url_for("update_sample_types") }}', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert(data.error || '更新失败');
+                }
+            })
+            .catch(error => {
+                alert('更新出错: ' + error);
+            })
+            .finally(() => {
+                this.disabled = false;
+                this.textContent = '更新包类型';
             });
         }
     });

@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .guide-container {
+        max-width: 1000px;
+        margin: 30px auto;
+        padding: 30px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
+    
+    .guide-title {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #333;
+        font-size: 28px;
+        font-weight: 700;
+    }
+    
+    .guide-section {
+        margin-bottom: 40px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 30px;
+    }
+    
+    .guide-section:last-child {
+        border-bottom: none;
+    }
+    
+    .section-title {
+        color: #4b6cb7;
+        font-size: 22px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-icon {
+        margin-right: 10px;
+        font-size: 24px;
+    }
+    
+    .guide-content {
+        line-height: 1.7;
+        color: #444;
+    }
+    
+    .step {
+        margin-bottom: 15px;
+        padding-left: 25px;
+        position: relative;
+    }
+    
+    .step-number {
+        position: absolute;
+        left: 0;
+        top: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        background: #4b6cb7;
+        color: white;
+        border-radius: 50%;
+        font-size: 12px;
+        font-weight: 700;
+    }
+    
+    .note {
+        background: rgba(75, 108, 183, 0.1);
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+        border-left: 4px solid #4b6cb7;
+    }
+    
+    .note-title {
+        font-weight: 600;
+        color: #4b6cb7;
+        margin-bottom: 5px;
+    }
+    
+    .feature-list {
+        margin: 15px 0;
+        padding-left: 20px;
+    }
+    
+    .feature-list li {
+        margin-bottom: 10px;
+    }
+    
+    .screenshot {
+        max-width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        margin: 20px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="guide-container">
+    <h1 class="guide-title">开源组件包安全检测平台使用指南</h1>
+    
+    <div class="guide-section">
+        <h2 class="section-title"><span class="section-icon">📋</span>平台概述</h2>
+        <div class="guide-content">
+            <p>欢迎使用开源组件包安全检测平台。该平台旨在帮助开发者识别和防范潜在的恶意开源组件包，保障软件供应链安全。</p>
+            
+            <div class="note">
+                <div class="note-title">平台主要功能</div>
+                <p>本平台提供以下核心功能：</p>
+                <ul class="feature-list">
+                    <li>自动检测上传的组件包是否含有恶意代码或安全漏洞</li>
+                    <li>详细的检测报告和风险评估</li>
+                    <li>历史检测记录查询和管理</li>
+                    <li>恶意包知识库查阅</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="guide-section">
+        <h2 class="section-title"><span class="section-icon">🏠</span>主页功能</h2>
+        <div class="guide-content">
+            <p>主页是平台的核心入口，分为以下几个区域：</p>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                <h3>统计信息区</h3>
+                <p>显示总检测次数和已检测到的恶意包数量，一目了然地了解平台使用情况。</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <h3>最近检测到的恶意包</h3>
+                <p>展示最近5条检测到的高风险开源组件包，包括文件名、包类型、大小、检测时间和风险置信度等信息。</p>
+                <p>每条记录右侧提供"查看详情"按钮，点击可查看该包的详细检测结果。</p>
+                <p>区域底部的"查看所有历史"按钮可跳转至完整的历史记录页面。</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <h3>上传检测区域</h3>
+                <p>提供文件上传功能，支持多种格式如.zip、.tar.gz、.jar、.npm等组件包格式。</p>
+                <p>可通过点击选择文件或直接拖拽文件到上传区域进行上传。</p>
+                <p>上传成功后，系统会自动开始检测并跳转到检测进度页面。</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="guide-section">
+        <h2 class="section-title"><span class="section-icon">🔍</span>检测流程指南</h2>
+        <div class="guide-content">
+            <h3>如何上传并检测组件包：</h3>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                <p>在主页的上传检测区域，点击或拖拽文件到上传区域。</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <p>选择需要检测的组件包文件后，会显示文件名称和大小信息。</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <p>确认文件无误后，点击"开始检测"按钮启动检测流程。</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                <p>系统会自动跳转到检测进度页面，实时显示检测进度和当前任务。</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">5</span>
+                <p>检测完成后，系统会自动跳转到检测结果页面，显示详细的安全分析报告。</p>
+            </div>
+            
+            <div class="note">
+                <div class="note-title">提示</div>
+                <p>检测过程可能需要几秒到几分钟不等，取决于文件大小和复杂程度。请耐心等待检测完成。</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="guide-section">
+        <h2 class="section-title"><span class="section-icon">📊</span>检测结果解读</h2>
+        <div class="guide-content">
+            <p>检测完成后，系统会生成详细的检测报告，主要包括以下内容：</p>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                <h3>风险等级</h3>
+                <p>系统会给出高、中、低三级风险评估，高风险表示极有可能是恶意包。</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <h3>置信度</h3>
+                <p>系统对风险评估的置信程度，数值越高表示判断越可靠。</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <h3>风险详情</h3>
+                <p>详细说明检测到的风险点，包括可疑代码、异常行为等。</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                <h3>文件特征</h3>
+                <p>展示组件包的文件结构、关键特征和识别到的包类型（如PyPI、npm等）。</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">5</span>
+                <h3>报告下载</h3>
+                <p>提供PDF或JSON格式的报告下载选项，方便保存和分享。</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="guide-section">
+        <h2 class="section-title"><span class="section-icon">📜</span>历史记录查询</h2>
+        <div class="guide-content">
+            <p>历史记录页面提供对所有已检测组件包的管理功能：</p>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                <h3>查看所有历史</h3>
+                <p>在主页点击"查看所有历史"或导航栏的"历史记录"访问历史页面。</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <h3>筛选功能</h3>
+                <p>可通过文件名搜索、风险等级和检测状态进行筛选，快速找到需要的记录。</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <h3>查看结果</h3>
+                <p>对于已完成检测的记录，可点击"查看结果"按钮查看详细报告。</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                <h3>查看进度</h3>
+                <p>对于正在检测中的记录，可点击"查看进度"实时了解检测状态。</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="guide-section">
+        <h2 class="section-title"><span class="section-icon">📚</span>知识库</h2>
+        <div class="guide-content">
+            <p>知识库页面提供关于恶意包的详细信息和安全最佳实践：</p>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                <p>通过导航栏的"知识库"进入该页面。</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <p>浏览常见恶意包类型、攻击手法和检测技巧。</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <p>了解如何保护自己的项目免受供应链攻击。</p>
+            </div>
+            
+            <div class="note">
+                <div class="note-title">安全提示</div>
+                <p>定期检查您使用的第三方依赖是否存在安全风险，并保持更新到最新的安全版本。</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="guide-section">
+        <h2 class="section-title"><span class="section-icon">❓</span>常见问题</h2>
+        <div class="guide-content">
+            <div class="step">
+                <span class="step-number">Q</span>
+                <h3>检测结果是否100%准确？</h3>
+                <p>答：我们使用先进的机器学习和大语言模型技术，但由于恶意代码的隐蔽性和多变性，检测结果仍可能存在误报或漏报。系统会给出置信度，建议结合实际情况进行判断。</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">Q</span>
+                <h3>支持哪些类型的组件包检测？</h3>
+                <p>答：目前主要支持PyPI（Python）、npm（JavaScript）包，以及常见的.zip、.tar.gz、.jar等格式的组件包。系统会自动识别包类型并进行相应分析。</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">Q</span>
+                <h3>如何处理检测到的高风险包？</h3>
+                <p>答：建议立即停止使用该包，查看详细的风险报告了解具体问题，并寻找安全的替代方案。如果确认是误报，可以继续使用，但建议定期重新检测。</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

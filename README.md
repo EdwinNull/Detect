@@ -1,92 +1,82 @@
-# 开源组件包安全检测系统
+# 开源组件包安全检测平台
 
-这是一个基于机器学习和大语言模型的开源组件包安全检测平台，能够自动分析上传的组件包并识别潜在的安全风险。
+这是一个用于检测开源组件包安全风险的Web平台，可以识别和防范潜在的恶意开源组件包，保障软件供应链安全。
 
-## 🚀 主要特性
+## 主要功能
 
-- **智能检测**: 结合XGBoost机器学习模型和DeepSeek大语言模型进行双重检测
-- **多格式支持**: 支持ZIP、TAR.GZ、JAR、NPM、TGZ等常见组件包格式
-- **特征提取**: 自动提取141项语言无关特征进行深度分析
-- **实时进度**: 提供实时检测进度反馈和状态更新
-- **风险评估**: 生成详细的风险分析报告和安全建议
-- **用户管理**: 支持多用户管理和权限控制
-- **报告导出**: 支持PDF和JSON格式的检测报告导出
-- **移动端支持**: 响应式设计，支持移动设备访问
+- 自动检测上传的组件包是否含有恶意代码或安全漏洞
+- 支持多种组件包格式（PyPI、npm、jar等）
+- 详细的检测报告和风险评估
+- 历史检测记录管理
+- 恶意包知识库
 
-## 🛠️ 技术架构
+## 技术栈
 
-- **后端**: Flask (Python)
-- **前端**: HTML5 + CSS3 + JavaScript
-- **数据库**: SQLite
-- **机器学习**: scikit-learn (RandomForest模拟XGBoost)
-- **大语言模型**: DeepSeek API
-- **文件处理**: zipfile, tarfile
-- **报告生成**: FPDF
+- 后端: Python + Flask
+- 前端: HTML, CSS, JavaScript
+- 数据库: SQLite
+- 机器学习: XGBoost
+- 深度分析: LLM技术
 
-## 📋 系统要求
+## 安装与运行
 
-- Python 3.7+
-- 推荐内存: 4GB+
-- 磁盘空间: 1GB+
-- 网络连接: 用于访问DeepSeek API
+### 环境要求
+- Python 3.8+
+- 推荐使用虚拟环境
 
-## 🔧 安装和配置
+### 安装步骤
 
-### 1. 克隆项目
+1. 克隆仓库
 ```bash
-git clone <repository-url>
+git clone https://github.com/yourusername/security-scanner.git
 cd security-scanner
 ```
 
-### 2. 安装依赖
+2. 创建并激活虚拟环境
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# 或
+venv\Scripts\activate  # Windows
+```
+
+3. 安装依赖
 ```bash
 pip install -r requirements.txt
 ```
 
+<<<<<<< HEAD
 ### 3. 配置DeepSeek API
 - 在 `app.py` 中更新 `DEEPSEEK_API_KEY` 为您的API密钥
 - 当前使用的密钥: `************************`
+=======
+4. 初始化数据库
+```bash
+python init_db.py
+```
+>>>>>>> 4c1b433 (add a main page)
 
-### 4. 启动系统
+5. 运行应用
 ```bash
 python app.py
 ```
 
-### 5. 访问系统
-- 访问地址: http://localhost:5000
-- 管理员账户: admin / admin123
+6. 访问应用
+在浏览器中打开 http://localhost:5000
 
-## 📖 使用说明
+## 使用指南
 
-### 用户登录
-1. 打开浏览器访问 http://localhost:5000
-2. 使用管理员账户登录：用户名 `admin`，密码 `admin123`
+详细的使用指南可以在应用内通过点击"快速上手"按钮获取。
 
-### 文件检测
-1. 在首页点击上传区域或拖拽文件到上传区域
-2. 选择要检测的组件包文件（最大100MB）
-3. 点击"开始检测"按钮
-4. 系统会显示实时检测进度
-5. 检测完成后可查看详细结果
+## 许可证
 
-### 检测流程
-1. **文件上传**: 上传组件包到服务器
-2. **特征提取**: 提取141项语言无关特征
-3. **XGBoost初筛**: 使用机器学习模型进行初步检测
-4. **大模型复筛**: 使用DeepSeek进行深度安全分析
-5. **生成报告**: 产生详细的安全评估报告
+[MIT License](LICENSE)
 
-### 结果解读
-- **风险等级**: 
-  - 🟢 低风险: 组件相对安全
-  - 🟡 中等风险: 存在潜在隐患，建议人工审查
-  - 🔴 高风险: 检测到恶意特征，建议停止使用
+## 贡献指南
 
-- **置信度**: 
-  - 80%+: 高可信度
-  - 60-80%: 中等可信度，建议复查
-  - <60%: 低可信度，需要谨慎对待
+欢迎贡献代码、报告问题或提出改进建议。请遵循以下步骤：
 
+<<<<<<< HEAD
 ### 历史记录
 - 查看所有检测历史
 - 支持按文件名、风险等级、状态筛选
@@ -214,20 +204,6 @@ security-scanner/
 - API调用状态
 - 错误信息
 
-## 📄 许可证
-
-本项目基于MIT许可证开源，详见LICENSE文件。
-
-## 🤝 贡献
-
-欢迎提交Issue和Pull Request来改进这个项目！
-
-## 📞 联系我们
-
-如有问题或建议，请通过以下方式联系：
-- GitHub Issues
-- Email: [您的邮箱]
-
 ---
 
 **注意**: 这是一个演示系统，实际部署时请确保：
@@ -235,3 +211,9 @@ security-scanner/
 2. 配置适当的网络安全措施  
 3. 定期备份数据库和配置文件
 4. 监控系统资源使用情况 
+=======
+1. Fork 仓库
+2. 创建您的特性分支 (`git checkout -b feature/amazing-feature`)
+3. 提交您的更改 (`git commit -m 'Add some amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 打开一个 Pull Request
