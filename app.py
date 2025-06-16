@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash, send_file
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 import os
 import zipfile
 import tarfile
@@ -27,6 +28,28 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB
+
+# 权限控制中间件
+def login_required(view):
+    @wraps(view)
+    def wrapped_view(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('请先登录', 'error')
+            return redirect(url_for('login'))
+        return view(*args, **kwargs)
+    return wrapped_view
+
+def admin_required(view):
+    @wraps(view)
+    def wrapped_view(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('请先登录', 'error')
+            return redirect(url_for('login'))
+        if session.get('role') != 'admin':
+            flash('需要管理员权限', 'error')
+            return redirect(url_for('index'))
+        return view(*args, **kwargs)
+    return wrapped_view
 
 # DeepSeek API配置
 DEEPSEEK_API_KEY = "sk-4d9403ac0e0640328d254c6c6b32bcd0"
@@ -115,6 +138,13 @@ def init_db():
         INSERT OR IGNORE INTO users (username, email, password_hash, role)
         VALUES (?, ?, ?, ?)
     ''', ('admin', 'admin@scanner.com', admin_password, 'admin'))
+    
+    # 创建默认普通用户账户
+    user_password = generate_password_hash('user123')
+    cursor.execute('''
+        INSERT OR IGNORE INTO users (username, email, password_hash, role)
+        VALUES (?, ?, ?, ?)
+    ''', ('user', 'user@scanner.com', user_password, 'user'))
     
     conn.commit()
     conn.close()
@@ -586,22 +616,73 @@ def update_scan_status(scan_id, status):
 
 # 路由定义
 @app.route('/')
+@login_required
 def index():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    
-    # 获取最近检测到的恶意包
     conn = sqlite3.connect('security_scanner.db')
     cursor = conn.cursor()
-    cursor.execute('''
-        SELECT id, filename, file_size, risk_level, confidence, created_at, package_type
-        FROM scan_records 
-        WHERE risk_level = 'high' 
-        AND scan_status = 'completed' 
-        ORDER BY created_at DESC 
-        LIMIT 5
-    ''')
-    recent_malicious_packages = cursor.fetchall()
+    
+    # 管理员和普通用户视图分离
+    is_admin = session.get('role') == 'admin'
+    
+    if is_admin:
+        # 管理员可以看到全局数据
+        cursor.execute('''
+            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type, user_id
+            FROM scan_records 
+            WHERE risk_level = 'high' 
+            AND scan_status = 'completed' 
+            ORDER BY created_at DESC 
+            LIMIT 8
+        ''')
+        recent_malicious_packages = cursor.fetchall()
+        
+        # 管理员统计信息
+        cursor.execute('SELECT COUNT(*) FROM users')
+        total_users = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM samples')
+        total_samples = cursor.fetchone()[0]
+        
+        # 计算高风险包总数
+        cursor.execute('''
+            SELECT COUNT(*) FROM scan_records 
+            WHERE risk_level = 'high' AND scan_status = 'completed'
+        ''')
+        total_malicious = cursor.fetchone()[0]
+        
+        # 获取检测总数
+        cursor.execute('''
+            SELECT COUNT(*) FROM scan_records 
+            WHERE scan_status = 'completed'
+        ''')
+        total_scans = cursor.fetchone()[0]
+    else:
+        # 普通用户只能看到自己的数据
+        cursor.execute('''
+            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type
+            FROM scan_records 
+            WHERE user_id = ?
+            AND scan_status = 'completed' 
+            ORDER BY created_at DESC 
+            LIMIT 5
+        ''', (session['user_id'],))
+        recent_malicious_packages = cursor.fetchall()
+        
+        # 用户自己的统计信息
+        cursor.execute('''
+            SELECT COUNT(*) FROM scan_records 
+            WHERE user_id = ? AND risk_level = 'high' AND scan_status = 'completed'
+        ''', (session['user_id'],))
+        total_malicious = cursor.fetchone()[0]
+        
+        cursor.execute('''
+            SELECT COUNT(*) FROM scan_records 
+            WHERE user_id = ? AND scan_status = 'completed'
+        ''', (session['user_id'],))
+        total_scans = cursor.fetchone()[0]
+        
+        total_users = None
+        total_samples = None
     
     # 格式化数据
     malicious_packages = []
@@ -613,29 +694,19 @@ def index():
             'risk_level': pkg[3],
             'confidence': pkg[4] * 100 if pkg[4] else 0,
             'created_at': pkg[5],
-            'package_type': pkg[6] if len(pkg) > 6 else 'unknown'
+            'package_type': pkg[6] if len(pkg) > 6 else 'unknown',
+            'user_id': pkg[7] if is_admin and len(pkg) > 7 else session['user_id']
         })
-    
-    # 计算高风险包总数
-    cursor.execute('''
-        SELECT COUNT(*) FROM scan_records 
-        WHERE risk_level = 'high' AND scan_status = 'completed'
-    ''')
-    total_malicious = cursor.fetchone()[0]
-    
-    # 获取最近检测总数
-    cursor.execute('''
-        SELECT COUNT(*) FROM scan_records 
-        WHERE scan_status = 'completed'
-    ''')
-    total_scans = cursor.fetchone()[0]
     
     conn.close()
     
     return render_template('index.html', 
                           malicious_packages=malicious_packages,
                           total_malicious=total_malicious,
-                          total_scans=total_scans)
+                          total_scans=total_scans,
+                          total_users=total_users,
+                          total_samples=total_samples,
+                          is_admin=is_admin)
 
 def format_size(size_in_bytes):
     """格式化文件大小"""
@@ -647,6 +718,59 @@ def format_size(size_in_bytes):
         return f"{size_in_bytes / (1024 * 1024):.2f} MB"
     else:
         return f"{size_in_bytes / (1024 * 1024 * 1024):.2f} GB"
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+        
+        # 验证两次密码输入是否一致
+        if password != confirm_password:
+            flash('两次输入的密码不一致', 'error')
+            return render_template('register.html')
+        
+        conn = sqlite3.connect('security_scanner.db')
+        cursor = conn.cursor()
+        
+        # 检查用户名是否已存在
+        cursor.execute('SELECT id FROM users WHERE username = ?', (username,))
+        if cursor.fetchone():
+            flash('用户名已被使用', 'error')
+            conn.close()
+            return render_template('register.html')
+        
+        # 检查邮箱是否已存在
+        cursor.execute('SELECT id FROM users WHERE email = ?', (email,))
+        if cursor.fetchone():
+            flash('邮箱已被注册', 'error')
+            conn.close()
+            return render_template('register.html')
+        
+        # 创建用户
+        password_hash = generate_password_hash(password)
+        cursor.execute(
+            'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
+            (username, email, password_hash, 'user')
+        )
+        conn.commit()
+        
+        # 获取新用户ID
+        cursor.execute('SELECT id FROM users WHERE username = ?', (username,))
+        user_id = cursor.fetchone()[0]
+        conn.close()
+        
+        # 自动登录
+        session['user_id'] = user_id
+        session['username'] = username
+        session['role'] = 'user'
+        
+        flash('注册成功，欢迎使用！', 'success')
+        return redirect(url_for('index'))
+    
+    return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -672,9 +796,10 @@ def login():
             conn.commit()
             conn.close()
             
+            flash(f'欢迎回来，{username}！', 'success')
             return redirect(url_for('index'))
         else:
-            flash('用户名或密码错误')
+            flash('用户名或密码错误', 'error')
     
     return render_template('login.html')
 
@@ -799,18 +924,27 @@ def results(scan_id):
     return render_template('results.html', scan_data=scan_data)
 
 @app.route('/history')
+@login_required
 def history():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    
     conn = sqlite3.connect('security_scanner.db')
     cursor = conn.cursor()
-    cursor.execute('''
-        SELECT id, filename, file_size, risk_level, confidence, scan_status, created_at, package_type
-        FROM scan_records 
-        WHERE user_id = ?
-        ORDER BY created_at DESC
-    ''', (session['user_id'],))
+    
+    # 管理员可以看到所有用户的记录，普通用户只能看到自己的
+    if session.get('role') == 'admin':
+        cursor.execute('''
+            SELECT r.id, r.filename, r.file_size, r.risk_level, r.confidence, r.scan_status, r.created_at, 
+                   r.package_type, u.username
+            FROM scan_records r
+            JOIN users u ON r.user_id = u.id
+            ORDER BY r.created_at DESC
+        ''')
+    else:
+        cursor.execute('''
+            SELECT id, filename, file_size, risk_level, confidence, scan_status, created_at, package_type
+            FROM scan_records 
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+        ''', (session['user_id'],))
     
     records = cursor.fetchall()
     conn.close()
@@ -818,11 +952,8 @@ def history():
     return render_template('history.html', records=records)
 
 @app.route('/admin')
+@admin_required
 def admin():
-    if 'user_id' not in session or session.get('role') != 'admin':
-        flash('需要管理员权限')
-        return redirect(url_for('index'))
-    
     return render_template('admin.html')
 
 @app.route('/knowledge')
@@ -2043,8 +2174,180 @@ def detect_package_type(file_path):
     return 'unknown'
 
 @app.route('/scan')
+@login_required
 def scan():
     return render_template('scan.html')
+
+# 用户管理路由
+@app.route('/admin/users')
+@admin_required
+def user_management():
+    conn = sqlite3.connect('security_scanner.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    # 获取所有用户
+    cursor.execute('SELECT * FROM users ORDER BY created_at DESC')
+    users = cursor.fetchall()
+    
+    # 统计信息
+    cursor.execute('SELECT COUNT(*) FROM users')
+    total_users = cursor.fetchone()[0]
+    
+    cursor.execute('SELECT COUNT(*) FROM users WHERE role = "admin"')
+    admin_count = cursor.fetchone()[0]
+    
+    # 假设30天内有登录记录的为活跃用户
+    thirty_days_ago = datetime.now() - timedelta(days=30)
+    cursor.execute('SELECT COUNT(*) FROM users WHERE last_login > ?', 
+                  (thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S'),))
+    active_users = cursor.fetchone()[0]
+    
+    conn.close()
+    
+    return render_template('user_management.html', 
+                          users=users, 
+                          total_users=total_users,
+                          admin_count=admin_count,
+                          active_users=active_users)
+
+@app.route('/admin/users/add', methods=['POST'])
+@admin_required
+def add_user():
+    username = request.form.get('username')
+    email = request.form.get('email')
+    password = request.form.get('password')
+    role = request.form.get('role', 'user')
+    
+    if not username or not email or not password:
+        flash('请填写所有必填字段', 'error')
+        return redirect(url_for('user_management'))
+    
+    conn = sqlite3.connect('security_scanner.db')
+    cursor = conn.cursor()
+    
+    # 检查用户名和邮箱是否已存在
+    cursor.execute('SELECT id FROM users WHERE username = ?', (username,))
+    if cursor.fetchone():
+        flash('用户名已被使用', 'error')
+        conn.close()
+        return redirect(url_for('user_management'))
+    
+    cursor.execute('SELECT id FROM users WHERE email = ?', (email,))
+    if cursor.fetchone():
+        flash('邮箱已被注册', 'error')
+        conn.close()
+        return redirect(url_for('user_management'))
+    
+    # 创建用户
+    password_hash = generate_password_hash(password)
+    cursor.execute(
+        'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
+        (username, email, password_hash, role)
+    )
+    conn.commit()
+    conn.close()
+    
+    flash('用户创建成功', 'success')
+    return redirect(url_for('user_management'))
+
+@app.route('/admin/users/edit/<int:user_id>', methods=['GET', 'POST'])
+@admin_required
+def edit_user(user_id):
+    conn = sqlite3.connect('security_scanner.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    # 获取用户信息
+    cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,))
+    user = cursor.fetchone()
+    
+    if not user:
+        flash('用户不存在', 'error')
+        conn.close()
+        return redirect(url_for('user_management'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        role = request.form.get('role')
+        
+        # 检查用户名和邮箱是否已被其他用户使用
+        cursor.execute('SELECT id FROM users WHERE username = ? AND id != ?', (username, user_id))
+        if cursor.fetchone():
+            flash('用户名已被使用', 'error')
+            conn.close()
+            return render_template('edit_user.html', user=user)
+        
+        cursor.execute('SELECT id FROM users WHERE email = ? AND id != ?', (email, user_id))
+        if cursor.fetchone():
+            flash('邮箱已被注册', 'error')
+            conn.close()
+            return render_template('edit_user.html', user=user)
+        
+        # 更新用户信息
+        cursor.execute(
+            'UPDATE users SET username = ?, email = ?, role = ? WHERE id = ?',
+            (username, email, role, user_id)
+        )
+        conn.commit()
+        
+        flash('用户信息更新成功', 'success')
+        return redirect(url_for('user_management'))
+    
+    conn.close()
+    return render_template('edit_user.html', user=user)
+
+@app.route('/admin/users/delete/<int:user_id>', methods=['POST'])
+@admin_required
+def delete_user(user_id):
+    conn = sqlite3.connect('security_scanner.db')
+    cursor = conn.cursor()
+    
+    # 获取用户信息
+    cursor.execute('SELECT username FROM users WHERE id = ?', (user_id,))
+    user = cursor.fetchone()
+    
+    if not user:
+        flash('用户不存在', 'error')
+    elif user[0] == 'admin':
+        flash('不能删除主管理员账户', 'error')
+    else:
+        # 删除用户相关的扫描记录
+        cursor.execute('DELETE FROM scan_records WHERE user_id = ?', (user_id,))
+        
+        # 删除用户
+        cursor.execute('DELETE FROM users WHERE id = ?', (user_id,))
+        conn.commit()
+        flash('用户已成功删除', 'success')
+    
+    conn.close()
+    return redirect(url_for('user_management'))
+
+@app.route('/admin/users/reset_password/<int:user_id>', methods=['POST'])
+@admin_required
+def reset_password(user_id):
+    conn = sqlite3.connect('security_scanner.db')
+    cursor = conn.cursor()
+    
+    # 生成随机密码
+    import random
+    import string
+    new_password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+    
+    # 更新密码
+    password_hash = generate_password_hash(new_password)
+    cursor.execute('UPDATE users SET password_hash = ? WHERE id = ?', (password_hash, user_id))
+    conn.commit()
+    
+    # 获取用户信息
+    cursor.execute('SELECT username FROM users WHERE id = ?', (user_id,))
+    username = cursor.fetchone()[0]
+    
+    conn.close()
+    
+    flash(f'用户 {username} 的密码已重置为: {new_password}', 'success')
+    return redirect(url_for('user_management'))
 
 if __name__ == '__main__':
     init_db()
