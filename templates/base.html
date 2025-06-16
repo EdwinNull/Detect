@@ -169,6 +169,7 @@
             
             <ul class="nav-links">
                 <li><a href="{{ url_for('index') }}" {% if request.path == '/' %}class="active"{% endif %}>首页</a></li>
+                <li><a href="{{ url_for('scan') }}" {% if request.path == '/scan' %}class="active"{% endif %}>扫描</a></li>
                 <li><a href="{{ url_for('history') }}" {% if request.path == '/history' %}class="active"{% endif %}>历史记录</a></li>
                 <li><a href="{{ url_for('knowledge') }}" {% if request.path == '/knowledge' %}class="active"{% endif %}>知识库</a></li>
                 <li><a href="{{ url_for('guide') }}" {% if request.path == '/guide' %}class="active"{% endif %}>快速上手</a></li>
@@ -199,7 +200,7 @@
                 </div>
             {% endif %}
         {% endwith %}
-        
+
         {% block content %}{% endblock %}
     </div>
     

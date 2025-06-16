@@ -100,6 +100,27 @@
         background: #2ed573;
     }
     
+    .type-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #fff;
+    }
+    
+    .type-pypi { 
+        background: #3776ab; 
+    }
+    
+    .type-npm { 
+        background: #cb3837; 
+    }
+    
+    .type-unknown { 
+        background: #888; 
+    }
+    
     .confidence-bar {
         width: 100px;
         height: 8px;
@@ -171,6 +192,22 @@
         background: #eee;
     }
     
+    .btn-icon {
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-icon:hover {
+        opacity: 0.8;
+    }
+    
     .empty-state {
         text-align: center;
         padding: 60px 20px;
@@ -207,6 +244,77 @@
         border-color: #667eea;
     }
     
+    /* 模态框样式 */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+        position: relative;
+        background-color: #fefefe;
+        margin: 10% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 400px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    
+    .modal-header {
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 15px;
+    }
+    
+    .modal-title {
+        margin: 0;
+        color: #333;
+        font-size: 18px;
+    }
+    
+    .modal-body {
+        margin-bottom: 20px;
+    }
+    
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    
+    .modal-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .modal-btn-cancel {
+        background: #f5f5f5;
+        color: #666;
+    }
+    
+    .modal-btn-confirm {
+        background: #ff4757;
+        color: white;
+    }
+    
+    .close {
+        position: absolute;
+        right: 15px;
+        top: 15px;
+        color: #aaa;
+        font-size: 20px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    
     @media (max-width: 768px) {
         .search-controls {
             flex-direction: column;
@@ -241,6 +349,12 @@
     
     <div class="search-controls">
         <input type="text" class="search-input" placeholder="搜索文件名..." id="searchInput">
+        <select class="filter-select" id="packageTypeFilter">
+            <option value="">所有包类型</option>
+            <option value="pypi">PyPI</option>
+            <option value="npm">npm</option>
+            <option value="unknown">未知</option>
+        </select>
         <select class="filter-select" id="riskFilter">
             <option value="">所有风险等级</option>
             <option value="high">高风险</option>
@@ -260,6 +374,7 @@
         <thead>
             <tr>
                 <th>文件名</th>
+                <th>包类型</th>
                 <th>大小</th>
                 <th>风险等级</th>
                 <th>置信度</th>
@@ -270,9 +385,18 @@
         </thead>
         <tbody>
             {% for record in records %}
-            <tr data-risk="{{ record[3] or '' }}" data-status="{{ record[5] }}" data-filename="{{ record[1] }}">
+            <tr data-risk="{{ record[3] or '' }}" data-status="{{ record[5] }}" data-filename="{{ record[1] }}" data-package-type="{{ record[7] or 'unknown' }}">
                 <td>
                     <div style="font-weight: 600; color: #333;">{{ record[1] }}</div>
+                </td>
+                <td>
+                    {% if record[7] == 'pypi' %}
+                        <span class="type-badge type-pypi">PyPI</span>
+                    {% elif record[7] == 'npm' %}
+                        <span class="type-badge type-npm">npm</span>
+                    {% else %}
+                        <span class="type-badge type-unknown">未知</span>
+                    {% endif %}
                 </td>
                 <td>{{ "%.1f"|format(record[2] / 1024 / 1024) }} MB</td>
                 <td>
@@ -313,11 +437,17 @@
                 <td>
                     <div class="action-buttons">
                         {% if record[5] == 'completed' %}
-                            <a href="/results/{{ record[0] }}" class="btn-small btn-primary">查看结果</a>
+                            <a href="/results/{{ record[0] }}" class="btn-small btn-primary">查看详情</a>
                         {% elif record[5] == 'pending' %}
                             <a href="/progress/{{ record[0] }}" class="btn-small btn-secondary">查看进度</a>
+                            <button class="btn-small btn-icon" title="取消" onclick="cancelScan({{ record[0] }})" style="background: #f8d7da; color: #721c24;">
+                                <i class="cancel-icon">✕</i>
+                            </button>
                         {% else %}
-                            <span style="color: #999; font-size: 12px;">无可用操作</span>
+                            <a href="#" class="btn-small btn-secondary" onclick="retryDetection({{ record[0] }})">重新检测</a>
+                            <button class="btn-small btn-icon" title="删除" onclick="deleteRecord({{ record[0] }})" style="background: #f8d7da; color: #721c24;">
+                                <i class="delete-icon">🗑️</i>
+                            </button>
                         {% endif %}
                     </div>
                 </td>
@@ -341,6 +471,7 @@
 // 搜索和过滤功能
 function filterRecords() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const packageTypeFilter = document.getElementById('packageTypeFilter').value;
     const riskFilter = document.getElementById('riskFilter').value;
     const statusFilter = document.getElementById('statusFilter').value;
     
@@ -352,10 +483,11 @@ function filterRecords() {
         const status = row.dataset.status;
         
         const matchesSearch = filename.includes(searchTerm);
+        const matchesPackageType = !packageTypeFilter || row.dataset.packageType === packageTypeFilter;
         const matchesRisk = !riskFilter || risk === riskFilter;
         const matchesStatus = !statusFilter || status === statusFilter;
         
-        if (matchesSearch && matchesRisk && matchesStatus) {
+        if (matchesSearch && matchesPackageType && matchesRisk && matchesStatus) {
             row.style.display = '';
         } else {
             row.style.display = 'none';
@@ -365,6 +497,7 @@ function filterRecords() {
 
 // 绑定事件监听器
 document.getElementById('searchInput').addEventListener('input', filterRecords);
+document.getElementById('packageTypeFilter').addEventListener('change', filterRecords);
 document.getElementById('riskFilter').addEventListener('change', filterRecords);
 document.getElementById('statusFilter').addEventListener('change', filterRecords);
 
@@ -375,5 +508,71 @@ setInterval(function() {
         location.reload();
     }
 }, 30000); // 30秒刷新一次
+
+// 取消扫描
+function cancelScan(scanId) {
+    if (confirm('确定要取消这次扫描吗？')) {
+        fetch(`/cancel_scan/${scanId}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('扫描已取消');
+                location.reload();
+            } else {
+                alert('操作失败: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('错误:', error);
+            alert('操作失败，请稍后重试');
+        });
+    }
+}
+
+// 重新检测
+function retryDetection(scanId) {
+    if (confirm('确定要重新检测这个文件吗？')) {
+        fetch(`/retry_scan/${scanId}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('已开始重新检测');
+                location.reload();
+            } else {
+                alert('操作失败: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('错误:', error);
+            alert('操作失败，请稍后重试');
+        });
+    }
+}
+
+// 删除记录
+function deleteRecord(scanId) {
+    if (confirm('确定要删除这条记录吗？此操作不可恢复。')) {
+        fetch(`/delete_record/${scanId}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('记录已删除');
+                location.reload();
+            } else {
+                alert('操作失败: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('错误:', error);
+            alert('操作失败，请稍后重试');
+        });
+    }
+}
 </script>
 {% endblock %} 

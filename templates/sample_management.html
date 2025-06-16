@@ -1,49 +1,51 @@
 {% extends "base.html" %}
 
+{% block title %}样本管理 - 开源组件包安全检测平台{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
+<div class="container">
     <h2>恶意样本管理</h2>
     
     {% with messages = get_flashed_messages() %}
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-info">{{ message }}</div>
+                <div class="flash-message flash-info">{{ message }}</div>
             {% endfor %}
         {% endif %}
     {% endwith %}
     
-    <div class="card mb-4">
-        <div class="card-header">
+    <div class="card mb-4" style="background: white; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px;">
+        <div class="card-header" style="padding: 15px 20px; border-bottom: 1px solid #eee;">
             <h4>批量上传样本</h4>
         </div>
-        <div class="card-body">
+        <div class="card-body" style="padding: 20px;">
             <form method="POST" action="{{ url_for('upload_samples') }}" enctype="multipart/form-data" id="uploadForm">
-                <div class="mb-3">
-                    <label for="samples" class="form-label">选择样本文件（支持.tar.gz, .zip, .whl, .tgz格式）</label>
-                    <input type="file" class="form-control" id="samples" name="samples" multiple accept=".tar.gz,.zip,.whl,.tgz" required>
-                    <div class="form-text">可以选择多个文件，或直接拖拽文件到此处</div>
+                <div style="margin-bottom: 15px;">
+                    <label for="samples" style="display: block; margin-bottom: 8px;">选择样本文件（支持.tar.gz, .zip, .whl, .tgz格式）</label>
+                    <input type="file" id="samples" name="samples" multiple accept=".tar.gz,.zip,.whl,.tgz" required style="display: block; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                    <div style="font-size: 13px; color: #666; margin-top: 6px;">可以选择多个文件，或直接拖拽文件到此处</div>
                 </div>
                 
-                <div class="mb-3">
-                    <label class="form-label">样本安全性分类</label>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="sample_type" id="type_malware" value="malware" checked>
-                        <label class="form-check-label" for="type_malware">恶意软件</label>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px;">样本安全性分类</label>
+                    <div style="margin-bottom: 8px;">
+                        <input type="radio" name="sample_type" id="type_malware" value="malware" checked>
+                        <label for="type_malware">恶意软件</label>
                     </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="sample_type" id="type_benign" value="benign">
-                        <label class="form-check-label" for="type_benign">良性软件</label>
+                    <div>
+                        <input type="radio" name="sample_type" id="type_benign" value="benign">
+                        <label for="type_benign">良性软件</label>
                     </div>
                 </div>
                 
-                <div class="mb-3">
-                    <label for="description" class="form-label">样本描述</label>
-                    <textarea class="form-control" id="description" name="description" rows="3" placeholder="可以添加样本的详细描述，如来源、类型等"></textarea>
+                <div style="margin-bottom: 15px;">
+                    <label for="description" style="display: block; margin-bottom: 8px;">样本描述</label>
+                    <textarea id="description" name="description" rows="3" placeholder="可以添加样本的详细描述，如来源、类型等" style="display: block; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"></textarea>
                 </div>
                 
-                <div class="mb-3">
-                    <div class="progress d-none" id="uploadProgress">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                <div style="margin-bottom: 15px;">
+                    <div class="progress" id="uploadProgress" style="display: none; height: 20px; background-color: #f0f0f0; border-radius: 4px; overflow: hidden;">
+                        <div style="width: 0%; height: 100%; background-color: #667eea;"></div>
                     </div>
                 </div>
                 
@@ -52,46 +54,50 @@
         </div>
     </div>
     
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">样本列表</h4>
+    <div class="card" style="background: white; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px;">
+        <div class="card-header" style="padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+            <h4 style="margin: 0;">样本列表</h4>
             <div>
-                <button class="btn btn-info btn-sm" id="updateTypes">更新包类型</button>
-                <button class="btn btn-danger btn-sm" id="deleteSelected">删除选中</button>
-                <button class="btn btn-success btn-sm" id="selectAll">全选</button>
+                <button class="btn btn-outline" id="updateTypes" style="margin-right: 10px; background: #f8f9fa; color: #333;">更新包类型</button>
+                <button class="btn btn-outline" id="deleteSelected" style="margin-right: 10px; background: #f8f9fa; color: #333;">删除选中</button>
+                <button class="btn btn-outline" id="selectAll" style="background: #f8f9fa; color: #333;">全选</button>
             </div>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table">
+        <div class="card-body" style="padding: 20px;">
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
                     <thead>
-                        <tr>
-                            <th><input type="checkbox" id="selectAllCheckbox"></th>
-                            <th>文件名</th>
-                            <th>安全性</th>
-                            <th>包类型</th>
-                            <th>描述</th>
-                            <th>上传时间</th>
-                            <th>操作</th>
+                        <tr style="border-bottom: 2px solid #eee;">
+                            <th style="padding: 10px; text-align: left;"><input type="checkbox" id="selectAllCheckbox"></th>
+                            <th style="padding: 10px; text-align: left;">文件名</th>
+                            <th style="padding: 10px; text-align: left;">安全性</th>
+                            <th style="padding: 10px; text-align: left;">包类型</th>
+                            <th style="padding: 10px; text-align: left;">描述</th>
+                            <th style="padding: 10px; text-align: left;">上传时间</th>
+                            <th style="padding: 10px; text-align: left;">操作</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for sample in samples %}
-                        <tr>
-                            <td><input type="checkbox" class="sample-checkbox" value="{{ sample.id }}"></td>
-                            <td>{{ sample.filename }}</td>
-                            <td>{{ sample.type }}</td>
-                            <td>
-                                <span class="badge {% if sample.package_type == 'unknown' %}bg-secondary{% elif sample.package_type == 'pypi' %}bg-primary{% elif sample.package_type == 'npm' %}bg-success{% else %}bg-info{% endif %}">
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 10px;"><input type="checkbox" class="sample-checkbox" value="{{ sample.id }}"></td>
+                            <td style="padding: 10px;">{{ sample.filename }}</td>
+                            <td style="padding: 10px;">{{ sample.type }}</td>
+                            <td style="padding: 10px;">
+                                <span style="display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; color: white; background-color: 
+                                    {% if sample.package_type == 'unknown' %}#6c757d
+                                    {% elif sample.package_type == 'pypi' %}#667eea
+                                    {% elif sample.package_type == 'npm' %}#28a745
+                                    {% else %}#17a2b8{% endif %};">
                                     {{ sample.package_type|default('未知') }}
                                 </span>
                             </td>
-                            <td>{{ sample.description }}</td>
-                            <td>{{ sample.upload_time }}</td>
-                            <td>
+                            <td style="padding: 10px;">{{ sample.description }}</td>
+                            <td style="padding: 10px;">{{ sample.upload_time }}</td>
+                            <td style="padding: 10px;">
                                 <form method="POST" action="{{ url_for('delete_samples') }}" style="display: inline;">
                                     <input type="hidden" name="sample_id" value="{{ sample.id }}">
-                                    <button type="submit" class="btn btn-danger btn-sm">删除</button>
+                                    <button type="submit" class="btn btn-outline" style="padding: 4px 8px; background: #f8d7da; color: #721c24; border: none;">删除</button>
                                 </form>
                             </td>
                         </tr>
@@ -102,52 +108,51 @@
         </div>
     </div>
     
-    <div class="card mt-4">
-        <div class="card-header">
+    <div class="card" style="background: white; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <div class="card-header" style="padding: 15px 20px; border-bottom: 1px solid #eee;">
             <h4>训练操作</h4>
         </div>
-        <div class="card-body">
+        <div class="card-body" style="padding: 20px;">
             <form method="POST" action="{{ url_for('train_with_samples') }}" id="trainForm">
-                <div class="mb-3">
-                    <label for="train_model_type" class="form-label">选择模型类型</label>
-                    <select class="form-select" id="train_model_type" name="model_type">
+                <div style="margin-bottom: 15px;">
+                    <label for="train_model_type" style="display: block; margin-bottom: 8px;">选择模型类型</label>
+                    <select id="train_model_type" name="model_type" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
                         <option value="xgboost">XGBoost</option>
                         <option value="randomforest">Random Forest</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-success" id="trainButton">使用样本训练模型</button>
+                <button type="submit" class="btn btn-primary" id="trainButton">使用样本训练模型</button>
             </form>
         </div>
     </div>
 </div>
 
-{% block scripts %}
+{% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // 文件拖放上传
     const dropZone = document.getElementById('samples');
     
-    dropZone.addEventListener('dragover', (e) => {
+    dropZone.addEventListener('dragover', function(e) {
         e.preventDefault();
-        dropZone.classList.add('border-primary');
+        this.style.borderColor = '#667eea';
     });
     
-    dropZone.addEventListener('dragleave', (e) => {
+    dropZone.addEventListener('dragleave', function(e) {
         e.preventDefault();
-        dropZone.classList.remove('border-primary');
+        this.style.borderColor = '#ddd';
     });
     
-    dropZone.addEventListener('drop', (e) => {
+    dropZone.addEventListener('drop', function(e) {
         e.preventDefault();
-        dropZone.classList.remove('border-primary');
-        const files = e.dataTransfer.files;
-        dropZone.files = files;
+        this.style.borderColor = '#ddd';
+        this.files = e.dataTransfer.files;
     });
     
     // 上传进度显示
     const uploadForm = document.getElementById('uploadForm');
     const uploadProgress = document.getElementById('uploadProgress');
-    const progressBar = uploadProgress.querySelector('.progress-bar');
+    const progressBar = uploadProgress.querySelector('div');
     const uploadButton = document.getElementById('uploadButton');
     
     uploadForm.addEventListener('submit', function(e) {
@@ -161,9 +166,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         uploadButton.disabled = true;
-        uploadProgress.classList.remove('d-none');
+        uploadProgress.style.display = 'block';
         
-        // 使用fetch API上传文件
         fetch(this.action, {
             method: 'POST',
             body: formData
@@ -181,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .finally(() => {
             uploadButton.disabled = false;
-            uploadProgress.classList.add('d-none');
+            uploadProgress.style.display = 'none';
             progressBar.style.width = '0%';
         });
     });
@@ -242,7 +246,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('updateTypes').addEventListener('click', function() {
         if (confirm('确定要更新所有样本的包类型吗？')) {
             this.disabled = true;
-            this.textContent = '更新中...';
             
             fetch('{{ url_for("update_sample_types") }}', {
                 method: 'POST'
@@ -250,7 +253,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(data.message);
                     window.location.reload();
                 } else {
                     alert(data.error || '更新失败');
@@ -261,7 +263,6 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .finally(() => {
                 this.disabled = false;
-                this.textContent = '更新包类型';
             });
         }
     });

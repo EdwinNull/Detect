@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}扫描 - 开源组件包安全检测平台{% endblock %}
+
+{% block content %}
+<div class="scan-container" style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+    <h2 style="margin-bottom: 20px; color: #667eea;">安全扫描</h2>
+    
+    <p style="margin-bottom: 25px; font-size: 16px; line-height: 1.6;">
+        上传你的组件包，系统将自动进行安全检测，识别潜在的恶意代码和风险。
+    </p>
+    
+    <form method="POST" action="{{ url_for('scan') }}" enctype="multipart/form-data">
+        <div style="margin-bottom: 20px;">
+            <label for="scan_file" style="display: block; margin-bottom: 8px; font-weight: 500;">选择要扫描的文件</label>
+            <input type="file" id="scan_file" name="scan_file" required style="display: block; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+            <div style="font-size: 13px; color: #666; margin-top: 6px;">支持 .zip, .tar.gz, .whl, .jar, .tgz, .npm 等格式</div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" style="width: 100%;">开始扫描</button>
+    </form>
+</div>
+{% endblock %} 

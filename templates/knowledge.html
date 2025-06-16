@@ -37,9 +37,11 @@
     }
     .article-title {
         color: #222;
-        font-size: 18px;
+        font-size: 20px;
         font-weight: 600;
-        margin-bottom: 8px;
+        margin: 30px 0 12px 0;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #f3f4f6;
     }
     .article-desc {
         color: #555;
@@ -47,17 +49,44 @@
         line-height: 1.7;
         margin-bottom: 10px;
     }
+    .article-desc h4 {
+        color: #333;
+        font-size: 16px;
+        font-weight: 600;
+        margin: 20px 0 10px 0;
+    }
+    .article-desc ul, .article-desc ol {
+        padding-left: 20px;
+        margin: 12px 0;
+    }
+    .article-desc li {
+        margin-bottom: 8px;
+    }
+    .article-desc code {
+        background-color: #f1f5f9;
+        padding: 2px 4px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.9em;
+        color: #334155;
+    }
+    .article-desc strong {
+        font-weight: 600;
+        color: #334155;
+    }
     .faq-title {
         color: #333;
-        font-size: 20px;
+        font-size: 22px;
         font-weight: 600;
-        margin-bottom: 16px;
+        margin: 40px 0 16px 0;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #f3f4f6;
         text-align: left;
     }
     .faq-item {
         border: none;
         border-radius: 0;
-        margin-bottom: 12px;
+        margin-bottom: 25px;
         background: none;
         box-shadow: none;
     }
@@ -123,6 +152,20 @@
     }
     .subcategory-item a:hover {
         color: #2563eb;
+    }
+    .article-section {
+        padding-top: 25px;
+    }
+    .article-section-title {
+        color: #1e40af;
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    .knowledge-content-wrapper {
+        max-width: 800px;
     }
 </style>
 {% endblock %}
@@ -226,21 +269,92 @@
         <div class="knowledge-header">
             <h2>知识库</h2>
         </div>
-        {% for article in articles %}
-        <div class="article-title">{{ article.title }}</div>
-        <div class="article-desc">{{ article.desc }}</div>
-        {% endfor %}
-        {% if faqs %}
-        <div class="faq-section">
-            <div class="faq-title">常见问题</div>
-            {% for faq in faqs %}
-            <div class="faq-item">
-                <div class="article-title">{{ faq.q }}</div>
-                <div class="article-desc">{{ faq.a }}</div>
+        
+        <div class="knowledge-content-wrapper">
+            <div class="article-section" id="quick-start-section">
+                <h3 class="article-section-title">入门指南</h3>
+                {% for article in articles %}
+                    {% if article.id == 'quick-start' or article.id == 'installation' or article.id == 'configuration' or article.id == 'first-scan' %}
+                    <div class="article-item" id="{{ article.id }}">
+                        <h4 class="article-title">{{ article.title }}</h4>
+                        <div class="article-desc">{{ article.desc|safe }}</div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
             </div>
-            {% endfor %}
+            
+            <div class="article-section" id="basic-usage-section">
+                <h3 class="article-section-title">基础使用</h3>
+                {% for article in articles %}
+                    {% if article.id == 'scan-types' or article.id == 'result-analysis' %}
+                    <div class="article-item" id="{{ article.id }}">
+                        <h4 class="article-title">{{ article.title }}</h4>
+                        <div class="article-desc">{{ article.desc|safe }}</div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            <div class="article-section" id="features-section">
+                <h3 class="article-section-title">功能特性</h3>
+                {% for article in articles %}
+                    {% if article.id == 'scan-features' or article.id == 'dependency-scan' or article.id == 'vulnerability-scan' or article.id == 'malware-scan' or article.id == 'risk-assessment' or article.id == 'report-generation' %}
+                    <div class="article-item" id="{{ article.id }}">
+                        <h4 class="article-title">{{ article.title }}</h4>
+                        <div class="article-desc">{{ article.desc|safe }}</div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            <div class="article-section" id="security-section">
+                <h3 class="article-section-title">安全说明</h3>
+                {% for article in articles %}
+                    {% if article.id == 'security-best-practices' or article.id == 'threat-modeling' or article.id == 'security-standards' %}
+                    <div class="article-item" id="{{ article.id }}">
+                        <h4 class="article-title">{{ article.title }}</h4>
+                        <div class="article-desc">{{ article.desc|safe }}</div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            <div class="article-section" id="troubleshooting-section">
+                <h3 class="article-section-title">故障排除</h3>
+                {% for article in articles %}
+                    {% if article.id == 'common-issues' or article.id == 'error-messages' or article.id == 'performance' %}
+                    <div class="article-item" id="{{ article.id }}">
+                        <h4 class="article-title">{{ article.title }}</h4>
+                        <div class="article-desc">{{ article.desc|safe }}</div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            <div class="article-section" id="api-section">
+                <h3 class="article-section-title">API文档</h3>
+                {% for article in articles %}
+                    {% if article.id == 'api-overview' or article.id == 'api-endpoints' or article.id == 'api-examples' %}
+                    <div class="article-item" id="{{ article.id }}">
+                        <h4 class="article-title">{{ article.title }}</h4>
+                        <div class="article-desc">{{ article.desc|safe }}</div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            {% if faqs %}
+            <div class="faq-section">
+                <div class="faq-title">常见问题</div>
+                {% for faq in faqs %}
+                <div class="faq-item">
+                    <div class="article-title">{{ faq.q }}</div>
+                    <div class="article-desc">{{ faq.a|safe }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
 </div>
 
@@ -250,13 +364,58 @@ document.getElementById('knowledgeSearch').addEventListener('input', function(e)
     const articles = document.querySelectorAll('.article-title, .article-desc');
     const faqs = document.querySelectorAll('.faq-item');
     
+    if (searchText.trim() === '') {
+        // 如果搜索框为空，显示所有内容
+        document.querySelectorAll('.article-item, .faq-item').forEach(item => {
+            item.style.display = '';
+        });
+        document.querySelectorAll('.article-section').forEach(section => {
+            section.style.display = '';
+        });
+        return;
+    }
+    
+    // 隐藏所有文章和FAQ
+    document.querySelectorAll('.article-item, .faq-item').forEach(item => {
+        item.style.display = 'none';
+    });
+    
+    // 检查每个文章和FAQ是否包含搜索文本
+    let foundContent = false;
     articles.forEach(article => {
         const content = article.textContent.toLowerCase();
-        const parent = article.closest('.article-item, .faq-item');
         if (content.includes(searchText)) {
-            parent.style.display = '';
-        } else {
-            parent.style.display = 'none';
+            const parent = article.closest('.article-item, .faq-item');
+            if (parent) {
+                parent.style.display = '';
+                foundContent = true;
+                
+                // 确保包含这个文章的section也是可见的
+                const section = parent.closest('.article-section');
+                if (section) {
+                    section.style.display = '';
+                }
+            }
+        }
+    });
+    
+    // 如果没有找到任何内容，显示一个提示
+    if (!foundContent) {
+        document.querySelector('.knowledge-content-wrapper').innerHTML += '<div class="no-results">没有找到匹配的内容</div>';
+    }
+});
+
+// 点击侧边栏链接时滚动到对应内容
+document.querySelectorAll('.sidebar a').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href').substring(1);
+        const targetElement = document.getElementById(targetId);
+        if (targetElement) {
+            window.scrollTo({
+                top: targetElement.offsetTop - 100,
+                behavior: 'smooth'
+            });
         }
     });
 });
