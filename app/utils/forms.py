@@ -16,5 +16,4 @@ class RegisterForm(FlaskForm):
 
 class ScanForm(FlaskForm):
     scan_file = FileField('选择要扫描的文件', validators=[DataRequired()])
-    fetch_packages = BooleanField('同时抓取最新包进行检测')
     submit = SubmitField('开始扫描') 
