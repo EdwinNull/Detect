@@ -473,3 +473,31 @@ def update_sample_types():
         'success': True,
         'message': f'成功更新 {updated_count} 个样本的包类型'
     })
+
+@admin_bp.route('/settings', methods=['GET', 'POST'])
+@admin_required
+def settings():
+    conn = sqlite3.connect(Config.DATABASE_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    if request.method == 'POST':
+        # 更新设置
+        for key in request.form:
+            if key.startswith('setting_'):
+                setting_key = key.replace('setting_', '')
+                value = request.form[key]
+                cursor.execute('''
+                    UPDATE settings SET value = ?, updated_at = CURRENT_TIMESTAMP
+                    WHERE key = ?
+                ''', (value, setting_key))
+        
+        conn.commit()
+        flash('设置已成功更新', 'success')
+        
+    # 获取所有设置
+    cursor.execute('SELECT * FROM settings ORDER BY key')
+    settings = cursor.fetchall()
+    conn.close()
+    
+    return render_template('settings.html', settings=settings)

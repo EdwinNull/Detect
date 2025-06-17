@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">系统设置</h4>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('admin.settings') }}" method="post">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>设置名称</th>
+                                        <th>当前值</th>
+                                        <th>说明</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for setting in settings %}
+                                    <tr>
+                                        <td>{{ setting.key }}</td>
+                                        <td>
+                                            <input type="text" name="setting_{{ setting.key }}" 
+                                                  value="{{ setting.value }}" class="form-control"
+                                                  {% if 'API_KEY' in setting.key %}autocomplete="off"{% endif %}>
+                                        </td>
+                                        <td>{{ setting.description }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <button type="submit" class="btn btn-primary">保存设置</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

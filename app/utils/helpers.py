@@ -14,6 +14,7 @@ def format_size(size_in_bytes):
         return f"{size_in_bytes / (1024 * 1024 * 1024):.2f} GB"
 
 def detect_package_type(file_path):
+    """检测包类型"""
     filename = os.path.basename(file_path).lower()
     
     print(f"正在检测包类型: {file_path}")
@@ -91,3 +92,18 @@ def detect_package_type(file_path):
     # 3. 只有在上述所有方法都失败时，再返回'unknown'而不是压缩格式
     print(f"无法识别包类型，返回unknown")
     return 'unknown'
+
+def get_setting(key, default=None):
+    """从数据库获取系统设置"""
+    from config import Config
+    import sqlite3
+    
+    conn = sqlite3.connect(Config.DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute('SELECT value FROM settings WHERE key = ?', (key,))
+    result = cursor.fetchone()
+    conn.close()
+    
+    if result:
+        return result[0]
+    return default

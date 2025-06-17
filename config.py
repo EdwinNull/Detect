@@ -6,7 +6,7 @@ class Config:
     MAX_CONTENT_LENGTH = 100 * 1024 * 1024  # 100MB
     
     # DeepSeek API配置
-    DEEPSEEK_API_KEY = "sk-4d9403ac0e0640328d254c6c6b32bcd0"
+    DEEPSEEK_API_KEY = ""
     DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
     DATABASE_PATH = 'security_scanner.db'
 
