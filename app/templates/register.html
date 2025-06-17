@@ -160,7 +160,7 @@
             {% endif %}
         {% endwith %}
         
-        <form method="POST" action="{{ url_for('register') }}">
+        <form method="POST" action="{{ url_for('auth.register') }}">
             <div class="form-group">
                 <label for="username" class="form-label">用户名</label>
                 <input type="text" id="username" name="username" class="form-input" required minlength="3" maxlength="20">
@@ -185,7 +185,7 @@
         </form>
         
         <div class="login-link">
-            已有账号？<a href="{{ url_for('login') }}">登录</a>
+            已有账号？<a href="{{ url_for('auth.login') }}">登录</a>
         </div>
     </div>
 </body>

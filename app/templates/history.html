@@ -413,12 +413,13 @@
                 </td>
                 <td>
                     {% if record[4] %}
+                        {% set confidence_percent = (record[4] * 100)|int %}
                         <div class="confidence-bar">
-                            <div class="confidence-fill" style="width: {{ (record[4] * 100)|round }}%"></div>
+                            <div class="confidence-fill" style="width: {{ confidence_percent }}%"></div>
                         </div>
-                        <span style="font-size: 12px; color: #666; margin-left: 8px;">{{ "%.0f"|format(record[4] * 100) }}%</span>
+                        <span class="confidence-text">{{ confidence_percent }}%</span>
                     {% else %}
-                        <span style="color: #999;">-</span>
+                        <span class="confidence-text">-</span>
                     {% endif %}
                 </td>
                 <td>
@@ -446,12 +447,12 @@
                             <a href="/results/{{ record[0] }}" class="btn-small btn-primary">查看详情</a>
                         {% elif record[5] == 'pending' %}
                             <a href="/progress/{{ record[0] }}" class="btn-small btn-secondary">查看进度</a>
-                            <button class="btn-small btn-icon" title="取消" onclick="cancelScan({{ record[0] }})" style="background: #f8d7da; color: #721c24;">
+                            <button class="btn-small btn-icon" title="取消" onclick="cancelScan('{{ record[0] }}')" style="background: #f8d7da; color: #721c24;">
                                 <i class="cancel-icon">✕</i>
                             </button>
                         {% else %}
-                            <a href="#" class="btn-small btn-secondary" onclick="retryDetection({{ record[0] }})">重新检测</a>
-                            <button class="btn-small btn-icon" title="删除" onclick="deleteRecord({{ record[0] }})" style="background: #f8d7da; color: #721c24;">
+                            <a href="#" class="btn-small btn-secondary" onclick="retryDetection('{{ record[0] }}')">重新检测</a>
+                            <button class="btn-small btn-icon" title="删除" onclick="deleteRecord('{{ record[0] }}')" style="background: #f8d7da; color: #721c24;">
                                 <i class="delete-icon">🗑️</i>
                             </button>
                         {% endif %}
