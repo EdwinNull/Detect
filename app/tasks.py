@@ -11,7 +11,7 @@ from config import Config
 # 初始化服务实例
 feature_extractor = FeatureExtractor()
 security_classifier = SecurityClassifier()
-deepseek_analyzer = DeepSeekAnalyzer(Config.DEEPSEEK_API_KEY)
+deepseek_analyzer = DeepSeekAnalyzer()
 
 # 扫描任务管理
 scan_tasks = {}

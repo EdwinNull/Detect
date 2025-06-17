@@ -1,13 +1,16 @@
 import requests
 from config import Config
+from app.utils.helpers import get_setting
 
 class DeepSeekAnalyzer:
-    def __init__(self, api_key):
-        self.api_key = api_key
-        self.api_url = Config.DEEPSEEK_API_URL
+    def __init__(self, api_key=None):
+        self.api_key = api_key or get_setting('DEEPSEEK_API_KEY')
+        self.api_url = get_setting('DEEPSEEK_API_URL', Config.DEEPSEEK_API_URL)
     
     def analyze_package(self, filename, features, xgboost_result):
         """使用DeepSeek进行深度分析"""
+        if not self.api_key:
+            return self._fallback_analysis(xgboost_result)
         try:
             # 构建分析提示
             prompt = self._build_analysis_prompt(filename, features, xgboost_result)
