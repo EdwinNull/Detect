@@ -154,7 +154,29 @@
         line-height: 1.8;
         font-size: 16px;
         margin-bottom: 20px;
-        white-space: pre-wrap;
+    }
+    
+    .explanation-content h1, 
+    .explanation-content h2, 
+    .explanation-content h3,
+    .analysis-title, 
+    .analysis-subtitle, 
+    .analysis-section {
+        color: #333;
+        margin-top: 15px;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+    
+    .explanation-content ul,
+    .analysis-list {
+        margin-bottom: 15px;
+        padding-left: 20px;
+    }
+    
+    .explanation-content p,
+    .analysis-paragraph {
+        margin-bottom: 10px;
     }
     
     .technical-details {
@@ -327,7 +349,7 @@
         <div class="explanation-title">
             📋 风险分析报告
         </div>
-        <div class="explanation-content">{{ scan_data.risk_explanation }}</div>
+        <div class="explanation-content">{{ scan_data.risk_explanation|safe }}</div>
     </div>
     {% endif %}
     
@@ -363,25 +385,38 @@
         </div>
     </div>
     
+    {% if scan_data.llm_result.analysis %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>大模型分析结果</h5>
+        </div>
+        <div class="card-body">
+            <div class="analysis-content explanation-content">
+                {{ scan_data.llm_result.analysis|safe }}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
     <div class="action-buttons">
         <a href="/download_report/{{ scan_data.id }}/pdf" class="btn btn-primary">📄 导出PDF报告</a>
         <a href="/download_report/{{ scan_data.id }}/json" class="btn btn-success">💾 导出JSON数据</a>
         <a href="/" class="btn btn-secondary">🔄 重新检测</a>
         <a href="/history" class="btn btn-secondary">📊 查看历史记录</a>
-         </div>
- </div>
- {% endblock %}
+    </div>
+</div>
+{% endblock %}
 
- {% block extra_js %}
- <script>
- // 动态设置置信度圆环
- document.addEventListener('DOMContentLoaded', function() {
-     const confidenceValue = {{ scan_data.confidence }};
-     const circle = document.querySelector('.confidence-circle');
-     if (circle) {
-         const angle = confidenceValue * 360;
-         circle.style.background = `conic-gradient(#667eea 0deg ${angle}deg, #e5e7eb ${angle}deg 360deg)`;
-     }
- });
- </script>
- {% endblock %} 
+{% block extra_js %}
+<script>
+// 动态设置置信度圆环
+document.addEventListener('DOMContentLoaded', function() {
+    const confidenceValue = {{ scan_data.confidence|tojson }};
+    const circle = document.querySelector('.confidence-circle');
+    if (circle) {
+        const angle = confidenceValue * 360;
+        circle.style.background = `conic-gradient(#667eea 0deg ${angle}deg, #e5e7eb ${angle}deg 360deg)`;
+    }
+});
+</script>
+{% endblock %} 
