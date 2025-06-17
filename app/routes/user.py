@@ -3,6 +3,7 @@ import sqlite3
 import json
 from app.utils import login_required
 from app.utils.helpers import format_size
+from app.utils.forms import ScanForm
 from config import Config
 from fpdf import FPDF
 
@@ -11,6 +12,9 @@ user_bp = Blueprint('user', __name__)
 @user_bp.route('/')
 @login_required
 def index():
+    # 创建一个空的ScanForm，防止模板中使用form变量时出错
+    form = ScanForm()
+    
     conn = sqlite3.connect(Config.DATABASE_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -21,7 +25,7 @@ def index():
     if is_admin:
         # 管理员可以看到全局数据
         cursor.execute('''
-            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type, user_id
+            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type, user_id, source
             FROM scan_records 
             WHERE risk_level = 'high' 
             AND scan_status = 'completed' 
@@ -29,6 +33,29 @@ def index():
             LIMIT 8
         ''')
         recent_malicious_packages = cursor.fetchall()
+        
+        # 自动检测的恶意包
+        cursor.execute('''
+            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type, user_id, source
+            FROM scan_records 
+            WHERE risk_level = 'high'
+            AND scan_status = 'completed'
+            AND source = 'auto'
+            ORDER BY created_at DESC 
+            LIMIT 5
+        ''')
+        auto_detected_packages = cursor.fetchall()
+        
+        # 良性包（低风险包）
+        cursor.execute('''
+            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type, user_id, source
+            FROM scan_records 
+            WHERE risk_level = 'low'
+            AND scan_status = 'completed'
+            ORDER BY created_at DESC 
+            LIMIT 5
+        ''')
+        benign_packages = cursor.fetchall()
         
         # 管理员统计信息
         cursor.execute('SELECT COUNT(*) FROM users')
@@ -50,10 +77,24 @@ def index():
             WHERE scan_status = 'completed'
         ''')
         total_scans = cursor.fetchone()[0]
+        
+        # 自动检测的恶意包数量
+        cursor.execute('''
+            SELECT COUNT(*) FROM scan_records 
+            WHERE risk_level = 'high' AND scan_status = 'completed' AND source = 'auto'
+        ''')
+        total_auto_detected = cursor.fetchone()[0]
+        
+        # 良性包数量
+        cursor.execute('''
+            SELECT COUNT(*) FROM scan_records 
+            WHERE risk_level = 'low' AND scan_status = 'completed'
+        ''')
+        total_benign = cursor.fetchone()[0]
     else:
         # 普通用户只能看到自己的数据
         cursor.execute('''
-            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type
+            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type, source
             FROM scan_records 
             WHERE user_id = ?
             AND scan_status = 'completed' 
@@ -61,6 +102,29 @@ def index():
             LIMIT 5
         ''', (session['user_id'],))
         recent_malicious_packages = cursor.fetchall()
+        
+        # 所有用户可以看到自动检测的恶意包
+        cursor.execute('''
+            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type, source
+            FROM scan_records 
+            WHERE risk_level = 'high'
+            AND scan_status = 'completed'
+            AND source = 'auto'
+            ORDER BY created_at DESC 
+            LIMIT 5
+        ''')
+        auto_detected_packages = cursor.fetchall()
+        
+        # 良性包（低风险包）
+        cursor.execute('''
+            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type, source
+            FROM scan_records 
+            WHERE risk_level = 'low'
+            AND scan_status = 'completed'
+            ORDER BY created_at DESC 
+            LIMIT 5
+        ''')
+        benign_packages = cursor.fetchall()
         
         # 用户自己的统计信息
         cursor.execute('''
@@ -74,6 +138,20 @@ def index():
             WHERE user_id = ? AND scan_status = 'completed'
         ''', (session['user_id'],))
         total_scans = cursor.fetchone()[0]
+        
+        # 自动检测的恶意包数量
+        cursor.execute('''
+            SELECT COUNT(*) FROM scan_records 
+            WHERE risk_level = 'high' AND scan_status = 'completed' AND source = 'auto'
+        ''')
+        total_auto_detected = cursor.fetchone()[0]
+        
+        # 良性包数量
+        cursor.execute('''
+            SELECT COUNT(*) FROM scan_records 
+            WHERE risk_level = 'low' AND scan_status = 'completed'
+        ''')
+        total_benign = cursor.fetchone()[0]
         
         total_users = None
         total_samples = None
@@ -89,54 +167,113 @@ def index():
             'confidence': pkg['confidence'] * 100 if pkg['confidence'] else 0,
             'created_at': pkg['created_at'],
             'package_type': pkg['package_type'] if 'package_type' in pkg.keys() else 'unknown',
-            'user_id': pkg['user_id'] if is_admin and 'user_id' in pkg.keys() else session['user_id']
+            'user_id': pkg['user_id'] if is_admin and 'user_id' in pkg.keys() else session['user_id'],
+            'source': pkg['source'] if 'source' in pkg.keys() else 'manual'
+        })
+    
+    # 格式化自动检测的恶意包数据
+    auto_packages = []
+    for pkg in auto_detected_packages:
+        auto_packages.append({
+            'id': pkg['id'],
+            'filename': pkg['filename'],
+            'file_size': format_size(pkg['file_size']) if pkg['file_size'] else "未知",
+            'risk_level': pkg['risk_level'],
+            'confidence': pkg['confidence'] * 100 if pkg['confidence'] else 0,
+            'created_at': pkg['created_at'],
+            'package_type': pkg['package_type'] if 'package_type' in pkg.keys() else 'unknown',
+            'user_id': pkg['user_id'] if is_admin and 'user_id' in pkg.keys() else None,
+            'source': 'auto'
+        })
+    
+    # 格式化良性包数据
+    safe_packages = []
+    for pkg in benign_packages:
+        safe_packages.append({
+            'id': pkg['id'],
+            'filename': pkg['filename'],
+            'file_size': format_size(pkg['file_size']) if pkg['file_size'] else "未知",
+            'risk_level': pkg['risk_level'],
+            'confidence': pkg['confidence'] * 100 if pkg['confidence'] else 0,
+            'created_at': pkg['created_at'],
+            'package_type': pkg['package_type'] if 'package_type' in pkg.keys() else 'unknown',
+            'user_id': pkg['user_id'] if is_admin and 'user_id' in pkg.keys() else None,
+            'source': pkg['source'] if 'source' in pkg.keys() else 'manual'
         })
     
     conn.close()
     
     return render_template('index.html', 
                           malicious_packages=malicious_packages,
+                          auto_packages=auto_packages,
+                          safe_packages=safe_packages,
                           total_malicious=total_malicious,
                           total_scans=total_scans,
                           total_users=total_users,
                           total_samples=total_samples,
-                          is_admin=is_admin)
+                          total_auto_detected=total_auto_detected,
+                          total_benign=total_benign,
+                          is_admin=is_admin,
+                          form=form)
 
 @user_bp.route('/history')
 @login_required
 def history():
+    # 创建一个空的ScanForm，防止模板中使用form变量时出错
+    form = ScanForm()
+    
     conn = sqlite3.connect(Config.DATABASE_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     
-    # 管理员可以看到所有用户的记录，普通用户只能看到自己的
-    if session.get('role') == 'admin':
+    # 管理员可以看到所有用户的历史记录
+    is_admin = session.get('role') == 'admin'
+    
+    if is_admin:
         cursor.execute('''
-            SELECT r.id, r.filename, r.file_size, r.risk_level, r.confidence, r.scan_status, r.created_at, 
-                   r.package_type, u.username
-            FROM scan_records r
-            JOIN users u ON r.user_id = u.id
-            ORDER BY r.created_at DESC
+            SELECT id, filename, file_size, risk_level, confidence, created_at, scan_status, package_type, user_id, source
+            FROM scan_records 
+            ORDER BY created_at DESC
         ''')
     else:
         cursor.execute('''
-            SELECT id, filename, file_size, risk_level, confidence, scan_status, created_at, package_type
+            SELECT id, filename, file_size, risk_level, confidence, created_at, scan_status, package_type, source
             FROM scan_records 
             WHERE user_id = ?
             ORDER BY created_at DESC
         ''', (session['user_id'],))
     
-    records = cursor.fetchall()
+    scan_records = cursor.fetchall()
     conn.close()
     
-    return render_template('history.html', records=records)
+    # 格式化数据
+    records = []
+    for record in scan_records:
+        records.append({
+            'id': record['id'],
+            'filename': record['filename'],
+            'file_size': format_size(record['file_size']) if record['file_size'] else "未知",
+            'risk_level': record['risk_level'],
+            'confidence': record['confidence'] * 100 if record['confidence'] else 0,
+            'created_at': record['created_at'],
+            'scan_status': record['scan_status'],
+            'package_type': record['package_type'] if 'package_type' in record.keys() else 'unknown',
+            'user_id': record['user_id'] if is_admin and 'user_id' in record.keys() else session['user_id'],
+            'source': record['source'] if 'source' in record.keys() else 'manual'
+        })
+    
+    return render_template('history.html', records=records, is_admin=is_admin, form=form)
 
 @user_bp.route('/guide')
 def guide():
-    return render_template('guide.html')
+    # 创建一个空的ScanForm，防止模板中使用form变量时出错
+    form = ScanForm()
+    return render_template('guide.html', form=form)
 
 @user_bp.route('/knowledge')
 def knowledge():
+    # 创建一个空的ScanForm，防止模板中使用form变量时出错
+    form = ScanForm()
     # 入门指南内容
     getting_started_articles = [
         {
@@ -365,36 +502,32 @@ def get_scan_result(scan_id):
             time.sleep(5)
                 </pre>
             '''
-        }
-    ]
-    
-    # 故障排除内容
-    troubleshooting_articles = [
+        },
         {
             'id': 'common-issues',
             'title': '常见问题',
             'desc': '''
-                <h4>上传问题</h4>
+                <h4>扫描问题</h4>
                 <ul>
                     <li>
-                        <strong>问题</strong>: 文件上传失败<br>
-                        <strong>解决方法</strong>: 检查文件大小是否超过限制(50MB)，确认文件格式是否受支持，检查网络连接
+                        <strong>问题</strong>: 扫描进度卡在某一步骤<br>
+                        <strong>解决方法</strong>: 检查包大小是否过大，系统资源是否充足，可以尝试重新上传或将包分割为更小的部分
                     </li>
                     <li>
-                        <strong>问题</strong>: 无法识别包类型<br>
-                        <strong>解决方法</strong>: 确保上传的是标准格式的组件包，包含必要的元数据文件（如setup.py、package.json等）
+                        <strong>问题</strong>: 某些文件类型无法解析<br>
+                        <strong>解决方法</strong>: 检查文件格式是否正确，可能需要预处理或转换为标准格式
                     </li>
                 </ul>
                 
-                <h4>检测问题</h4>
+                <h4>性能问题</h4>
                 <ul>
                     <li>
-                        <strong>问题</strong>: 检测过程卡住不动<br>
-                        <strong>解决方法</strong>: 检查网络连接，确保API服务可用；对于特别大的包可能需要更长时间
+                        <strong>问题</strong>: 系统运行缓慢<br>
+                        <strong>解决方法</strong>: 检查系统资源占用，关闭不必要的进程，考虑增加服务器资源
                     </li>
                     <li>
-                        <strong>问题</strong>: 检测失败，无结果<br>
-                        <strong>解决方法</strong>: 查看系统日志，检查包文件完整性，尝试重新上传或使用"重试检测"功能
+                        <strong>问题</strong>: 大型包检测超时<br>
+                        <strong>解决方法</strong>: 调整配置文件中的超时设置，或将包分割为多个部分单独检测
                     </li>
                 </ul>
             '''
@@ -403,57 +536,81 @@ def get_scan_result(scan_id):
             'id': 'error-messages',
             'title': '错误信息',
             'desc': '''
-                <h4>常见错误代码及解决方案</h4>
+                <h4>常见错误代码</h4>
                 <table border="1" style="border-collapse: collapse; width: 100%;">
                     <tr style="background-color: #f3f4f6;">
                         <th style="padding: 8px; text-align: left;">错误代码</th>
-                        <th style="padding: 8px; text-align: left;">描述</th>
-                        <th style="padding: 8px; text-align: left;">解决方法</th>
+                        <th style="padding: 8px; text-align: left;">含义</th>
+                        <th style="padding: 8px; text-align: left;">解决方案</th>
                     </tr>
                     <tr>
-                        <td style="padding: 8px;">ERR-001</td>
+                        <td style="padding: 8px;">E001</td>
                         <td style="padding: 8px;">文件格式不支持</td>
-                        <td style="padding: 8px;">使用受支持的包格式(.zip, .tar.gz, .whl, .jar等)</td>
+                        <td style="padding: 8px;">转换为支持的格式后重试</td>
                     </tr>
                     <tr>
-                        <td style="padding: 8px;">ERR-002</td>
-                        <td style="padding: 8px;">API调用失败</td>
-                        <td style="padding: 8px;">检查API密钥和网络连接，确认DeepSeek服务可用</td>
+                        <td style="padding: 8px;">E002</td>
+                        <td style="padding: 8px;">文件大小超限</td>
+                        <td style="padding: 8px;">压缩或分割后重试</td>
                     </tr>
                     <tr>
-                        <td style="padding: 8px;">ERR-003</td>
-                        <td style="padding: 8px;">特征提取失败</td>
-                        <td style="padding: 8px;">检查包文件是否完整，尝试重新上传</td>
+                        <td style="padding: 8px;">E003</td>
+                        <td style="padding: 8px;">解析失败</td>
+                        <td style="padding: 8px;">检查文件完整性</td>
                     </tr>
                     <tr>
-                        <td style="padding: 8px;">ERR-004</td>
-                        <td style="padding: 8px;">存储空间不足</td>
-                        <td style="padding: 8px;">清理临时文件目录，为上传文件释放空间</td>
+                        <td style="padding: 8px;">E004</td>
+                        <td style="padding: 8px;">模型加载失败</td>
+                        <td style="padding: 8px;">联系管理员</td>
                     </tr>
                 </table>
+                
+                <h4>故障排除步骤</h4>
+                <ol>
+                    <li>检查日志文件了解详细错误信息</li>
+                    <li>确保系统环境满足要求</li>
+                    <li>检查网络连接和API状态</li>
+                    <li>尝试使用不同的浏览器或客户端</li>
+                    <li>联系技术支持团队获取帮助</li>
+                </ol>
             '''
         },
         {
             'id': 'performance',
             'title': '性能优化',
             'desc': '''
-                <h4>系统性能优化建议</h4>
-                <p>如果系统运行缓慢或检测效率不高，可以尝试以下优化措施：</p>
-                
+                <h4>提高扫描性能</h4>
                 <ul>
-                    <li><strong>增加硬件资源</strong>: 对于大型部署，建议至少16GB内存和4核处理器</li>
-                    <li><strong>优化数据库</strong>: 定期清理旧的检测记录和临时文件</li>
-                    <li><strong>调整并发设置</strong>: 在<code>config.py</code>中调整最大并发检测任务数</li>
-                    <li><strong>使用缓存</strong>: 启用结果缓存可以加快重复检测的速度</li>
+                    <li>
+                        <strong>预处理大型包</strong>: 对于超过50MB的包，建议事先分割或只扫描关键部分
+                    </li>
+                    <li>
+                        <strong>批量扫描优化</strong>: 使用API接口进行批量扫描时，建议控制并发数量在5-10个之间
+                    </li>
+                    <li>
+                        <strong>缓存利用</strong>: 对于已扫描过的包，系统会缓存结果，可通过文件哈希值查询
+                    </li>
                 </ul>
                 
-                <h4>大型包处理策略</h4>
-                <p>处理超大型包（>100MB）时的建议：</p>
-                <ul>
-                    <li>增加超时时间设置</li>
-                    <li>使用分块分析模式</li>
-                    <li>优先分析关键文件而非全量分析</li>
-                </ul>
+                <h4>服务器配置建议</h4>
+                <table border="1" style="border-collapse: collapse; width: 100%;">
+                    <tr style="background-color: #f3f4f6;">
+                        <th style="padding: 8px; text-align: left;">用户规模</th>
+                        <th style="padding: 8px; text-align: left;">建议配置</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">小型团队 (< 10人)</td>
+                        <td style="padding: 8px;">2 CPU, 8GB RAM, 100GB SSD</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">中型团队 (10-50人)</td>
+                        <td style="padding: 8px;">4 CPU, 16GB RAM, 500GB SSD</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">大型团队 (> 50人)</td>
+                        <td style="padding: 8px;">8+ CPU, 32GB+ RAM, 1TB+ SSD</td>
+                    </tr>
+                </table>
             '''
         }
     ]
@@ -677,6 +834,120 @@ def get_scan_result(scan_id):
         }
     ]
     
+    # 故障排除内容
+    troubleshooting_articles = [
+        {
+            'id': 'common-issues',
+            'title': '常见问题',
+            'desc': '''
+                <h4>扫描问题</h4>
+                <ul>
+                    <li>
+                        <strong>问题</strong>: 扫描进度卡在某一步骤<br>
+                        <strong>解决方法</strong>: 检查包大小是否过大，系统资源是否充足，可以尝试重新上传或将包分割为更小的部分
+                    </li>
+                    <li>
+                        <strong>问题</strong>: 某些文件类型无法解析<br>
+                        <strong>解决方法</strong>: 检查文件格式是否正确，可能需要预处理或转换为标准格式
+                    </li>
+                </ul>
+                
+                <h4>性能问题</h4>
+                <ul>
+                    <li>
+                        <strong>问题</strong>: 系统运行缓慢<br>
+                        <strong>解决方法</strong>: 检查系统资源占用，关闭不必要的进程，考虑增加服务器资源
+                    </li>
+                    <li>
+                        <strong>问题</strong>: 大型包检测超时<br>
+                        <strong>解决方法</strong>: 调整配置文件中的超时设置，或将包分割为多个部分单独检测
+                    </li>
+                </ul>
+            '''
+        },
+        {
+            'id': 'error-messages',
+            'title': '错误信息',
+            'desc': '''
+                <h4>常见错误代码</h4>
+                <table border="1" style="border-collapse: collapse; width: 100%;">
+                    <tr style="background-color: #f3f4f6;">
+                        <th style="padding: 8px; text-align: left;">错误代码</th>
+                        <th style="padding: 8px; text-align: left;">含义</th>
+                        <th style="padding: 8px; text-align: left;">解决方案</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">E001</td>
+                        <td style="padding: 8px;">文件格式不支持</td>
+                        <td style="padding: 8px;">转换为支持的格式后重试</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">E002</td>
+                        <td style="padding: 8px;">文件大小超限</td>
+                        <td style="padding: 8px;">压缩或分割后重试</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">E003</td>
+                        <td style="padding: 8px;">解析失败</td>
+                        <td style="padding: 8px;">检查文件完整性</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">E004</td>
+                        <td style="padding: 8px;">模型加载失败</td>
+                        <td style="padding: 8px;">联系管理员</td>
+                    </tr>
+                </table>
+                
+                <h4>故障排除步骤</h4>
+                <ol>
+                    <li>检查日志文件了解详细错误信息</li>
+                    <li>确保系统环境满足要求</li>
+                    <li>检查网络连接和API状态</li>
+                    <li>尝试使用不同的浏览器或客户端</li>
+                    <li>联系技术支持团队获取帮助</li>
+                </ol>
+            '''
+        },
+        {
+            'id': 'performance',
+            'title': '性能优化',
+            'desc': '''
+                <h4>提高扫描性能</h4>
+                <ul>
+                    <li>
+                        <strong>预处理大型包</strong>: 对于超过50MB的包，建议事先分割或只扫描关键部分
+                    </li>
+                    <li>
+                        <strong>批量扫描优化</strong>: 使用API接口进行批量扫描时，建议控制并发数量在5-10个之间
+                    </li>
+                    <li>
+                        <strong>缓存利用</strong>: 对于已扫描过的包，系统会缓存结果，可通过文件哈希值查询
+                    </li>
+                </ul>
+                
+                <h4>服务器配置建议</h4>
+                <table border="1" style="border-collapse: collapse; width: 100%;">
+                    <tr style="background-color: #f3f4f6;">
+                        <th style="padding: 8px; text-align: left;">用户规模</th>
+                        <th style="padding: 8px; text-align: left;">建议配置</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">小型团队 (< 10人)</td>
+                        <td style="padding: 8px;">2 CPU, 8GB RAM, 100GB SSD</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">中型团队 (10-50人)</td>
+                        <td style="padding: 8px;">4 CPU, 16GB RAM, 500GB SSD</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">大型团队 (> 50人)</td>
+                        <td style="padding: 8px;">8+ CPU, 32GB+ RAM, 1TB+ SSD</td>
+                    </tr>
+                </table>
+            '''
+        }
+    ]
+    
     # 整合文章内容
     articles = getting_started_articles + basic_usage_articles + features_articles + security_articles + troubleshooting_articles + api_articles
     
@@ -724,7 +995,7 @@ def get_scan_result(scan_id):
         }
     ]
     
-    return render_template('knowledge.html', articles=articles, faqs=faqs)
+    return render_template('knowledge.html', articles=articles, faqs=faqs, form=form)
 
 @user_bp.route('/download_report/<int:scan_id>/<format>')
 @login_required

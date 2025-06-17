@@ -10,20 +10,24 @@ from datetime import datetime, timedelta
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.model_selection import train_test_split
 import joblib
-from app.utils import admin_required
+from app.utils import admin_required, login_required
 from app.services.extractor import FeatureExtractor
 from app.services.classifier import SecurityClassifier
 from config import Config
 from app.utils.helpers import detect_package_type
+from app.utils.forms import ScanForm
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 @admin_bp.route('/')
+@login_required
 @admin_required
 def admin():
-    return render_template('admin.html')
+    form = ScanForm()
+    return render_template('admin.html', form=form)
 
 @admin_bp.route('/model', methods=['GET', 'POST'])
+@login_required
 @admin_required
 def model_management():
     if request.method == 'POST':
@@ -50,9 +54,11 @@ def model_management():
         'size': os.path.getsize(model_path) if os.path.exists(model_path) else 0
     }
     
-    return render_template('model_management.html', model_info=model_info)
+    form = ScanForm()
+    return render_template('model_management.html', model_info=model_info, form=form)
 
 @admin_bp.route('/samples', methods=['GET'])
+@login_required
 @admin_required
 def sample_management():
     conn = sqlite3.connect(Config.DATABASE_PATH)
@@ -74,9 +80,11 @@ def sample_management():
             'package_type': sample['package_type'] if 'package_type' in sample.keys() else 'unknown'
         })
     
-    return render_template('sample_management.html', samples=sample_list)
+    form = ScanForm()
+    return render_template('sample_management.html', samples=sample_list, form=form)
 
 @admin_bp.route('/samples/upload', methods=['POST'])
+@login_required
 @admin_required
 def upload_samples():
     if 'samples' not in request.files:
@@ -161,6 +169,7 @@ def upload_samples():
         }), 400
 
 @admin_bp.route('/samples/delete', methods=['POST'])
+@login_required
 @admin_required
 def delete_samples():
     data = request.get_json()
@@ -198,6 +207,7 @@ def delete_samples():
     })
 
 @admin_bp.route('/samples/train', methods=['POST'])
+@login_required
 @admin_required
 def train_with_samples():
     model_type = request.form.get('model_type', 'xgboost')
@@ -271,6 +281,7 @@ def train_with_samples():
     return redirect(url_for('admin.sample_management'))
 
 @admin_bp.route('/users')
+@login_required
 @admin_required
 def user_management():
     conn = sqlite3.connect(Config.DATABASE_PATH)
@@ -296,13 +307,16 @@ def user_management():
     
     conn.close()
     
+    form = ScanForm()
     return render_template('user_management.html', 
                           users=users, 
                           total_users=total_users,
                           admin_count=admin_count,
-                          active_users=active_users)
+                          active_users=active_users,
+                          form=form)
 
 @admin_bp.route('/users/add', methods=['POST'])
+@login_required
 @admin_required
 def add_user():
     username = request.form.get('username')
@@ -343,6 +357,7 @@ def add_user():
     return redirect(url_for('admin.user_management'))
 
 @admin_bp.route('/users/edit/<int:user_id>', methods=['GET', 'POST'])
+@login_required
 @admin_required
 def edit_user(user_id):
     conn = sqlite3.connect(Config.DATABASE_PATH)
@@ -387,9 +402,11 @@ def edit_user(user_id):
         return redirect(url_for('admin.user_management'))
     
     conn.close()
-    return render_template('edit_user.html', user=user)
+    form = ScanForm()
+    return render_template('edit_user.html', user=user, form=form)
 
 @admin_bp.route('/users/delete/<int:user_id>', methods=['POST'])
+@login_required
 @admin_required
 def delete_user(user_id):
     conn = sqlite3.connect(Config.DATABASE_PATH)
@@ -416,6 +433,7 @@ def delete_user(user_id):
     return redirect(url_for('admin.user_management'))
 
 @admin_bp.route('/users/reset_password/<int:user_id>', methods=['POST'])
+@login_required
 @admin_required
 def reset_password(user_id):
     conn = sqlite3.connect(Config.DATABASE_PATH)
@@ -441,6 +459,7 @@ def reset_password(user_id):
     return redirect(url_for('admin.user_management'))
 
 @admin_bp.route('/samples/update_types', methods=['POST'])
+@login_required
 @admin_required
 def update_sample_types():
     if 'user_id' not in session or session.get('role') != 'admin':
@@ -475,6 +494,7 @@ def update_sample_types():
     })
 
 @admin_bp.route('/settings', methods=['GET', 'POST'])
+@login_required
 @admin_required
 def settings():
     conn = sqlite3.connect(Config.DATABASE_PATH)
@@ -500,4 +520,5 @@ def settings():
     settings = cursor.fetchall()
     conn.close()
     
-    return render_template('settings.html', settings=settings)
+    form = ScanForm()
+    return render_template('settings.html', settings=settings, form=form)

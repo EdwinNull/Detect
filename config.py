@@ -1,7 +1,9 @@
 import os
+import secrets
 
 class Config:
-    SECRET_KEY = 'your-secret-key-here'
+    # 使用固定的SECRET_KEY进行测试
+    SECRET_KEY = 'your-super-secret-key-for-testing-12345'
     UPLOAD_FOLDER = 'uploads'
     MAX_CONTENT_LENGTH = 100 * 1024 * 1024  # 100MB
     
@@ -9,6 +11,10 @@ class Config:
     DEEPSEEK_API_KEY = ""
     DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
     DATABASE_PATH = 'security_scanner.db'
+    
+    # 配置WTF_CSRF相关选项
+    WTF_CSRF_ENABLED = True
+    WTF_CSRF_SECRET_KEY = 'csrf-secret-key-for-testing-67890'
 
 class DevelopmentConfig(Config):
     DEBUG = True
