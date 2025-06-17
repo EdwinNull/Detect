@@ -334,7 +334,7 @@
 <div class="dashboard-container">
     <!-- 快速上手按钮 - 左上角 -->
     <div style="grid-column: span 2; text-align: left; margin-bottom: 15px;">
-        <a href="{{ url_for('guide') }}" class="quick-guide-small-btn">
+        <a href="{{ url_for('user.guide') }}" class="quick-guide-small-btn">
             <i class="guide-icon">📘</i> 快速上手
         </a>
     </div>
@@ -381,7 +381,7 @@
                     </div>
                     <div>
                         <span class="risk-badge risk-high">高风险</span>
-                        <a href="{{ url_for('results', scan_id=pkg.id) }}" class="more-link">查看详情</a>
+                        <a href="{{ url_for('scan.results', scan_id=pkg.id) }}" class="more-link">查看详情</a>
                     </div>
                 </div>
                 {% endfor %}
@@ -394,7 +394,7 @@
         </div>
         
         <div class="center-text">
-            <a href="{{ url_for('history') }}" class="more-link">查看所有历史</a>
+            <a href="{{ url_for('user.history') }}" class="more-link">查看所有历史</a>
         </div>
     </div>
     

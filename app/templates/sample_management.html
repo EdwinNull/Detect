@@ -19,7 +19,7 @@
             <h4>批量上传样本</h4>
         </div>
         <div class="card-body" style="padding: 20px;">
-            <form method="POST" action="{{ url_for('upload_samples') }}" enctype="multipart/form-data" id="uploadForm">
+            <form method="POST" action="{{ url_for('admin.upload_samples') }}" enctype="multipart/form-data" id="uploadForm">
                 <div style="margin-bottom: 15px;">
                     <label for="samples" style="display: block; margin-bottom: 8px;">选择样本文件（支持.tar.gz, .zip, .whl, .tgz格式）</label>
                     <input type="file" id="samples" name="samples" multiple accept=".tar.gz,.zip,.whl,.tgz" required style="display: block; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
@@ -84,18 +84,14 @@
                             <td style="padding: 10px;">{{ sample.filename }}</td>
                             <td style="padding: 10px;">{{ sample.type }}</td>
                             <td style="padding: 10px;">
-                                <span style="display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; color: white; background-color: 
-                                    {% if sample.package_type == 'unknown' %}#6c757d
-                                    {% elif sample.package_type == 'pypi' %}#667eea
-                                    {% elif sample.package_type == 'npm' %}#28a745
-                                    {% else %}#17a2b8{% endif %};">
-                                    {{ sample.package_type|default('未知') }}
+                                <span class="package-badge {% if sample.package_type == 'unknown' %}badge-unknown{% elif sample.package_type == 'pypi' %}badge-pypi{% elif sample.package_type == 'npm' %}badge-npm{% else %}badge-default{% endif %}">
+                                    {{ sample.package_type }}
                                 </span>
                             </td>
                             <td style="padding: 10px;">{{ sample.description }}</td>
                             <td style="padding: 10px;">{{ sample.upload_time }}</td>
                             <td style="padding: 10px;">
-                                <form method="POST" action="{{ url_for('delete_samples') }}" style="display: inline;">
+                                <form method="POST" action="{{ url_for('admin.delete_samples') }}" style="display: inline;">
                                     <input type="hidden" name="sample_id" value="{{ sample.id }}">
                                     <button type="submit" class="btn btn-outline" style="padding: 4px 8px; background: #f8d7da; color: #721c24; border: none;">删除</button>
                                 </form>
@@ -113,7 +109,7 @@
             <h4>训练操作</h4>
         </div>
         <div class="card-body" style="padding: 20px;">
-            <form method="POST" action="{{ url_for('train_with_samples') }}" id="trainForm">
+            <form method="POST" action="{{ url_for('admin.train_with_samples') }}" id="trainForm">
                 <div style="margin-bottom: 15px;">
                     <label for="train_model_type" style="display: block; margin-bottom: 8px;">选择模型类型</label>
                     <select id="train_model_type" name="model_type" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
@@ -221,7 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (confirm(`确定要删除选中的 ${selectedIds.length} 个样本吗？`)) {
-            fetch('{{ url_for("delete_samples") }}', {
+            fetch('{{ url_for("admin.delete_samples") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -247,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (confirm('确定要更新所有样本的包类型吗？')) {
             this.disabled = true;
             
-            fetch('{{ url_for("update_sample_types") }}', {
+            fetch('{{ url_for("admin.update_sample_types") }}', {
                 method: 'POST'
             })
             .then(response => response.json())
@@ -269,4 +265,17 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
+
+<style>
+    .badge-unknown { background-color: #6c757d; }
+    .badge-pypi { background-color: #667eea; }
+    .badge-npm { background-color: #28a745; }
+    .badge-default { background-color: #17a2b8; }
+    
+    .package-badge {
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+</style>
 {% endblock %} 

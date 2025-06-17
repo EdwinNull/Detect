@@ -165,24 +165,24 @@
     {% if session.user_id %}
     <nav class="navbar">
         <div class="navbar-content">
-            <a href="{{ url_for('index') }}" class="logo">安全检测平台</a>
+            <a href="{{ url_for('user.index') }}" class="logo">安全检测平台</a>
             
             <ul class="nav-links">
-                <li><a href="{{ url_for('index') }}" {% if request.path == '/' %}class="active"{% endif %}>首页</a></li>
-                <li><a href="{{ url_for('scan') }}" {% if request.path == '/scan' %}class="active"{% endif %}>扫描</a></li>
-                <li><a href="{{ url_for('history') }}" {% if request.path == '/history' %}class="active"{% endif %}>历史记录</a></li>
-                <li><a href="{{ url_for('knowledge') }}" {% if request.path == '/knowledge' %}class="active"{% endif %}>知识库</a></li>
-                <li><a href="{{ url_for('guide') }}" {% if request.path == '/guide' %}class="active"{% endif %}>快速上手</a></li>
+                <li><a href="{{ url_for('user.index') }}" {% if request.path == '/' %}class="active"{% endif %}>首页</a></li>
+                <li><a href="{{ url_for('scan.scan') }}" {% if request.path == '/scan' %}class="active"{% endif %}>扫描</a></li>
+                <li><a href="{{ url_for('user.history') }}" {% if request.path == '/history' %}class="active"{% endif %}>历史记录</a></li>
+                <li><a href="{{ url_for('user.knowledge') }}" {% if request.path == '/knowledge' %}class="active"{% endif %}>知识库</a></li>
+                <li><a href="{{ url_for('user.guide') }}" {% if request.path == '/guide' %}class="active"{% endif %}>快速上手</a></li>
                 {% if session.role == 'admin' %}
-                <li><a href="{{ url_for('admin') }}" class="{% if request.endpoint == 'admin' %}active{% endif %}">系统管理</a></li>
-                <li><a href="{{ url_for('model_management') }}" class="{% if request.endpoint == 'model_management' %}active{% endif %}">模型管理</a></li>
-                <li><a href="{{ url_for('sample_management') }}" class="{% if request.endpoint == 'sample_management' %}active{% endif %}">样本管理</a></li>
+                <li><a href="{{ url_for('admin.admin') }}" class="{% if request.endpoint == 'admin' %}active{% endif %}">系统管理</a></li>
+                <li><a href="{{ url_for('admin.model_management') }}" class="{% if request.endpoint == 'model_management' %}active{% endif %}">模型管理</a></li>
+                <li><a href="{{ url_for('admin.sample_management') }}" class="{% if request.endpoint == 'sample_management' %}active{% endif %}">样本管理</a></li>
                 {% endif %}
             </ul>
             
             <div class="user-menu">
                 <span class="user-info">欢迎，{{ session.username }}</span>
-                <a href="{{ url_for('logout') }}" class="btn btn-outline">退出登录</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline">退出登录</a>
             </div>
         </div>
     </nav>

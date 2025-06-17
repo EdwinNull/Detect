@@ -10,7 +10,7 @@
         上传你的组件包，系统将自动进行安全检测，识别潜在的恶意代码和风险。
     </p>
     
-    <form method="POST" action="{{ url_for('scan') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ url_for('scan.scan') }}" enctype="multipart/form-data">
         <div style="margin-bottom: 20px;">
             <label for="scan_file" style="display: block; margin-bottom: 8px; font-weight: 500;">选择要扫描的文件</label>
             <input type="file" id="scan_file" name="scan_file" required style="display: block; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">

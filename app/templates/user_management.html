@@ -25,7 +25,7 @@
     <!-- 添加用户 -->
     <div style="margin-bottom: 30px; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
         <h3 style="margin-bottom: 15px; font-size: 18px;">添加新用户</h3>
-        <form method="POST" action="{{ url_for('add_user') }}">
+        <form method="POST" action="{{ url_for('admin.add_user') }}">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
                 <div>
                     <label style="display: block; margin-bottom: 5px; font-weight: 500;">用户名</label>
@@ -89,13 +89,13 @@
                         <td style="padding: 12px; border-bottom: 1px solid #eee;">{{ user.last_login or '从未登录' }}</td>
                         <td style="padding: 12px; border-bottom: 1px solid #eee;">
                             <div style="display: flex; gap: 5px;">
-                                <a href="{{ url_for('edit_user', user_id=user.id) }}" style="text-decoration: none; background: #4299e1; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">编辑</a>
+                                <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" style="text-decoration: none; background: #4299e1; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">编辑</a>
                                 {% if user.username != 'admin' %}
-                                <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" onsubmit="return confirm('确定要删除此用户吗？');">
+                                <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}" onsubmit="return confirm('确定要删除此用户吗？');">
                                     <button type="submit" style="background: #e53e3e; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">删除</button>
                                 </form>
                                 {% endif %}
-                                <form method="POST" action="{{ url_for('reset_password', user_id=user.id) }}">
+                                <form method="POST" action="{{ url_for('admin.reset_password', user_id=user.id) }}">
                                     <button type="submit" style="background: #667eea; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">重置密码</button>
                                 </form>
                             </div>
