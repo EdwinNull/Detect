@@ -180,17 +180,18 @@
         {% endwith %}
         
         <form method="POST">
+            {{ form.csrf_token }}
             <div class="form-group">
                 <label for="username" class="form-label">用户名</label>
-                <input type="text" id="username" name="username" class="form-input" required>
+                {{ form.username(class="form-input", required=true) }}
             </div>
             
             <div class="form-group">
                 <label for="password" class="form-label">密码</label>
-                <input type="password" id="password" name="password" class="form-input" required>
+                {{ form.password(class="form-input", required=true) }}
             </div>
             
-            <button type="submit" class="btn btn-primary">登录</button>
+            {{ form.submit(class="btn btn-primary") }}
         </form>
         
         <div class="register-link">

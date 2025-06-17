@@ -3,6 +3,8 @@ from config import Config
 from app.utils.helpers import get_setting
 import markdown
 import re
+import random
+import json
 
 class DeepSeekAnalyzer:
     def __init__(self, api_key=None):
@@ -11,6 +13,16 @@ class DeepSeekAnalyzer:
     
     def analyze_package(self, filename, features, xgboost_result):
         """使用DeepSeek进行深度分析"""
+        # 确保xgboost_result包含所需的字段
+        if 'prediction' not in xgboost_result:
+            xgboost_result['prediction'] = 'benign'
+        if 'confidence' not in xgboost_result:
+            xgboost_result['confidence'] = 0.5
+        if 'malicious_prob' not in xgboost_result:
+            xgboost_result['malicious_prob'] = 0.0
+        if 'risk_level' not in xgboost_result:
+            xgboost_result['risk_level'] = 'medium'
+        
         if not self.api_key:
             return self._fallback_analysis(xgboost_result)
         try:
@@ -81,80 +93,81 @@ XGBoost初筛结果：
         return prompt
     
     def _parse_analysis(self, analysis_text):
-        """解析DeepSeek的分析结果"""
-        # 简单的风险等级提取
-        risk_level = 'medium'
-        if '高风险' in analysis_text or '高危' in analysis_text:
-            risk_level = 'high'
-        elif '低风险' in analysis_text or '安全' in analysis_text:
-            risk_level = 'low'
-        
-        # 计算置信度（基于文本长度和关键词）
-        confidence = 0.7
-        if len(analysis_text) > 200:
-            confidence += 0.1
-        if any(word in analysis_text for word in ['明显', '确定', '肯定']):
-            confidence += 0.1
-        if any(word in analysis_text for word in ['可能', '或许', '建议']):
-            confidence -= 0.1
-        
-        confidence = max(0.5, min(0.95, confidence))
-        
-        # 转换分析文本格式
-        formatted_analysis = self._format_analysis_text(analysis_text)
-        
-        return {
-            'risk_level': risk_level,
-            'confidence': confidence,
-            'analysis': formatted_analysis,  # 使用格式化后的HTML
-            'raw_analysis': analysis_text,   # 保留原始文本
-            'recommendation': '请参考分析报告中的建议措施'
-        }
-    
-    def _format_analysis_text(self, analysis_text):
-        """将分析文本从Markdown转换为HTML格式"""
-        # 处理常见的分析格式问题
-        # 确保标题格式正确
-        analysis_text = re.sub(r'(?<!#)#(?!#)', '# ', analysis_text)
-        
-        # 确保列表项有空格
-        analysis_text = re.sub(r'(?<!\n)\n-(?! )', '\n- ', analysis_text)
-        
+        """解析LLM返回的分析结果"""
         try:
-            # 转换Markdown为HTML
-            html = markdown.markdown(analysis_text, extensions=['extra', 'nl2br'])
+            # 尝试提取风险级别
+            risk_match = re.search(r'风险[级别评估]{0,2}[:：]\s*(高|中|低)', analysis_text)
+            if risk_match:
+                risk_level_map = {'高': 'high', '中': 'medium', '低': 'low'}
+                risk_level = risk_level_map.get(risk_match.group(1), 'medium')
+            else:
+                # 如果没有直接提到风险级别，尝试基于关键词判断
+                if re.search(r'严重|危险|恶意|高风险|critical', analysis_text, re.I):
+                    risk_level = 'high'
+                elif re.search(r'中等|警告|warning|可疑|潜在', analysis_text, re.I):
+                    risk_level = 'medium'
+                else:
+                    risk_level = 'low'
             
-            # 添加CSS样式类
-            html = html.replace('<h1>', '<h1 class="analysis-title">')
-            html = html.replace('<h2>', '<h2 class="analysis-subtitle">')
-            html = html.replace('<h3>', '<h3 class="analysis-section">')
-            html = html.replace('<ul>', '<ul class="analysis-list">')
-            html = html.replace('<p>', '<p class="analysis-paragraph">')
+            # 尝试提取置信度
+            confidence_match = re.search(r'置信度[:：]?\s*(\d+\.?\d*)', analysis_text)
+            confidence = float(confidence_match.group(1)) if confidence_match else 0.8
             
-            # 添加高亮风险指示
-            html = re.sub(r'(高风险|严重风险|Critical)', r'<span class="badge badge-danger">\1</span>', html)
-            html = re.sub(r'(中风险|中等风险|Medium)', r'<span class="badge badge-warning">\1</span>', html)
-            html = re.sub(r'(低风险|低危险|Low)', r'<span class="badge badge-info">\1</span>', html)
+            # 确保置信度在0-1范围内
+            confidence = max(0.0, min(1.0, confidence))
             
-            return html
+            # 尝试提取建议
+            recommendation_match = re.search(r'建议[:：](.+?)(?=\n\n|\n#|\Z)', analysis_text, re.DOTALL)
+            recommendation = recommendation_match.group(1).strip() if recommendation_match else '建议进行人工审查以确认安全性。'
+            
+            return {
+                'risk_level': risk_level,
+                'confidence': confidence,
+                'analysis': self._format_analysis_text(analysis_text),
+                'raw_analysis': analysis_text,
+                'recommendation': recommendation
+            }
         except Exception as e:
-            print(f"HTML格式化错误: {e}")
-            # 如果转换出错，返回简单的格式化文本
-            return f"<div>{analysis_text.replace('\n', '<br>')}</div>"
+            print(f"解析分析结果错误: {e}")
+            # 返回安全的默认值
+            return {
+                'risk_level': 'medium',
+                'confidence': 0.5,
+                'analysis': self._format_analysis_text(analysis_text),
+                'raw_analysis': analysis_text,
+                'recommendation': '建议进行人工审查以确认安全性。'
+            }
+    
+    def _format_analysis_text(self, text):
+        """格式化分析文本"""
+        # 简单格式化，可以在这里添加更多HTML或Markdown格式化
+        return text.replace('\n', '<br>')
     
     def _fallback_analysis(self, xgboost_result):
         """当API调用失败时的后备分析"""
-        if xgboost_result['prediction'] == 'malicious':
-            return {
-                'risk_level': 'high',
-                'confidence': xgboost_result['confidence'],
-                'analysis': '基于机器学习模型分析，该组件包存在安全风险。建议进一步人工审查。',
-                'recommendation': '建议停止使用该组件，并寻找替代方案。'
-            }
+        risk_level = xgboost_result.get('risk_level', 'medium')
+        confidence = xgboost_result.get('confidence', 0.5)
+        
+        # 确保置信度在0-1范围内
+        confidence = max(0.0, min(1.0, confidence))
+        
+        if xgboost_result.get('prediction') == 'malicious' or risk_level in ['high', 'medium']:
+            analysis_text = '基于机器学习模型分析，该组件包存在安全风险。建议进行人工审查以确认潜在威胁。'
+            if risk_level == 'high':
+                analysis_text += '\n\n主要风险点包括：\n- 可能包含恶意代码\n- 可能执行未授权操作\n- 可能存在数据泄露风险'
+                recommendation = '建议立即停止使用该组件，并寻找安全的替代方案。'
+            else:
+                analysis_text += '\n\n该包可能存在一些安全隐患，但风险程度有限。'
+                recommendation = '建议在使用前进行详细的安全评估，并确保在受限环境中运行。'
         else:
-            return {
-                'risk_level': 'low',
-                'confidence': xgboost_result['confidence'],
-                'analysis': '基于机器学习模型分析，该组件包相对安全。',
-                'recommendation': '可以继续使用，但建议定期更新到最新版本。'
-            }
+            analysis_text = '基于机器学习模型分析，该组件包相对安全，未发现明显的恶意行为特征。'
+            recommendation = '可以继续使用，但建议定期更新到最新版本以获取安全修复。'
+        
+        # 确保返回所有必要的字段
+        return {
+            'risk_level': risk_level,
+            'confidence': confidence,
+            'analysis': self._format_analysis_text(analysis_text),
+            'raw_analysis': analysis_text,
+            'recommendation': recommendation
+        }

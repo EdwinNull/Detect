@@ -10,14 +10,22 @@
         上传你的组件包，系统将自动进行安全检测，识别潜在的恶意代码和风险。
     </p>
     
-    <form method="POST" action="{{ url_for('scan.scan') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ url_for('scan.scan') }}" enctype="multipart/form-data" id="scanForm">
+        {{ form.csrf_token }}
         <div style="margin-bottom: 20px;">
             <label for="scan_file" style="display: block; margin-bottom: 8px; font-weight: 500;">选择要扫描的文件</label>
-            <input type="file" id="scan_file" name="scan_file" required style="display: block; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+            {{ form.scan_file(style="display: block; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;", required=true) }}
             <div style="font-size: 13px; color: #666; margin-top: 6px;">支持 .zip, .tar.gz, .whl, .jar, .tgz, .npm 等格式</div>
         </div>
         
-        <button type="submit" class="btn btn-primary" style="width: 100%;">开始扫描</button>
+        <div style="margin-bottom: 20px;">
+            <label class="checkbox-container" style="display: flex; align-items: center; cursor: pointer;">
+                {{ form.fetch_packages(style="margin-right: 8px;") }}
+                <span style="font-size: 14px;">同时抓取最新包进行检测（将自动从包仓库抓取20个最新的包进行安全分析）</span>
+            </label>
+        </div>
+        
+        {{ form.submit(class="btn btn-primary", style="width: 100%;") }}
     </form>
 </div>
 {% endblock %} 

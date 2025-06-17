@@ -1,13 +1,24 @@
 from flask import Flask
 from config import Config
 import os
+from flask_wtf.csrf import CSRFProtect
 
 # 全局变量
 scan_tasks = {}
+csrf = CSRFProtect()
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    
+    # 初始化CSRF保护
+    csrf.init_app(app)
+    
+    # 添加CSRF令牌到模板全局变量
+    @app.context_processor
+    def inject_csrf_token():
+        from flask_wtf.csrf import generate_csrf
+        return dict(csrf_token=generate_csrf)
     
     # 确保上传目录存在
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)

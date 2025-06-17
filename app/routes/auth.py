@@ -3,21 +3,17 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import sqlite3
 from datetime import datetime
 from config import Config
+from app.utils.forms import LoginForm, RegisterForm
 
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
-        
-        # 验证两次密码输入是否一致
-        if password != confirm_password:
-            flash('两次输入的密码不一致', 'error')
-            return render_template('register.html')
+    form = RegisterForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        email = form.email.data
+        password = form.password.data
         
         conn = sqlite3.connect(Config.DATABASE_PATH)
         cursor = conn.cursor()
@@ -27,14 +23,14 @@ def register():
         if cursor.fetchone():
             flash('用户名已被使用', 'error')
             conn.close()
-            return render_template('register.html')
+            return render_template('register.html', form=form)
         
         # 检查邮箱是否已存在
         cursor.execute('SELECT id FROM users WHERE email = ?', (email,))
         if cursor.fetchone():
             flash('邮箱已被注册', 'error')
             conn.close()
-            return render_template('register.html')
+            return render_template('register.html', form=form)
         
         # 创建用户
         password_hash = generate_password_hash(password)
@@ -57,13 +53,14 @@ def register():
         flash('注册成功，欢迎使用！', 'success')
         return redirect(url_for('user.index'))
     
-    return render_template('register.html')
+    return render_template('register.html', form=form)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+    form = LoginForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
         
         conn = sqlite3.connect(Config.DATABASE_PATH)
         cursor = conn.cursor()
@@ -88,7 +85,7 @@ def login():
         else:
             flash('用户名或密码错误', 'error')
     
-    return render_template('login.html')
+    return render_template('login.html', form=form)
 
 @auth_bp.route('/logout')
 def logout():
