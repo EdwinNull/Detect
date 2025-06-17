@@ -1,6 +1,8 @@
 import requests
 from config import Config
 from app.utils.helpers import get_setting
+import markdown
+import re
 
 class DeepSeekAnalyzer:
     def __init__(self, api_key=None):
@@ -98,12 +100,47 @@ XGBoost初筛结果：
         
         confidence = max(0.5, min(0.95, confidence))
         
+        # 转换分析文本格式
+        formatted_analysis = self._format_analysis_text(analysis_text)
+        
         return {
             'risk_level': risk_level,
             'confidence': confidence,
-            'analysis': analysis_text,
+            'analysis': formatted_analysis,  # 使用格式化后的HTML
+            'raw_analysis': analysis_text,   # 保留原始文本
             'recommendation': '请参考分析报告中的建议措施'
         }
+    
+    def _format_analysis_text(self, analysis_text):
+        """将分析文本从Markdown转换为HTML格式"""
+        # 处理常见的分析格式问题
+        # 确保标题格式正确
+        analysis_text = re.sub(r'(?<!#)#(?!#)', '# ', analysis_text)
+        
+        # 确保列表项有空格
+        analysis_text = re.sub(r'(?<!\n)\n-(?! )', '\n- ', analysis_text)
+        
+        try:
+            # 转换Markdown为HTML
+            html = markdown.markdown(analysis_text, extensions=['extra', 'nl2br'])
+            
+            # 添加CSS样式类
+            html = html.replace('<h1>', '<h1 class="analysis-title">')
+            html = html.replace('<h2>', '<h2 class="analysis-subtitle">')
+            html = html.replace('<h3>', '<h3 class="analysis-section">')
+            html = html.replace('<ul>', '<ul class="analysis-list">')
+            html = html.replace('<p>', '<p class="analysis-paragraph">')
+            
+            # 添加高亮风险指示
+            html = re.sub(r'(高风险|严重风险|Critical)', r'<span class="badge badge-danger">\1</span>', html)
+            html = re.sub(r'(中风险|中等风险|Medium)', r'<span class="badge badge-warning">\1</span>', html)
+            html = re.sub(r'(低风险|低危险|Low)', r'<span class="badge badge-info">\1</span>', html)
+            
+            return html
+        except Exception as e:
+            print(f"HTML格式化错误: {e}")
+            # 如果转换出错，返回简单的格式化文本
+            return f"<div>{analysis_text.replace('\n', '<br>')}</div>"
     
     def _fallback_analysis(self, xgboost_result):
         """当API调用失败时的后备分析"""

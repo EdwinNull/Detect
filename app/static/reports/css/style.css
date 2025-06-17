@@ -1,0 +1,64 @@
+/* 分析报告样式 */
+.analysis-title {
+    color: #2c3e50;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.analysis-subtitle {
+    color: #3498db;
+    margin-top: 0.8rem;
+    margin-bottom: 0.8rem;
+}
+
+.analysis-section {
+    color: #2980b9;
+    font-weight: 600;
+    margin-top: 0.6rem;
+}
+
+.analysis-list {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.analysis-paragraph {
+    margin-bottom: 0.8rem;
+    line-height: 1.6;
+}
+
+.badge-danger {
+    background-color: #e74c3c;
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.badge-warning {
+    background-color: #f39c12;
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.badge-info {
+    background-color: #3498db;
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.analysis-content code {
+    background-color: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-family: Consolas, Monaco, 'Andale Mono', monospace;
+    color: #e83e8c;
+}
+
+.analysis-content pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    overflow-x: auto;
+}
