@@ -207,7 +207,6 @@ security-scanner/
 2. 配置适当的网络安全措施  
 3. 定期备份数据库和配置文件
 4. 监控系统资源使用情况 
-=======
 1. Fork 仓库
 2. 创建您的特性分支 (`git checkout -b feature/amazing-feature`)
 3. 提交您的更改 (`git commit -m 'Add some amazing feature'`)
