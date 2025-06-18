@@ -45,7 +45,6 @@ venv\Scripts\activate  # Windows
 pip install -r requirements.txt
 ```
 
-<<<<<<< HEAD
 ### 3. 配置DeepSeek API
 - 在 `app.py` 中更新 `DEEPSEEK_API_KEY` 为您的API密钥
 - 当前使用的密钥: `************************`
@@ -76,7 +75,6 @@ python app.py
 
 欢迎贡献代码、报告问题或提出改进建议。请遵循以下步骤：
 
-<<<<<<< HEAD
 ### 历史记录
 - 查看所有检测历史
 - 支持按文件名、风险等级、状态筛选
