@@ -27,7 +27,7 @@
                     <span class="meta-label">公开日期:</span>
                     <span class="meta-value">{{ scan_data.created_at.split(' ')[0] if scan_data.created_at else 'N/A' }}</span>
                     <span class="meta-label">更新日期:</span>
-                    <span class="meta-value">{{ scan_data.created_at.split(' ')[0] if scan_data.created_at else 'N/A' }}</span>
+                    <span class="meta-value">{{ scan_data.updated_at.split(' ')[0] if scan_data.updated_at else scan_data.created_at.split(' ')[0] if scan_data.created_at else 'N/A' }}</span>
                 </div>
                 <div class="meta-row">
                     <span class="meta-label">威胁标签:</span>
@@ -442,7 +442,22 @@ document.addEventListener('DOMContentLoaded', function() {
                         display: true
                     },
                     suggestedMin: 0,
-                    suggestedMax: 100
+                    suggestedMax: 100,
+                    pointLabels: {
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        color: 'rgba(50, 50, 50, 0.8)'
+                    },
+                    ticks: {
+                        backdropColor: 'transparent',
+                        color: 'rgba(50, 50, 50, 0.8)',
+                        font: {
+                            size: 12
+                        },
+                        z: 1
+                    }
                 }
             }
         }

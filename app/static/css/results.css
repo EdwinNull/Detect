@@ -419,21 +419,24 @@
 }
 
 .meta-row {
-    margin-bottom: 10px;
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    gap: 15px;
 }
 
 .meta-label {
-    color: rgba(255,255,255,0.7);
-    margin-right: 8px;
+    font-size: 0.9em;
+    color: #6b7280;
     font-weight: 500;
+    margin-right: 5px;
 }
 
 .meta-value {
-    color: white;
-    margin-right: 20px;
+    font-size: 0.95em;
+    color: #374151;
+    font-weight: 600;
 }
 
 .meta-tag {

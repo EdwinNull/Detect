@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}举报帖子 - 安全社区{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="create-post-container">
+    <a href="{{ url_for('community.post_detail', post_id=post.id) }}" class="back-btn">
+        <i class="fas fa-arrow-left"></i> 返回帖子
+    </a>
+    
+    <h1>举报帖子</h1>
+    <p class="text-muted">标题: {{ post.title }}</p>
+    
+    <form method="post" action="{{ url_for('community.submit_report', post_id=post.id) }}" class="create-post-form">
+        <div class="form-group">
+            <label for="reason">举报原因</label>
+            <select id="reason" name="reason" class="form-control" required>
+                <option value="">-- 请选择举报原因 --</option>
+                <option value="spam">垃圾内容</option>
+                <option value="offensive">冒犯性内容</option>
+                <option value="inappropriate">不适当内容</option>
+                <option value="misinformation">错误信息</option>
+                <option value="other">其他原因</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="description">详细说明</label>
+            <textarea id="description" name="description" class="form-control" rows="10" required placeholder="请详细说明举报原因..."></textarea>
+        </div>
+        
+        <div class="form-group text-right">
+            <button type="submit" class="btn btn-warning">
+                <i class="fas fa-flag"></i> 提交举报
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %} 
