@@ -372,20 +372,20 @@
 
 <div class="dashboard-container">
     <div class="main-content">
-        <!-- 统计信息 -->
+    <!-- 统计信息 -->
         <div class="stats-container">
-            <div class="stat-card">
+        <div class="stat-card">
                 <div class="stat-icon">
                     <i class="fas fa-shield-alt"></i>
                 </div>
-                <div class="stat-value">{{ total_scans }}</div>
+            <div class="stat-value">{{ total_scans }}</div>
                 <div class="stat-label">总扫描次数</div>
-            </div>
-            <div class="stat-card">
+        </div>
+        <div class="stat-card">
                 <div class="stat-icon">
                     <i class="fas fa-exclamation-triangle"></i>
                 </div>
-                <div class="stat-value">{{ total_malicious }}</div>
+            <div class="stat-value">{{ total_malicious }}</div>
                 <div class="stat-label">检出恶意包</div>
             </div>
             <div class="stat-card">
@@ -398,10 +398,10 @@
             <div class="stat-card">
                 <div class="stat-icon">
                     <i class="fas fa-database"></i>
-                </div>
+        </div>
                 <div class="stat-value">{{ total_samples|default(0) }}</div>
                 <div class="stat-label">样本库规模</div>
-            </div>
+    </div>
         </div>
         
         <!-- 最近扫描 -->
@@ -470,19 +470,19 @@
                             <div class="package-meta">
                                 <span>{{ package.package_type }}</span>
                                 <span>检出时间: {{ package.created_at }}</span>
-                            </div>
-                        </div>
-                        <div>
-                            <span class="risk-badge risk-{{ package.risk_level }}">{{ package.risk_level }}</span>
                         </div>
                     </div>
-                    {% endfor %}
-                {% else %}
+                    <div>
+                            <span class="risk-badge risk-{{ package.risk_level }}">{{ package.risk_level }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
                 <div style="text-align: center; padding: 20px 0; color: var(--text-color-light);">
                     <i class="fas fa-info-circle"></i> 暂无恶意包数据
                 </div>
-                {% endif %}
-            </div>
+            {% endif %}
+        </div>
         </div>
     </div>
     
@@ -496,7 +496,7 @@
             <div id="uploadArea" class="upload-area">
                 <div class="upload-icon">
                     <i class="fas fa-file-upload"></i>
-                </div>
+            </div>
                 <div class="upload-text">拖放文件或点击上传</div>
                 <div class="upload-hint">支持 .zip, .tar.gz, .whl, .jar, .tgz, .npm 等格式</div>
                 <input type="file" id="fileInput" class="file-input">
@@ -515,7 +515,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- 快速指南 -->
         <div class="container-card">
             <div class="section-header">
@@ -567,7 +567,7 @@
     uploadArea.addEventListener('drop', (e) => {
         e.preventDefault();
         uploadArea.classList.remove('dragover');
-        
+    
         if (e.dataTransfer.files.length) {
             fileInput.files = e.dataTransfer.files;
             // 显示文件名
@@ -579,44 +579,44 @@
     fileInput.addEventListener('change', () => {
         if (fileInput.files.length) {
             uploadArea.querySelector('.upload-text').textContent = `已选择: ${fileInput.files[0].name}`;
-        }
+            }
     });
-    
+
     // 扫描按钮点击
     scanButton.addEventListener('click', () => {
         if (!fileInput.files.length) {
             alert('请先选择文件');
             return;
         }
-        
-        const formData = new FormData();
+    
+    const formData = new FormData();
         formData.append('file', fileInput.files[0]);
-        
+    
         // 显示进度条
         uploadProgress.style.display = 'block';
         scanButton.disabled = true;
-        
-        fetch('/upload', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
+    
+    fetch('/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
                 progressBar.style.width = '100%';
                 uploadStatus.textContent = data.message;
-                // 重定向到进度页面
-                window.location.href = '/progress/' + data.scan_id;
-            } else {
+            // 重定向到进度页面
+            window.location.href = '/progress/' + data.scan_id;
+        } else {
                 uploadStatus.textContent = data.error || '上传失败';
                 scanButton.disabled = false;
-            }
-        })
-        .catch(error => {
+        }
+    })
+    .catch(error => {
             console.error('Error:', error);
             uploadStatus.textContent = '上传失败: ' + error.message;
             scanButton.disabled = false;
-        });
     });
+});
 </script>
 {% endblock %} 

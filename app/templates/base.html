@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}开源组件包安全检测平台{% endblock %}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+    {% if request.path.startswith('/community') %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+    {% endif %}
     {% block extra_css %}{% endblock %}
     <style>
         :root {
@@ -432,5 +436,6 @@
     </script>
     
     {% block extra_js %}{% endblock %}
+    {% block scripts %}{% endblock %}
 </body>
 </html> 

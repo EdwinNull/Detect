@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}编辑帖子 - 安全社区{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="create-post-container">
+    <a href="{{ url_for('community.post_detail', post_id=post.id) }}" class="back-btn">
+        <i class="fas fa-arrow-left"></i> 返回帖子
+    </a>
+    
+    <h1>编辑帖子</h1>
+    
+    <form method="post" action="{{ url_for('community.edit_post', post_id=post.id) }}" class="create-post-form">
+        <div class="form-group">
+            <label for="title">标题</label>
+            <input type="text" id="title" name="title" class="form-control" value="{{ post.title }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="category">分类</label>
+            <select id="category" name="category" class="form-control">
+                <option value="discussion" {% if post.category == 'discussion' %}selected{% endif %}>讨论</option>
+                <option value="discovery" {% if post.category == 'discovery' %}selected{% endif %}>安全发现</option>
+                <option value="question" {% if post.category == 'question' %}selected{% endif %}>问题求助</option>
+                <option value="tutorial" {% if post.category == 'tutorial' %}selected{% endif %}>教程</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="content">内容</label>
+            <textarea id="content" name="content" class="form-control" rows="15" required>{{ post.content }}</textarea>
+        </div>
+        
+        <div class="form-group text-right">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> 保存更改
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %} 
