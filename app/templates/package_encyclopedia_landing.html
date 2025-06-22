@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #F0F2FE; /* Light purple background */
+    }
+    .encyclopedia-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 24px;
+    }
+    .hero-section {
+        background: white;
+        padding: 48px 32px;
+        border-radius: 20px;
+        text-align: center;
+        margin-bottom: 32px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+    }
+    .hero-title {
+        font-size: 42px;
+        font-weight: 800;
+        color: #4A4DE6; /* Main purple color */
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+    }
+    .hero-title .icon {
+        font-size: 38px;
+        color: #787CF1;
+    }
+    .hero-subtitle {
+        font-size: 18px;
+        color: #6c757d;
+        max-width: 600px;
+        margin: 0 auto 32px auto;
+    }
+    .search-bar {
+        position: relative;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    .search-input {
+        width: 100%;
+        padding: 16px 24px 16px 50px;
+        border-radius: 30px;
+        border: 2px solid #EAEAFB;
+        font-size: 16px;
+        background-color: #F8F9FF;
+        transition: all 0.3s;
+    }
+    .search-input:focus {
+        outline: none;
+        border-color: #787CF1;
+        box-shadow: 0 0 0 4px rgba(74, 77, 230, 0.1);
+    }
+    .search-icon {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #787CF1;
+        font-size: 20px;
+    }
+    .language-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 24px;
+    }
+    .language-card {
+        background: white;
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        text-decoration: none;
+        display: block;
+        color: inherit;
+    }
+    .language-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(74, 77, 230, 0.1);
+        border-color: #787CF1;
+    }
+    .lang-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+    .lang-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: bold;
+        color: white;
+    }
+    .python-bg { background-color: #306998; }
+    .js-bg { background-color: #F0DB4F; color: #323330; }
+    .java-bg { background-color: #E76F00; }
+    .ruby-bg { background-color: #CC342D; }
+    .go-bg { background-color: #00ADD8; }
+    .rust-bg { background-color: #DE342A; }
+    .php-bg { background-color: #777BB4; }
+    .other-bg { background-color: #6c757d; }
+    .lang-name {
+        font-size: 22px;
+        font-weight: 700;
+        color: #343a40;
+    }
+    .lang-count {
+        font-size: 16px;
+        color: #6c757d;
+        margin-bottom: 16px;
+    }
+    .lang-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 24px;
+        min-height: 58px;
+    }
+    .tag {
+        background-color: #F0F2FE;
+        color: #4A4DE6;
+        padding: 6px 12px;
+        border-radius: 15px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .view-details {
+        font-weight: 600;
+        color: #4A4DE6;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s;
+    }
+    .language-card:hover .view-details {
+        gap: 12px;
+    }
+    .arrow-icon {
+        transition: transform 0.3s;
+    }
+    .language-card:hover .arrow-icon {
+        transform: translateX(5px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="encyclopedia-container">
+    <div class="hero-section">
+        <h1 class="hero-title">
+            <span class="icon">📖</span> 包的百科
+        </h1>
+        <p class="hero-subtitle">
+            了解常见开源包的基本信息、安全风险和最佳实践，做出更明智的技术选择。
+        </p>
+        <form method="GET" action="{{ url_for('user.package_encyclopedia') }}">
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="text" name="search" class="search-input" placeholder="搜索包名称，例如: requests, express...">
+            </div>
+        </form>
+    </div>
+
+    <div class="language-grid">
+        {% for card in language_cards %}
+        <a href="{{ url_for('user.package_list', package_type=card.name) }}" class="language-card">
+            <div class="lang-header">
+                {% set icon_class = card.name.lower() %}
+                {% if icon_class == 'python' %}
+                    <div class="lang-icon python-bg">Py</div>
+                {% elif icon_class == 'javascript' %}
+                    <div class="lang-icon js-bg">JS</div>
+                {% elif icon_class == 'java' %}
+                    <div class="lang-icon java-bg">J</div>
+                {% elif icon_class == 'ruby' %}
+                    <div class="lang-icon ruby-bg">Rb</div>
+                {% elif icon_class == 'go' %}
+                    <div class="lang-icon go-bg">Go</div>
+                {% elif icon_class == 'rust' %}
+                    <div class="lang-icon rust-bg">Rs</div>
+                {% elif icon_class == 'php' %}
+                    <div class="lang-icon php-bg">Php</div>
+                {% else %}
+                    <div class="lang-icon other-bg">?</div>
+                {% endif %}
+                <span class="lang-name">{{ card.name }}</span>
+            </div>
+            <p class="lang-count">{{ card.count }} 个精选包</p>
+            <div class="lang-tags">
+                {% for tag in card.tags %}
+                <span class="tag">{{ tag }}</span>
+                {% endfor %}
+            </div>
+            <div class="view-details">
+                查看详情 <span class="arrow-icon">→</span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

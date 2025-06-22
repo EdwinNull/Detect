@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} - 安全社区{% endblock %}
+
+{% block extra_css %}
+<style>
+    .post-detail-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .post-header {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    .post-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 15px;
+    }
+    
+    .post-meta {
+        display: flex;
+        gap: 20px;
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .post-content {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        line-height: 1.8;
+        color: #333;
+    }
+    
+    .post-actions {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .left-actions {
+        display: flex;
+        gap: 12px;
+    }
+    
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: white;
+        color: #666;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+    
+    .action-btn:hover {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+    
+    .action-btn.liked {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+    
+    .comments-section {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    .comment-form {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .comment-textarea {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 16px;
+        min-height: 100px;
+        resize: vertical;
+        font-family: inherit;
+        margin-bottom: 15px;
+    }
+    
+    .comment-textarea:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .comment-submit {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    
+    .comment-submit:hover {
+        transform: translateY(-2px);
+    }
+    
+    .comment-item {
+        padding: 20px 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .comment-item:last-child {
+        border-bottom: none;
+    }
+    
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .comment-author {
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .comment-time {
+        font-size: 12px;
+        color: #999;
+    }
+    
+    .comment-content {
+        color: #555;
+        line-height: 1.6;
+    }
+    
+    .risk-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+    }
+    
+    .risk-high { background: #dc3545; }
+    .risk-medium { background: #ffc107; color: #333; }
+    .risk-low { background: #28a745; }
+    
+    .package-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+    }
+    
+    .package-npm { background: #cb3837; }
+    .package-pypi { background: #3776ab; }
+    
+    .back-btn {
+        background: #f5f5f5;
+        color: #666;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 14px;
+        margin-bottom: 20px;
+        display: inline-block;
+    }
+    
+    .back-btn:hover {
+        background: #e5e5e5;
+        color: #333;
+    }
+    
+    .report-btn {
+        border-color: #ff4757;
+        color: #ff4757;
+    }
+
+    .report-btn:hover {
+        background-color: #ff4757;
+        border-color: #ff4757;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="post-detail-container">
+    <a href="{{ url_for('community.index') }}" class="back-btn">← 返回社区</a>
+    
+    <!-- 帖子头部 -->
+    <div class="post-header">
+        <h1 class="post-title">{{ post.title }}</h1>
+        
+        <div class="post-meta">
+            <span>👤 {{ post.username }}</span>
+            <span>📅 {{ post.created_at }}</span>
+            <span>👁️ {{ post.views_count }} 浏览</span>
+            {% if post.package_name %}
+                <span>📦 {{ post.package_name }}</span>
+            {% endif %}
+            {% if post.package_type %}
+                <span class="package-badge package-{{ post.package_type }}">{{ post.package_type.upper() }}</span>
+            {% endif %}
+            {% if post.risk_level %}
+                <span class="risk-badge risk-{{ post.risk_level }}">{{ post.risk_level }}</span>
+            {% endif %}
+            {% if post.confidence %}
+                <span>🎯 {{ "%.1f"|format(post.confidence) }}% 置信度</span>
+            {% endif %}
+        </div>
+        
+        {% if post.is_pinned %}
+            <div style="color: #ffc107; font-weight: 600;">📌 置顶帖子</div>
+        {% endif %}
+        {% if post.is_verified %}
+            <div style="color: #28a745; font-weight: 600;">✅ 已验证</div>
+        {% endif %}
+    </div>
+    
+    <!-- 帖子内容 -->
+    <div class="post-content">
+        {{ post.content|nl2br }}
+    </div>
+    
+    <!-- 帖子操作 -->
+    <div class="post-actions">
+        <div class="left-actions">
+            <button class="action-btn {% if post.liked_by_user %}liked{% endif %}" onclick="toggleLike()">
+                👍 <span id="like-count">{{ post.likes }}</span>
+            </button>
+            <a href="#comment-form" class="action-btn">
+                💬 回复
+            </a>
+            {% if post.scan_id %}
+            <a href="{{ url_for('scan.result', scan_id=post.scan_id) }}" class="action-btn">
+                📄 查看扫描详情
+            </a>
+            <a href="{{ url_for('community.report_anomaly', scan_id=post.scan_id) }}" class="action-btn report-btn">
+                🚨 上报异常
+            </a>
+            {% endif %}
+        </div>
+        <div>
+            <!--
+            <a href="#" class="action-btn">
+                🔗 分享
+            </a>
+            -->
+        </div>
+    </div>
+    
+    <!-- 评论区 -->
+    <div class="comments-section">
+        <h3 class="comments-title">评论 ({{ comments|length }})</h3>
+        
+        {% if session.user_id %}
+        <div class="comment-form">
+            <form method="post" action="{{ url_for('community.add_comment', post_id=post.id) }}">
+                <textarea name="content" class="comment-textarea" 
+                          placeholder="写下您的评论..." required></textarea>
+                <button type="submit" class="comment-submit">发表评论</button>
+            </form>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 20px; color: #666;">
+            请 <a href="{{ url_for('auth.login') }}">登录</a> 后发表评论
+        </div>
+        {% endif %}
+        
+        <!-- 评论列表 -->
+        {% if comments %}
+            {% for comment in comments %}
+            <div class="comment-item">
+                <div class="comment-header">
+                    <span class="comment-author">{{ comment.username }}</span>
+                    <span class="comment-time">{{ comment.created_at }}</span>
+                </div>
+                <div class="comment-content">
+                    {{ comment.content|nl2br }}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 40px; color: #666;">
+                <p>暂无评论，成为第一个评论的用户吧！</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

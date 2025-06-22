@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 24px;
+    }
+    
+    .form-header {
+        background: #fff;
+        padding: 32px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 24px;
+        text-align: center;
+    }
+    
+    .form-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1e40af;
+        margin-bottom: 12px;
+    }
+    
+    .form-subtitle {
+        color: #6b7280;
+        font-size: 16px;
+    }
+    
+    .form-section {
+        background: #fff;
+        padding: 32px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 24px;
+    }
+    
+    .section-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1e40af;
+        margin-bottom: 20px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .form-group {
+        margin-bottom: 24px;
+    }
+    
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: all 0.2s;
+        box-sizing: border-box;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    
+    .form-select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 16px;
+        background: #fff;
+        transition: all 0.2s;
+        box-sizing: border-box;
+    }
+    
+    .form-select:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    
+    .form-textarea {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 16px;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 120px;
+        transition: all 0.2s;
+        box-sizing: border-box;
+    }
+    
+    .form-textarea:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    
+    .form-help {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+    
+    .required {
+        color: #ef4444;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        margin-top: 32px;
+    }
+    
+    .submit-btn {
+        padding: 12px 32px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .submit-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .cancel-btn {
+        padding: 12px 32px;
+        background: #f3f4f6;
+        color: #6b7280;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .cancel-btn:hover {
+        background: #e5e7eb;
+    }
+    
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        background: #f3f4f6;
+        color: #374151;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s;
+        margin-bottom: 24px;
+    }
+    
+    .back-link:hover {
+        background: #e5e7eb;
+        transform: translateY(-1px);
+    }
+    
+    .field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+    
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 0 16px;
+        }
+        
+        .form-section {
+            padding: 20px;
+        }
+        
+        .field-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <a href="{{ url_for('user.package_detail', package_id=package.id) }}" class="back-link">
+        ← 返回包详情
+    </a>
+    
+    <div class="form-header">
+        <h1 class="form-title">编辑包百科条目</h1>
+        <p class="form-subtitle">修改 {{ package.package_name }} 的信息</p>
+    </div>
+    
+    <form method="POST">
+        <div class="form-section">
+            <h2 class="section-title">基本信息</h2>
+            
+            <div class="field-row">
+                <div class="form-group">
+                    <label class="form-label">
+                        包名称 <span class="required">*</span>
+                    </label>
+                    <input type="text" 
+                           name="package_name" 
+                           class="form-input" 
+                           required 
+                           value="{{ package.package_name }}"
+                           placeholder="例如: requests, lodash, spring-boot">
+                    <div class="form-help">输入包的完整名称</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        包类型 <span class="required">*</span>
+                    </label>
+                    <select name="package_type" class="form-select" required>
+                        <option value="">选择包类型</option>
+                        <option value="Python" {% if package.package_type == 'Python' %}selected{% endif %}>Python (PyPI)</option>
+                        <option value="JavaScript" {% if package.package_type == 'JavaScript' %}selected{% endif %}>JavaScript (NPM)</option>
+                        <option value="Java" {% if package.package_type == 'Java' %}selected{% endif %}>Java (Maven)</option>
+                        <option value="Ruby" {% if package.package_type == 'Ruby' %}selected{% endif %}>Ruby (RubyGems)</option>
+                        <option value="Go" {% if package.package_type == 'Go' %}selected{% endif %}>Go (Go Modules)</option>
+                        <option value="Rust" {% if package.package_type == 'Rust' %}selected{% endif %}>Rust (Cargo)</option>
+                        <option value="PHP" {% if package.package_type == 'PHP' %}selected{% endif %}>PHP (Composer)</option>
+                        <option value="其他" {% if package.package_type == '其他' %}selected{% endif %}>其他</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">描述</label>
+                <textarea name="description" 
+                          class="form-textarea" 
+                          placeholder="简要描述包的功能和用途...">{{ package.description or '' }}</textarea>
+                <div class="form-help">描述包的主要功能和用途</div>
+            </div>
+            
+            <div class="field-row">
+                <div class="form-group">
+                    <label class="form-label">版本</label>
+                    <input type="text" 
+                           name="version" 
+                           class="form-input" 
+                           value="{{ package.version or '' }}"
+                           placeholder="例如: 2.28.1">
+                    <div class="form-help">当前稳定版本号</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">作者</label>
+                    <input type="text" 
+                           name="author" 
+                           class="form-input" 
+                           value="{{ package.author or '' }}"
+                           placeholder="例如: Kenneth Reitz">
+                    <div class="form-help">包的主要维护者或作者</div>
+                </div>
+            </div>
+            
+            <div class="field-row">
+                <div class="form-group">
+                    <label class="form-label">许可证</label>
+                    <input type="text" 
+                           name="license" 
+                           class="form-input" 
+                           value="{{ package.license or '' }}"
+                           placeholder="例如: MIT, Apache 2.0">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">代码仓库</label>
+                    <input type="url" 
+                           name="repository" 
+                           class="form-input" 
+                           value="{{ package.repository or '' }}"
+                           placeholder="https://github.com/...">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">官方网站</label>
+                <input type="url" 
+                       name="official_website" 
+                       class="form-input" 
+                       value="{{ package.official_website or '' }}"
+                       placeholder="https://...">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">标签</label>
+                <input type="text" 
+                       name="tags" 
+                       class="form-input"
+                       value="{{ package.tags or '' }}"
+                       placeholder="例如: Web框架, 数据分析, 工具库">
+                <div class="form-help">多个标签请用英文逗号分隔</div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h2 class="section-title">安全信息</h2>
+            
+            <div class="form-group">
+                <label class="form-label">安全说明</label>
+                <textarea name="security_notes" 
+                          class="form-textarea" 
+                          placeholder="描述包的安全特性、已知安全问题等...">{{ package.security_notes or '' }}</textarea>
+                <div class="form-help">可以包含安全特性、已知漏洞、安全更新等信息</div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">常见风险</label>
+                <textarea name="common_risks" 
+                          class="form-textarea" 
+                          placeholder="列出使用该包时可能遇到的常见安全风险...">{{ package.common_risks or '' }}</textarea>
+                <div class="form-help">描述使用该包时需要注意的安全风险</div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">最佳实践</label>
+                <textarea name="best_practices" 
+                          class="form-textarea" 
+                          placeholder="提供安全使用该包的最佳实践建议...">{{ package.best_practices or '' }}</textarea>
+                <div class="form-help">如何安全地使用该包的建议和指导</div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">替代方案</label>
+                <textarea name="alternatives" 
+                          class="form-textarea" 
+                          placeholder="列出功能类似但更安全的替代包...">{{ package.alternatives or '' }}</textarea>
+                <div class="form-help">如果该包存在安全问题，可以考虑的替代方案</div>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="submit-btn">保存修改</button>
+            <a href="{{ url_for('user.package_detail', package_id=package.id) }}" class="cancel-btn">取消</a>
+        </div>
+    </form>
+</div>
+{% endblock %} 

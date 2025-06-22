@@ -1,0 +1,464 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .encyclopedia-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px;
+    }
+    
+    .encyclopedia-header {
+        background: #fff;
+        padding: 32px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 24px;
+        text-align: center;
+    }
+    
+    .encyclopedia-title {
+        font-size: 32px;
+        font-weight: 700;
+        color: #1e40af;
+        margin-bottom: 12px;
+    }
+    
+    .encyclopedia-subtitle {
+        font-size: 16px;
+        color: #6b7280;
+        margin-bottom: 24px;
+    }
+    
+    .search-filter-section {
+        background: #fff;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 24px;
+    }
+    
+    .search-form {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .search-input {
+        flex: 1;
+        min-width: 300px;
+        padding: 12px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: all 0.2s;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    
+    .type-filter {
+        padding: 12px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 16px;
+        background: #fff;
+        min-width: 150px;
+    }
+    
+    .search-btn {
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .search-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .clear-btn {
+        padding: 12px 24px;
+        background: #f3f4f6;
+        color: #6b7280;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .clear-btn:hover {
+        background: #e5e7eb;
+    }
+    
+    .packages-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+    
+    .package-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .package-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .package-header {
+        padding: 20px;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .package-name {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1e40af;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .package-type-badge {
+        background: #dbeafe;
+        color: #1e40af;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .package-version {
+        color: #6b7280;
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+    
+    .package-description {
+        color: #374151;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 16px;
+    }
+    
+    .package-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+        color: #9ca3af;
+    }
+    
+    .package-author {
+        font-weight: 500;
+    }
+    
+    .package-license {
+        background: #f3f4f6;
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+    
+    .package-actions {
+        padding: 16px 20px;
+        background: #f9fafb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .view-details-btn {
+        padding: 8px 16px;
+        background: #2563eb;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .view-details-btn:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+    }
+    
+    .admin-actions {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .edit-btn {
+        padding: 6px 12px;
+        background: #f59e0b;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .edit-btn:hover {
+        background: #d97706;
+    }
+    
+    .delete-btn {
+        padding: 6px 12px;
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .delete-btn:hover {
+        background: #dc2626;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .empty-icon {
+        font-size: 48px;
+        color: #9ca3af;
+        margin-bottom: 16px;
+    }
+    
+    .empty-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+    
+    .empty-desc {
+        color: #6b7280;
+        margin-bottom: 24px;
+    }
+    
+    .add-package-btn {
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .add-package-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .stats-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .stat-card {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .stat-number {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1e40af;
+        margin-bottom: 4px;
+    }
+    
+    .stat-label {
+        color: #6b7280;
+        font-size: 14px;
+    }
+    
+    @media (max-width: 768px) {
+        .encyclopedia-container {
+            padding: 0 16px;
+        }
+        
+        .search-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .search-input {
+            min-width: auto;
+        }
+        
+        .packages-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .package-actions {
+            flex-direction: column;
+            gap: 12px;
+            align-items: stretch;
+        }
+        
+        .admin-actions {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="encyclopedia-container">
+    <div class="encyclopedia-header">
+        <h1 class="encyclopedia-title">包的百科</h1>
+        <p class="encyclopedia-subtitle">了解常见开源组件包的基本知识、安全风险和最佳实践</p>
+    </div>
+    
+    <div class="stats-section">
+        <div class="stat-card">
+            <div class="stat-number">{{ packages|length }}</div>
+            <div class="stat-label">总包数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ package_types|length }}</div>
+            <div class="stat-label">包类型</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ packages|selectattr('security_notes')|list|length }}</div>
+            <div class="stat-label">安全说明</div>
+        </div>
+    </div>
+    
+    <div class="search-filter-section">
+        <form class="search-form" method="GET" action="{{ url_for('user.package_encyclopedia') }}">
+            <input type="text" 
+                   name="search" 
+                   class="search-input" 
+                   placeholder="搜索包名、描述或作者..." 
+                   value="{{ search_query }}">
+            
+            <select name="type" class="type-filter">
+                <option value="">所有类型</option>
+                {% for type in package_types %}
+                <option value="{{ type }}" {% if type == selected_type %}selected{% endif %}>
+                    {{ type }}
+                </option>
+                {% endfor %}
+            </select>
+            
+            <button type="submit" class="search-btn">搜索</button>
+            <a href="{{ url_for('user.package_encyclopedia') }}" class="clear-btn">清除</a>
+        </form>
+    </div>
+    
+    {% if packages %}
+    <div class="packages-grid">
+        {% for package in packages %}
+        <div class="package-card">
+            <div class="package-header">
+                <div class="package-name">
+                    {{ package.package_name }}
+                    <span class="package-type-badge">{{ package.package_type }}</span>
+                </div>
+                {% if package.version %}
+                <div class="package-version">版本: {{ package.version }}</div>
+                {% endif %}
+                {% if package.description %}
+                <div class="package-description">{{ package.description[:150] }}{% if package.description|length > 150 %}...{% endif %}</div>
+                {% endif %}
+                <div class="package-meta">
+                    {% if package.author %}
+                    <span class="package-author">作者: {{ package.author }}</span>
+                    {% endif %}
+                    {% if package.license %}
+                    <span class="package-license">{{ package.license }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="package-actions">
+                <a href="{{ url_for('user.package_detail', package_id=package.id) }}" class="view-details-btn">
+                    查看详情
+                </a>
+                {% if session.role == 'admin' %}
+                <div class="admin-actions">
+                    <a href="{{ url_for('user.edit_package', package_id=package.id) }}" class="edit-btn">编辑</a>
+                    <button onclick="deletePackage({{ package.id }}, '{{ package.package_name }}')" class="delete-btn">删除</button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📦</div>
+        <h3 class="empty-title">暂无包百科条目</h3>
+        <p class="empty-desc">
+            {% if search_query or selected_type %}
+                没有找到匹配的包百科条目，请尝试其他搜索条件。
+            {% else %}
+                还没有添加任何包百科条目，管理员可以添加常见包的基本信息。
+            {% endif %}
+        </p>
+        {% if session.role == 'admin' %}
+        <a href="{{ url_for('user.add_package') }}" class="add-package-btn">添加包百科条目</a>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    {% if session.role == 'admin' and packages %}
+    <div style="text-align: center; margin-top: 32px;">
+        <a href="{{ url_for('user.add_package') }}" class="add-package-btn">添加新包百科条目</a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function deletePackage(packageId, packageName) {
+    if (confirm(`确定要删除包百科条目 "${packageName}" 吗？此操作不可撤销。`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/package_encyclopedia/delete/${packageId}`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %} 

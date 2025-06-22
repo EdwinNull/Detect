@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}开源组件包安全检测平台{% endblock %}</title>
+    {% block extra_css %}{% endblock %}
     <style>
         * {
             margin: 0;
@@ -62,6 +63,40 @@
             color: #667eea;
         }
         
+        .nav-item.dropdown {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            min-width: 160px;
+            padding: 8px 0;
+        }
+
+        .dropdown-menu a {
+            color: #333;
+            padding: 10px 20px;
+            display: block;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f3f4f6;
+            color: #667eea;
+        }
+
+        .nav-item.dropdown:hover .dropdown-menu {
+            display: block;
+        }
+        
         .user-menu {
             display: flex;
             align-items: center;
@@ -104,6 +139,17 @@
         .btn-outline:hover {
             background: #667eea;
             color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            border: 1px solid #dc3545;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+            border-color: #c82333;
         }
         
         .container {
@@ -159,7 +205,6 @@
             }
         }
     </style>
-    {% block extra_css %}{% endblock %}
 </head>
 <body>
     {% if session.user_id %}
@@ -171,7 +216,16 @@
                 <li><a href="{{ url_for('user.index') }}" {% if request.path == '/' %}class="active"{% endif %}>首页</a></li>
                 <li><a href="{{ url_for('scan.scan') }}" {% if request.path == '/scan' %}class="active"{% endif %}>扫描</a></li>
                 <li><a href="{{ url_for('user.history') }}" {% if request.path == '/history' %}class="active"{% endif %}>历史记录</a></li>
-                <li><a href="{{ url_for('user.knowledge') }}" {% if request.path == '/knowledge' %}class="active"{% endif %}>知识库</a></li>
+                <li class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle {% if request.path.startswith('/knowledge') or request.path.startswith('/package_encyclopedia') %}active{% endif %}" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        学习中心
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="{{ url_for('user.package_encyclopedia') }}">包的百科</a>
+                        <a class="dropdown-item" href="{{ url_for('user.knowledge') }}">知识库</a>
+                    </div>
+                </li>
+                <li><a href="{{ url_for('community.index') }}" class="{% if request.path.startswith('/community') %}active{% endif %}">安全社区</a></li>
                 <li><a href="{{ url_for('user.guide') }}" {% if request.path == '/guide' %}class="active"{% endif %}>快速上手</a></li>
                 {% if session.role == 'admin' %}
                 <li><a href="{{ url_for('admin.admin') }}" class="{% if request.endpoint == 'admin' %}active{% endif %}">系统管理</a></li>

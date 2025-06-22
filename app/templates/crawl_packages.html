@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}抓取开源包 - 管理后台{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:600px;margin:40px auto;background:#fff;padding:30px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+    <h2 style="color:#667eea;margin-bottom:20px;">抓取开源包</h2>
+    <form method="post">
+        <div class="form-group" style="margin-bottom:18px;">
+            <label for="pkg_type">包类型</label>
+            <select name="pkg_type" id="pkg_type" class="form-control">
+                <option value="npm">NPM</option>
+                <option value="pypi">PyPI</option>
+            </select>
+        </div>
+        <div class="form-group" style="margin-bottom:18px;">
+            <label for="limit">抓取数量</label>
+            <input type="number" name="limit" id="limit" class="form-control" value="5" min="1" max="50">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">开始抓取</button>
+    </form>
+    {% if result %}
+    <div style="margin-top:30px;">
+        <h4>抓取结果：</h4>
+        <pre style="background:#f8f8fa;padding:15px;border-radius:6px;max-height:400px;overflow:auto;font-size:14px;">{{ result }}</pre>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

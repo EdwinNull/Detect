@@ -1,16 +1,51 @@
-import time
-import json
 import os
-import threading
+import json
 import sqlite3
+import hashlib
+import zipfile
+import tarfile
+import tempfile
+import shutil
+from datetime import datetime
+from pathlib import Path
+import requests
+import time
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import logging
+from flask import current_app, g
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, confusion_matrix
+import pickle
+import joblib
+from xgboost import XGBClassifier
+import warnings
+warnings.filterwarnings('ignore')
+
+# 导入配置
+from config.config import Config
 from app.services.extractor import FeatureExtractor
 from app.services.classifier import SecurityClassifier
 from app.services.analyzer import DeepSeekAnalyzer
-from config import Config
+from app.services.csv_feature_extractor import CsvFeatureExtractor
 
 # 初始化服务实例
 feature_extractor = FeatureExtractor()
-security_classifier = SecurityClassifier()
+
+# 初始化csv特征提取器
+csv_feature_extractor = CsvFeatureExtractor()
+
+# 预初始化所有模型
+security_classifiers = {
+    'js_model': SecurityClassifier(model_type='js_model'),
+    'py_model': SecurityClassifier(model_type='py_model'),
+    'cross_language': SecurityClassifier(model_type='cross_language'),
+    'xgboost': SecurityClassifier(model_type='xgboost')
+}
+
 deepseek_analyzer = DeepSeekAnalyzer()
 
 # 扫描任务管理
@@ -20,80 +55,168 @@ def background_scan(scan_id, file_path, user_id):
     """后台扫描任务"""
     start_time = time.time()
     try:
-        print(f"开始扫描任务 {scan_id} 文件: {file_path}")
+        print(f"[DEBUG] 开始扫描任务: scan_id={scan_id}, file_path={file_path}")
         
         # 更新状态
         update_scan_status(scan_id, 'extracting_features')
-        print(f"扫描 {scan_id}: 开始提取特征")
         time.sleep(2)  # 模拟特征提取时间
         
-        # 提取特征
-        features = feature_extractor.extract_features(file_path)
-        print(f"扫描 {scan_id}: 特征提取完成")
+        # 判断是否用csv体系
+        use_csv_features = False
+        # 你可以根据模型类型、文件名、配置等条件判断
+        # 这里举例：如果模型类型为'csv_model'，则用csv特征体系
+        filename = os.path.basename(file_path)
+        print(f"[DEBUG] 文件名: {filename}")
+        
+        if filename.endswith('.js') or filename.endswith('.json'):
+            model_type = 'js_model'
+        elif filename.endswith('.py'):
+            model_type = 'py_model'
+        elif filename.endswith('.csvmodel') or filename.endswith('.csvpkg'):
+            model_type = 'csv_model'
+            use_csv_features = True
+        else:
+            model_type = 'cross_language'
+        
+        print(f"[DEBUG] 选择的模型类型: {model_type}")
+        
+        if use_csv_features or model_type == 'csv_model':
+            features = csv_feature_extractor.extract_features(file_path)
+            print(f"[DEBUG] (CSV) 文件: {file_path}")
+            print(f"[DEBUG] (CSV) 特征名: {csv_feature_extractor.feature_names}")
+            print(f"[DEBUG] (CSV) 特征向量: {csv_feature_extractor.get_feature_vector(features)}")
+        else:
+            features = feature_extractor.extract_features(file_path)
+            print(f"[DEBUG] 文件: {file_path}")
+            print(f"[DEBUG] 提取特征: {json.dumps(features, ensure_ascii=False, indent=2)}")
+        
+        if not features:
+            raise Exception("特征提取失败")
+        
+        # 检查包名是否在白名单中
+        package_name = features.get('package_name')
+        print(f"[DEBUG] 提取到的包名: {package_name}")
+        
+        # 根据文件类型选择合适的模型
+        if filename.endswith('.js') or filename.endswith('.json'):
+            model_type = 'js_model'
+        elif filename.endswith('.py'):
+            model_type = 'py_model'
+        else:
+            model_type = 'cross_language'
+        
+        print(f"[DEBUG] 最终选择的模型类型: {model_type}")
         
         # 更新状态
-        update_scan_status(scan_id, 'xgboost_analysis')
-        print(f"扫描 {scan_id}: 开始XGBoost分析")
-        time.sleep(3)  # 模拟XGBoost分析时间
+        update_scan_status(scan_id, f'{model_type}_analysis')
+        time.sleep(3)  # 模拟模型分析时间
         
-        # XGBoost分析
-        xgboost_result = security_classifier.predict(features)
+        # 专用模型分析
+        classifier = security_classifiers.get(model_type)
+        if not classifier or not classifier.is_trained:
+            print(f"专用模型{model_type}未就绪，尝试重新加载")
+            classifier = SecurityClassifier(model_type=model_type)
+            security_classifiers[model_type] = classifier
         
-        # 确保XGBoost结果包含所需字段
-        if 'risk_level' not in xgboost_result:
-            xgboost_result['risk_level'] = 'medium'  # 默认中等风险
-            print(f"扫描 {scan_id}: XGBoost结果缺少风险等级，使用默认值: medium")
+        # 打印特征向量
+        if hasattr(classifier, 'feature_names'):
+            feature_vector = [features.get(f, 0) for f in classifier.feature_names]
+            print(f"[DEBUG] 特征名: {classifier.feature_names}")
+            print(f"[DEBUG] 特征向量: {feature_vector}")
         
-        print(f"扫描 {scan_id}: XGBoost分析完成，结果: {xgboost_result['risk_level']}")
+        print(f"[DEBUG] 开始模型预测...")
+        model_result = classifier.predict(features)
+        print(f"[DEBUG] 模型输出: {model_result}")
+        
+        if not model_result:
+            # 如果专用模型分析失败,使用通用XGBoost模型
+            print("专用模型分析失败，使用XGBoost模型")
+            update_scan_status(scan_id, 'xgboost_analysis')
+            classifier = security_classifiers.get('xgboost')
+            if not classifier or not classifier.is_trained:
+                classifier = SecurityClassifier(model_type='xgboost')
+                security_classifiers['xgboost'] = classifier
+            model_result = classifier.predict(features)
+            print(f"[DEBUG] XGBoost模型输出: {model_result}")
+            
+            if not model_result:
+                # 如果模型预测失败，使用默认值
+                model_result = {
+                    'prediction': 0,
+                    'confidence': 0.5,
+                    'risk_score': 0.0,
+                    'risk_level': 'unknown',
+                    'feature_importance': {}
+                }
+        
+        # 确保model_result包含所有必要字段
+        if 'risk_score' not in model_result:
+            model_result['risk_score'] = 0.0
+        if 'feature_importance' not in model_result:
+            model_result['feature_importance'] = {}
+        if 'risk_level' not in model_result:
+            model_result['risk_level'] = 'unknown'
+        
+        print(f"[DEBUG] 最终模型结果: {model_result}")
         
         # 更新状态
         update_scan_status(scan_id, 'llm_analysis')
-        print(f"扫描 {scan_id}: 开始大模型分析")
         time.sleep(5)  # 模拟大模型分析时间
         
         # DeepSeek分析
-        filename = os.path.basename(file_path)
-        llm_result = deepseek_analyzer.analyze_package(filename, features, xgboost_result)
-        print(f"扫描 {scan_id}: 大模型分析完成，结果: {llm_result['risk_level']}")
+        print("[DEBUG] 即将调用 deepseek_analyzer.analyze_package")
+        llm_result = deepseek_analyzer.analyze_package(filename, features, model_result)
+        print("[DEBUG] deepseek_analyzer.analyze_package 调用完成，llm_result:", llm_result)
+        if not llm_result:
+            raise Exception("大模型分析失败")
         
-        # 计算最终结果 - 确保置信度不超过1.0
-        xgboost_confidence = min(1.0, xgboost_result.get('confidence', 0.5))
-        llm_confidence = min(1.0, llm_result.get('confidence', 0.5))
-        final_confidence = min(1.0, (xgboost_confidence + llm_confidence) / 2)
-        
+        # 计算最终结果
+        model_confidence = model_result.get('confidence', 0.5)
+        llm_confidence = llm_result.get('confidence', 0.5)
+        final_confidence = (model_confidence + llm_confidence) / 2
         scan_time = time.time() - start_time
+        
+        print(f"[DEBUG] 最终风险等级: {model_result.get('risk_level', 'unknown')}")
+        print(f"[DEBUG] 最终置信度: {final_confidence}")
         
         # 更新数据库
         conn = sqlite3.connect(Config.DATABASE_PATH)
         cursor = conn.cursor()
         
+        # 预处理代码片段，确保是字符串
+        snippet_data = llm_result.get('malicious_code_snippet', '')
+        if isinstance(snippet_data, list):
+            snippet_to_save = '\n'.join(snippet_data)
+        else:
+            snippet_to_save = str(snippet_data)
+
         cursor.execute('''
             UPDATE scan_records 
             SET scan_status = ?, risk_level = ?, confidence = ?, 
-                xgboost_result = ?, llm_result = ?, risk_explanation = ?, scan_time = ?
+                xgboost_result = ?, llm_result = ?, risk_explanation = ?, scan_time = ?,
+                malicious_code_snippet = ?, code_location = ?, malicious_action = ?,
+                technical_details = ?
             WHERE id = ?
         ''', (
             'completed',
-            llm_result['risk_level'],
+            llm_result.get('risk_level', 'unknown'),
             final_confidence,
-            json.dumps(xgboost_result),
+            json.dumps(model_result),
             json.dumps(llm_result),
-            llm_result['analysis'],
+            llm_result.get('risk_explanation', '分析失败'),
             scan_time,
+            snippet_to_save,
+            llm_result.get('code_location', ''),
+            llm_result.get('malicious_action', ''),
+            llm_result.get('technical_details', ''),
             scan_id
         ))
         
-        print(f"扫描 {scan_id}: 数据库记录已更新，风险级别: {llm_result['risk_level']}, 置信度: {final_confidence:.2f}")
-        
         # 保存特征数据
-        try:
-            cursor.execute('''
-                INSERT INTO features (scan_id, feature_data)
-                VALUES (?, ?)
-            ''', (scan_id, json.dumps(features)))
-            print(f"扫描 {scan_id}: 特征数据已保存")
-        except Exception as e:
-            print(f"扫描 {scan_id}: 保存特征数据失败: {e}")
+        cursor.execute('''
+            INSERT INTO features (scan_id, feature_data)
+            VALUES (?, ?)
+        ''', (scan_id, json.dumps(features)))
         
         conn.commit()
         conn.close()
@@ -105,35 +228,33 @@ def background_scan(scan_id, file_path, user_id):
             'current_task': '检测完成'
         }
         
-        print(f"扫描 {scan_id}: 任务完成，总耗时: {scan_time:.2f}秒")
+        # 清理临时文件
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            
+    except Exception as e:
+        print(f"扫描任务失败: {str(e)}")
+        # 更新任务状态为失败
+        conn = sqlite3.connect(Config.DATABASE_PATH)
+        cursor = conn.cursor()
+        cursor.execute('''
+            UPDATE scan_records 
+            SET scan_status = ?, error_message = ?
+            WHERE id = ?
+        ''', ('failed', str(e), scan_id))
+        conn.commit()
+        conn.close()
+        
+        # 更新任务状态
+        scan_tasks[scan_id] = {
+            'status': 'failed',
+            'progress': 0,
+            'current_task': f'检测失败: {str(e)}'
+        }
         
         # 清理临时文件
         if os.path.exists(file_path):
             os.remove(file_path)
-            print(f"扫描 {scan_id}: 临时文件已清理")
-            
-    except Exception as e:
-        import traceback
-        print(f"扫描任务 {scan_id} 错误: {e}")
-        print(traceback.format_exc())
-        
-        # 更新数据库中的状态为失败
-        try:
-            conn = sqlite3.connect(Config.DATABASE_PATH)
-            cursor = conn.cursor()
-            cursor.execute('UPDATE scan_records SET scan_status = "failed" WHERE id = ?', (scan_id,))
-            conn.commit()
-            conn.close()
-            print(f"扫描 {scan_id}: 已将数据库状态更新为失败")
-        except Exception as db_error:
-            print(f"扫描 {scan_id}: 更新数据库失败状态时出错: {db_error}")
-        
-        update_scan_status(scan_id, 'failed')
-        scan_tasks[scan_id] = {
-            'status': 'failed',
-            'progress': 0,
-            'current_task': '检测失败'
-        }
 
 def update_scan_status(scan_id, status):
     """更新扫描状态"""
@@ -152,21 +273,3 @@ def update_scan_status(scan_id, status):
             'progress': info['progress'],
             'current_task': info['task']
         })
-
-def execute_immediate_scan():
-    """立即执行一次批量抓取和检测任务"""
-    from app.services.fetcher import package_fetcher
-    
-    try:
-        print("开始执行立即批量抓取任务...")
-        packages = package_fetcher.fetch_latest_packages(limit=20)  # 抓取20个包
-        
-        if packages:
-            print(f"立即任务完成: 抓取并检测了 {len(packages)} 个包")
-            return len(packages)
-        else:
-            print("立即任务完成: 没有抓取到新包")
-            return 0
-    except Exception as e:
-        print(f"立即抓取任务出错: {e}")
-        return 0

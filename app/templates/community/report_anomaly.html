@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}异常情况上报{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #7952b3 !important; /* Purple background override */
+    }
+    .main-container {
+        background-color: #7952b3 !important;
+    }
+    .report-container {
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 40px;
+        background-color: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    }
+    .report-header {
+        background-color: #dc3545;
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .report-header i {
+        font-size: 24px;
+    }
+    .report-header h2 {
+        margin: 0;
+        font-size: 22px;
+    }
+    .report-header p {
+        margin: 0;
+        margin-top: 5px;
+        font-size: 14px;
+        opacity: 0.9;
+    }
+    .form-group {
+        margin-bottom: 25px;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #333;
+    }
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    }
+    .form-control:focus {
+        border-color: #80bdff;
+        outline: 0;
+        box-shadow: 0 0 0 .2rem rgba(0,123,255,.25);
+    }
+    textarea.form-control {
+        min-height: 150px;
+        resize: vertical;
+    }
+    .submit-btn {
+        background-color: #dc3545;
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+        transition: background-color 0.2s;
+    }
+    .submit-btn:hover {
+        background-color: #c82333;
+    }
+    .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        color: #6c757d;
+        text-decoration: none;
+    }
+    .back-link:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-container">
+    <div class="report-header">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div>
+            <h2>异常情况上报</h2>
+            <p>感谢您为平台安全做出贡献！请在此处详细描述您发现的任何异常情况、安全漏洞或可疑行为。</p>
+        </div>
+    </div>
+    
+    <form method="post" action="{{ url_for('user.report_issue', scan_id=(scan_record.id if scan_record else '')) }}">
+        
+        <div class="form-group">
+            <label for="title">异常标题</label>
+            <input type="text" id="title" name="title" class="form-control" placeholder="例如：某某包存在命令执行漏洞" value="{{ title or '' }}">
+        </div>
+
+        <div class="form-group">
+            <label for="description">详细描述</label>
+            <textarea id="description" name="description" class="form-control" placeholder="请详细说明您发现的问题，包括复现步骤、影响等。">{{ description or '' }}</textarea>
+        </div>
+        
+        <button type="submit" class="submit-btn">
+            <i class="fas fa-paper-plane"></i> 提交报告
+        </button>
+    </form>
+    <a href="{{ url_for('community.index') }}" class="back-link">返回社区首页</a>
+</div>
+{% endblock %} 
