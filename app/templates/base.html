@@ -1,11 +1,44 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}开源组件包安全检测平台{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css">
     {% block extra_css %}{% endblock %}
     <style>
+        :root {
+            --bg-color: #f5f6fa;
+            --card-bg: #fff;
+            --text-color: #333;
+            --text-color-light: #666;
+            --border-color: #e2e8f0;
+            --primary-color: #00c8ff;
+            --primary-color-dark: #00a6d6;
+            --secondary-color: #1a1f36;
+            --navbar-bg: #1a1f36;
+            --navbar-text: #adb5bd;
+            --navbar-text-active: #fff;
+            --navbar-hover: rgba(255,255,255,0.1);
+            --card-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e2e8f0;
+            --text-color-light: #a0aec0;
+            --border-color: #2d3748;
+            --primary-color: #00c8ff;
+            --primary-color-dark: #00a6d6;
+            --secondary-color: #e2e8f0;
+            --navbar-bg: #0f172a;
+            --navbar-text: #94a3b8;
+            --navbar-text-active: #e2e8f0;
+            --navbar-hover: rgba(255,255,255,0.05);
+            --card-shadow: 0 2px 12px rgba(0,0,0,0.2);
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -14,19 +47,20 @@
         
         body {
             font-family: 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-color);
             min-height: 100vh;
-            color: #333;
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         
         .navbar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 15px 0;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            background: var(--navbar-bg);
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             position: sticky;
             top: 0;
             z-index: 100;
+            transition: background-color 0.3s ease;
         }
         
         .navbar-content {
@@ -36,35 +70,57 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            height: 60px;
         }
         
         .logo {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 700;
-            color: #667eea;
+            color: var(--navbar-text-active);
             text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            color: var(--primary-color);
+            margin-right: 10px;
+            font-size: 22px;
         }
         
         .nav-links {
             display: flex;
-            gap: 30px;
+            gap: 5px;
             list-style: none;
+            height: 100%;
+        }
+        
+        .nav-links li {
+            height: 100%;
+            display: flex;
+            align-items: center;
         }
         
         .nav-links a {
-            color: #666;
+            color: var(--navbar-text);
             text-decoration: none;
             font-weight: 500;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
+            padding: 0 15px;
+            height: 100%;
+            display: flex;
+            align-items: center;
         }
         
         .nav-links a:hover,
         .nav-links a.active {
-            color: #667eea;
+            color: var(--navbar-text-active);
+            background-color: var(--navbar-hover);
         }
         
         .nav-item.dropdown {
             position: relative;
+            height: 100%;
         }
 
         .dropdown-menu {
@@ -72,25 +128,27 @@
             position: absolute;
             top: 100%;
             left: 0;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            background-color: var(--navbar-bg);
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             z-index: 1000;
-            min-width: 160px;
+            min-width: 180px;
             padding: 8px 0;
+            transition: background-color 0.3s ease;
         }
 
         .dropdown-menu a {
-            color: #333;
+            color: var(--navbar-text);
             padding: 10px 20px;
             display: block;
             text-decoration: none;
             font-size: 14px;
+            height: auto;
         }
 
         .dropdown-menu a:hover {
-            background-color: #f3f4f6;
-            color: #667eea;
+            background-color: var(--navbar-hover);
+            color: var(--navbar-text-active);
         }
 
         .nav-item.dropdown:hover .dropdown-menu {
@@ -104,14 +162,41 @@
         }
         
         .user-info {
-            color: #666;
+            color: var(--navbar-text);
             font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-info i {
+            margin-right: 6px;
+            color: var(--primary-color);
+        }
+        
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--navbar-text);
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle:hover {
+            background-color: var(--navbar-hover);
+            color: var(--navbar-text-active);
         }
         
         .btn {
             padding: 8px 16px;
             border: none;
-            border-radius: 6px;
+            border-radius: 4px;
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
@@ -121,24 +206,23 @@
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: var(--primary-color);
+            color: var(--secondary-color);
         }
         
         .btn-primary:hover {
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 200, 255, 0.3);
         }
         
         .btn-outline {
             background: transparent;
-            color: #667eea;
-            border: 1px solid #667eea;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
         }
         
         .btn-outline:hover {
-            background: #667eea;
-            color: white;
+            background: rgba(0, 200, 255, 0.1);
         }
         
         .btn-danger {
@@ -164,44 +248,86 @@
         
         .flash-message {
             padding: 12px 20px;
-            border-radius: 8px;
+            border-radius: 4px;
             margin-bottom: 10px;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+        
+        .flash-message i {
+            margin-right: 10px;
         }
         
         .flash-success {
             background: #d4edda;
             color: #155724;
-            border: 1px solid #c3e6cb;
+            border-left: 4px solid #28a745;
         }
         
         .flash-error {
             background: #f8d7da;
             color: #721c24;
-            border: 1px solid #f5c6cb;
+            border-left: 4px solid #dc3545;
         }
         
         .flash-info {
             background: #d1ecf1;
             color: #0c5460;
-            border: 1px solid #bee5eb;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 6px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .card-footer {
+            padding: 15px 20px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         
         @media (max-width: 768px) {
             .navbar-content {
                 flex-direction: column;
                 gap: 15px;
+                height: auto;
+                padding: 15px 20px;
             }
             
             .nav-links {
-                gap: 20px;
+                width: 100%;
                 flex-wrap: wrap;
                 justify-content: center;
             }
             
+            .nav-links li {
+                height: 40px;
+            }
+            
             .user-menu {
+                width: 100%;
                 flex-wrap: wrap;
                 justify-content: center;
+                padding-top: 10px;
+                border-top: 1px solid rgba(255,255,255,0.1);
             }
         }
     </style>
@@ -210,33 +336,36 @@
     {% if session.user_id %}
     <nav class="navbar">
         <div class="navbar-content">
-            <a href="{{ url_for('user.index') }}" class="logo">安全检测平台</a>
+            <a href="{{ url_for('user.index') }}" class="logo">
+                <i class="fas fa-shield-alt"></i>安全检测平台
+            </a>
             
             <ul class="nav-links">
-                <li><a href="{{ url_for('user.index') }}" {% if request.path == '/' %}class="active"{% endif %}>首页</a></li>
-                <li><a href="{{ url_for('scan.scan') }}" {% if request.path == '/scan' %}class="active"{% endif %}>扫描</a></li>
-                <li><a href="{{ url_for('user.history') }}" {% if request.path == '/history' %}class="active"{% endif %}>历史记录</a></li>
+                <li><a href="{{ url_for('user.index') }}" {% if request.path == '/' %}class="active"{% endif %}><i class="fas fa-home"></i> 首页</a></li>
+                <li><a href="{{ url_for('scan.scan') }}" {% if request.path == '/scan' %}class="active"{% endif %}><i class="fas fa-search"></i> 扫描</a></li>
+                <li><a href="{{ url_for('user.history') }}" {% if request.path == '/history' %}class="active"{% endif %}><i class="fas fa-history"></i> 历史记录</a></li>
                 <li class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle {% if request.path.startswith('/knowledge') or request.path.startswith('/package_encyclopedia') %}active{% endif %}" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        学习中心
+                    <a href="#" class="nav-link dropdown-toggle {% if request.path.startswith('/knowledge') or request.path.startswith('/package_encyclopedia') %}active{% endif %}">
+                        <i class="fas fa-book"></i> 学习中心
                     </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <a class="dropdown-item" href="{{ url_for('user.package_encyclopedia') }}">包的百科</a>
-                        <a class="dropdown-item" href="{{ url_for('user.knowledge') }}">知识库</a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{{ url_for('user.package_encyclopedia') }}"><i class="fas fa-box"></i> 包的百科</a>
+                        <a class="dropdown-item" href="{{ url_for('user.knowledge') }}"><i class="fas fa-graduation-cap"></i> 知识库</a>
                     </div>
                 </li>
-                <li><a href="{{ url_for('community.index') }}" class="{% if request.path.startswith('/community') %}active{% endif %}">安全社区</a></li>
-                <li><a href="{{ url_for('user.guide') }}" {% if request.path == '/guide' %}class="active"{% endif %}>快速上手</a></li>
+                <li><a href="{{ url_for('community.index') }}" class="{% if request.path.startswith('/community') %}active{% endif %}"><i class="fas fa-users"></i> 安全社区</a></li>
+                <li><a href="{{ url_for('user.guide') }}" {% if request.path == '/guide' %}class="active"{% endif %}><i class="fas fa-map-signs"></i> 快速上手</a></li>
                 {% if session.role == 'admin' %}
-                <li><a href="{{ url_for('admin.admin') }}" class="{% if request.endpoint == 'admin' %}active{% endif %}">系统管理</a></li>
-                <li><a href="{{ url_for('admin.model_management') }}" class="{% if request.endpoint == 'model_management' %}active{% endif %}">模型管理</a></li>
-                <li><a href="{{ url_for('admin.sample_management') }}" class="{% if request.endpoint == 'sample_management' %}active{% endif %}">样本管理</a></li>
+                <li><a href="{{ url_for('admin.admin') }}" class="{% if request.path == '/admin/' %}active{% endif %}"><i class="fas fa-cog"></i> 系统管理</a></li>
                 {% endif %}
             </ul>
             
             <div class="user-menu">
-                <span class="user-info">欢迎，{{ session.username }}</span>
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline">退出登录</a>
+                <button id="themeToggle" class="theme-toggle" title="切换主题">
+                    <i class="fas fa-sun"></i>
+                </button>
+                <span class="user-info"><i class="fas fa-user-circle"></i> {{ session.username }}</span>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline"><i class="fas fa-sign-out-alt"></i> 退出</a>
             </div>
         </div>
     </nav>
@@ -248,6 +377,13 @@
                 <div class="flash-messages">
                     {% for category, message in messages %}
                         <div class="flash-message flash-{{ category if category in ['success', 'error', 'info'] else 'info' }}">
+                            {% if category == 'success' %}
+                                <i class="fas fa-check-circle"></i>
+                            {% elif category == 'error' %}
+                                <i class="fas fa-exclamation-circle"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle"></i>
+                            {% endif %}
                             {{ message }}
                         </div>
                     {% endfor %}
@@ -257,6 +393,43 @@
 
         {% block content %}{% endblock %}
     </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const htmlElement = document.documentElement;
+            
+            // 检查本地存储中是否有保存的主题
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                htmlElement.setAttribute('data-theme', savedTheme);
+                updateThemeIcon(savedTheme);
+            }
+            
+            // 切换主题
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = htmlElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                htmlElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                
+                updateThemeIcon(newTheme);
+            });
+            
+            // 更新主题图标
+            function updateThemeIcon(theme) {
+                const icon = themeToggle.querySelector('i');
+                if (theme === 'dark') {
+                    icon.className = 'fas fa-moon';
+                    themeToggle.title = '切换到白天模式';
+                } else {
+                    icon.className = 'fas fa-sun';
+                    themeToggle.title = '切换到暗夜模式';
+                }
+            }
+        });
+    </script>
     
     {% block extra_js %}{% endblock %}
 </body>
