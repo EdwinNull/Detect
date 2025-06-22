@@ -2,29 +2,347 @@
 
 {% block title %}扫描 - 开源组件包安全检测平台{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+<style>
+    .scan-container {
+        max-width: 1200px;
+        margin: 20px auto;
+    }
+    
+    .scan-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    @media (min-width: 768px) {
+        .scan-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+    
+    .scan-card {
+        background: white;
+        padding: 20px;
+        border-radius: var(--card-border-radius);
+        box-shadow: var(--card-shadow);
+        border: 1px solid var(--border-color);
+    }
+    
+    .scan-card-header {
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .scan-card-header h2 {
+        color: var(--secondary-color);
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .scan-card-header h2 i {
+        color: var(--primary-color);
+        margin-right: 8px;
+    }
+    
+    .scan-card-description {
+        color: var(--text-color-light);
+        font-size: 14px;
+        margin-top: 8px;
+        line-height: 1.6;
+    }
+    
+    .upload-area {
+        border: 2px dashed var(--primary-color);
+        border-radius: 6px;
+        padding: 30px 20px;
+        text-align: center;
+        background: rgba(0, 200, 255, 0.03);
+        margin-bottom: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .upload-area:hover {
+        border-color: var(--primary-color-dark);
+        background: rgba(0, 200, 255, 0.05);
+    }
+    
+    .upload-area.dragover {
+        border-color: var(--primary-color-dark);
+        background: rgba(0, 200, 255, 0.05);
+        transform: scale(1.02);
+    }
+    
+    .upload-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(0, 200, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+    }
+    
+    .upload-icon i {
+        font-size: 24px;
+        color: var(--primary-color);
+    }
+    
+    .upload-text {
+        font-size: 16px;
+        color: var(--secondary-color);
+        margin-bottom: 10px;
+        font-weight: 500;
+    }
+    
+    .upload-hint {
+        color: var(--text-color-light);
+        font-size: 14px;
+    }
+    
+    .file-input {
+        display: none;
+    }
+    
+    .progress {
+        height: 8px;
+        background-color: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 10px;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        background-color: var(--primary-color);
+        transition: width 0.3s ease;
+    }
+    
+    .feature-list {
+        margin-top: 20px;
+    }
+    
+    .feature-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+    
+    .feature-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(0, 200, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+    
+    .feature-icon i {
+        font-size: 16px;
+        color: var(--primary-color);
+    }
+    
+    .feature-content {
+        flex: 1;
+    }
+    
+    .feature-title {
+        font-weight: 600;
+        color: var(--secondary-color);
+        margin-bottom: 4px;
+    }
+    
+    .feature-description {
+        color: var(--text-color-light);
+        font-size: 14px;
+        line-height: 1.5;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="scan-container" style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-    <h2 style="margin-bottom: 20px; color: #667eea;">安全扫描</h2>
-    
-    <p style="margin-bottom: 25px; font-size: 16px; line-height: 1.6;">
-        上传你的组件包，系统将自动进行安全检测，识别潜在的恶意代码和风险。
-    </p>
-    
-    <form id="uploadForm" enctype="multipart/form-data">
-        <div style="margin-bottom: 20px;">
-            <label for="file" style="display: block; margin-bottom: 8px; font-weight: 500;">选择要扫描的文件</label>
-            <input type="file" id="file" name="file" required style="display: block; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-            <div style="font-size: 13px; color: #666; margin-top: 6px;">支持 .zip, .tar.gz, .whl, .jar, .tgz, .npm 等格式</div>
+<div class="scan-container">
+    <div class="scan-grid">
+        <!-- 扫描组件包区域 -->
+        <div class="scan-card">
+            <div class="scan-card-header">
+                <h2><i class="fas fa-search"></i> 安全扫描</h2>
+                <div class="scan-card-description">
+                    上传您的组件包，系统将自动进行安全检测，识别潜在的恶意代码和风险。支持多种格式的包文件分析。
+                </div>
+            </div>
+            
+            <form id="uploadForm">
+                <div id="uploadArea" class="upload-area">
+                    <div class="upload-icon">
+                        <i class="fas fa-file-upload"></i>
+                    </div>
+                    <div class="upload-text">拖放文件或点击上传</div>
+                    <div class="upload-hint">支持 .zip, .tar.gz, .whl, .jar, .tgz, .npm 等格式</div>
+                    <input type="file" id="file" name="file" class="file-input">
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-shield-alt"></i> 开始安全扫描
+                </button>
+            </form>
+
+            <div id="progressContainer" style="display: none; margin-top: 20px;">
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" style="width: 0%;"></div>
+                </div>
+                <div id="statusText" style="margin-top: 10px; text-align: center; font-size: 14px; color: var(--text-color-light);"></div>
+            </div>
+            
+            <div class="feature-list">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-virus-slash"></i>
+                    </div>
+                    <div class="feature-content">
+                        <div class="feature-title">恶意代码检测</div>
+                        <div class="feature-description">
+                            检测包中的恶意代码模式、可疑函数调用和潜在的后门
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-fingerprint"></i>
+                    </div>
+                    <div class="feature-content">
+                        <div class="feature-title">行为分析</div>
+                        <div class="feature-description">
+                            分析包的行为特征，识别异常的网络请求和系统操作
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-project-diagram"></i>
+                    </div>
+                    <div class="feature-content">
+                        <div class="feature-title">依赖链分析</div>
+                        <div class="feature-description">
+                            检查依赖关系中的安全风险，识别供应链攻击
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         
-        <button type="submit" class="btn btn-primary" style="width: 100%;">开始扫描</button>
-    </form>
-
-    <div id="progressContainer" style="display: none; margin-top: 20px;">
-        <div class="progress">
-            <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+        <!-- 抓取开源包区域 - 只对管理员显示 -->
+        {% if session.role == 'admin' %}
+        <div class="scan-card">
+            <div class="scan-card-header">
+                <h2><i class="fas fa-cloud-download-alt"></i> 抓取开源包</h2>
+                <div class="scan-card-description">
+                    自动从NPM/PyPI等源抓取最新开源包，便于安全检测和样本扩充。系统将自动分析并存储结果。
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="feature-content">
+                        <div class="feature-title">自动抓取</div>
+                        <div class="feature-description">
+                            系统将自动从多个包管理平台抓取最新发布的组件包
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="feature-content">
+                        <div class="feature-title">样本扩充</div>
+                        <div class="feature-description">
+                            抓取的包将用于扩充系统样本库，提高检测准确率
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <a href="{{ url_for('scan.crawl_packages') }}" class="btn btn-primary" style="width: 100%; display: flex; justify-content: center; align-items: center;">
+                <i class="fas fa-cloud-download-alt"></i> 开始抓取开源包
+            </a>
         </div>
-        <p id="statusText" style="margin-top: 10px; text-align: center;"></p>
+        {% else %}
+        <div class="scan-card">
+            <div class="scan-card-header">
+                <h2><i class="fas fa-shield-alt"></i> 安全扫描说明</h2>
+                <div class="scan-card-description">
+                    了解我们的安全扫描流程和技术特点
+                </div>
+            </div>
+            
+            <div class="feature-list">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="feature-content">
+                        <div class="feature-title">AI驱动检测</div>
+                        <div class="feature-description">
+                            采用先进的机器学习算法，基于大量样本训练，能够识别未知威胁
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="feature-content">
+                        <div class="feature-title">隐私保护</div>
+                        <div class="feature-description">
+                            所有上传的文件都在安全隔离环境中分析，分析完成后自动清理
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="feature-content">
+                        <div class="feature-title">详细报告</div>
+                        <div class="feature-description">
+                            提供全面的安全分析报告，包括风险评级、漏洞详情和修复建议
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="feature-content">
+                        <div class="feature-title">历史追踪</div>
+                        <div class="feature-description">
+                            保存所有扫描记录，方便追踪和比较不同版本的安全状态
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -34,12 +352,19 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
     
     var formData = new FormData();
     var fileInput = document.getElementById('file');
+    
+    if (!fileInput.files.length) {
+        alert('请先选择文件');
+        return;
+    }
+    
     formData.append('file', fileInput.files[0]);
     
     // 显示进度条
     document.getElementById('progressContainer').style.display = 'block';
     var progressBar = document.querySelector('.progress-bar');
     var statusText = document.getElementById('statusText');
+    statusText.textContent = '正在上传文件...';
     
     fetch('/upload', {
         method: 'POST',
@@ -48,17 +373,55 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            statusText.textContent = data.message;
+            progressBar.style.width = '100%';
+            statusText.textContent = data.message || '上传成功，正在跳转...';
             // 重定向到进度页面
             window.location.href = '/progress/' + data.scan_id;
         } else {
             statusText.textContent = data.error || '上传失败';
+            progressBar.style.width = '0%';
         }
     })
     .catch(error => {
         console.error('Error:', error);
         statusText.textContent = '上传失败: ' + error.message;
+        progressBar.style.width = '0%';
     });
+});
+
+// 上传区域交互
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('file');
+
+uploadArea.addEventListener('click', function() {
+    fileInput.click();
+});
+
+fileInput.addEventListener('change', function() {
+    if (fileInput.files.length) {
+        const fileName = fileInput.files[0].name;
+        uploadArea.querySelector('.upload-text').textContent = '已选择: ' + fileName;
+    }
+});
+
+uploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+});
+
+uploadArea.addEventListener('dragleave', function() {
+    uploadArea.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    
+    if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        const fileName = fileInput.files[0].name;
+        uploadArea.querySelector('.upload-text').textContent = '已选择: ' + fileName;
+    }
 });
 </script>
 {% endblock %} 

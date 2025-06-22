@@ -39,7 +39,7 @@ def register():
         # 创建用户
         password_hash = generate_password_hash(password)
         cursor.execute(
-            'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
+            'INSERT INTO users (username, email, password_hash, role, register_time) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)',
             (username, email, password_hash, 'user')
         )
         conn.commit()
