@@ -1,6 +1,32 @@
 import os
+import json
+import sqlite3
+import hashlib
 import zipfile
 import tarfile
+import tempfile
+import shutil
+from datetime import datetime
+from pathlib import Path
+import requests
+import time
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import logging
+from flask import current_app, g
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, confusion_matrix
+import pickle
+import joblib
+from xgboost import XGBClassifier
+import warnings
+warnings.filterwarnings('ignore')
+
+# 导入配置
+from config.config import Config
 
 def format_size(size_in_bytes):
     """格式化文件大小"""
@@ -15,7 +41,8 @@ def format_size(size_in_bytes):
 
 def detect_package_type(file_path):
     """检测包类型"""
-    filename = os.path.basename(file_path).lower()
+    filename = os.path.basename(file_path)
+    filename = filename.lower() if filename else ''
     
     print(f"正在检测包类型: {file_path}")
     
@@ -24,13 +51,14 @@ def detect_package_type(file_path):
     if is_targz:
         ext = '.tar.gz'
     else:
-        ext = os.path.splitext(filename)[-1].lower()
+        ext_raw = os.path.splitext(filename)[-1]
+        ext = ext_raw.lower() if ext_raw else ''
     
     print(f"文件扩展名: {ext}")
     package_type = None
     
     # 1. 首先尝试通过内容识别包类型
-    if ext in ['.whl', '.zip', '.egg']:
+    if ext in ['.whl', '.zip', '.egg'] or filename == 'zip':
         try:
             with zipfile.ZipFile(file_path, 'r') as zipf:
                 names = zipf.namelist()
@@ -48,6 +76,15 @@ def detect_package_type(file_path):
                 if any(n.endswith('pom.xml') or n.endswith('build.gradle') for n in names):
                     print(f"找到Java包标记文件")
                     return 'maven'
+                # 如果没有找到特定标记文件，但包含常见源码文件，根据文件类型判断
+                js_files = [n for n in names if n.endswith(('.js', '.jsx', '.ts', '.tsx'))]
+                py_files = [n for n in names if n.endswith(('.py', '.pyc', '.pyo'))]
+                if js_files and len(js_files) > len(py_files):
+                    print(f"根据源码文件类型判断为NPM包")
+                    return 'npm'
+                elif py_files and len(py_files) > len(js_files):
+                    print(f"根据源码文件类型判断为Python包")
+                    return 'pypi'
         except Exception as e:
             print(f"处理ZIP文件时出错: {e}")
             pass
@@ -76,20 +113,33 @@ def detect_package_type(file_path):
     
     # 2. 根据文件名判断包类型
     print(f"文件名分析: {filename}")
-    if 'python' in filename or 'py' in filename.split('-'):
+    if 'python' in filename or 'py' in filename.split('-') or 'pip' in filename:
         print(f"根据文件名判断为Python包")
         return 'pypi'
-    if 'node' in filename or 'npm' in filename or 'js' in filename.split('-'):
+    if 'node' in filename or 'npm' in filename or 'js' in filename.split('-') or 'javascript' in filename:
         print(f"根据文件名判断为NPM包")
         return 'npm'
     if 'ruby' in filename or 'gem' in filename:
         print(f"根据文件名判断为Ruby包")
         return 'rubygems'
-    if 'java' in filename or 'maven' in filename:
+    if 'java' in filename or 'maven' in filename or 'jar' in filename:
         print(f"根据文件名判断为Java包")
         return 'maven'
     
-    # 3. 只有在上述所有方法都失败时，再返回'unknown'而不是压缩格式
+    # 3. 尝试通过文件头判断是否为压缩包
+    try:
+        with open(file_path, 'rb') as f:
+            header = f.read(4)
+            if header.startswith(b'PK\x03\x04'):  # ZIP文件头
+                print(f"通过文件头识别为ZIP包")
+                return 'unknown'  # 或者返回一个默认类型
+            elif header.startswith(b'\x1f\x8b'):  # GZIP文件头
+                print(f"通过文件头识别为GZIP包")
+                return 'unknown'
+    except Exception as e:
+        print(f"读取文件头时出错: {e}")
+    
+    # 4. 只有在上述所有方法都失败时，再返回'unknown'
     print(f"无法识别包类型，返回unknown")
     return 'unknown'
 

@@ -1,20 +1,44 @@
-from flask import Blueprint, render_template, redirect, url_for, session, flash, send_file, jsonify
+from flask import Blueprint, render_template, redirect, url_for, session, flash, send_file, jsonify, request
 import sqlite3
 import json
+import os
+import hashlib
+import zipfile
+import tarfile
+import tempfile
+import shutil
+from datetime import datetime
+from pathlib import Path
+import requests
+import time
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import logging
+from flask import current_app, g
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, confusion_matrix
+import pickle
+import joblib
+from xgboost import XGBClassifier
+import warnings
+warnings.filterwarnings('ignore')
+
+# 导入配置
+from config.config import Config
 from app.utils import login_required
 from app.utils.helpers import format_size
-from app.utils.forms import ScanForm
-from config import Config
+from app.models.db_models import AnomalyReport, ScanRecord
 from fpdf import FPDF
+from collections import defaultdict
 
 user_bp = Blueprint('user', __name__)
 
 @user_bp.route('/')
 @login_required
 def index():
-    # 创建一个空的ScanForm，防止模板中使用form变量时出错
-    form = ScanForm()
-    
     conn = sqlite3.connect(Config.DATABASE_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -25,7 +49,7 @@ def index():
     if is_admin:
         # 管理员可以看到全局数据
         cursor.execute('''
-            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type, user_id, source
+            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type, user_id
             FROM scan_records 
             WHERE risk_level = 'high' 
             AND scan_status = 'completed' 
@@ -33,29 +57,6 @@ def index():
             LIMIT 8
         ''')
         recent_malicious_packages = cursor.fetchall()
-        
-        # 自动检测的恶意包
-        cursor.execute('''
-            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type, user_id, source
-            FROM scan_records 
-            WHERE risk_level = 'high'
-            AND scan_status = 'completed'
-            AND source = 'auto'
-            ORDER BY created_at DESC 
-            LIMIT 5
-        ''')
-        auto_detected_packages = cursor.fetchall()
-        
-        # 良性包（低风险包）
-        cursor.execute('''
-            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type, user_id, source
-            FROM scan_records 
-            WHERE risk_level = 'low'
-            AND scan_status = 'completed'
-            ORDER BY created_at DESC 
-            LIMIT 5
-        ''')
-        benign_packages = cursor.fetchall()
         
         # 管理员统计信息
         cursor.execute('SELECT COUNT(*) FROM users')
@@ -77,24 +78,10 @@ def index():
             WHERE scan_status = 'completed'
         ''')
         total_scans = cursor.fetchone()[0]
-        
-        # 自动检测的恶意包数量
-        cursor.execute('''
-            SELECT COUNT(*) FROM scan_records 
-            WHERE risk_level = 'high' AND scan_status = 'completed' AND source = 'auto'
-        ''')
-        total_auto_detected = cursor.fetchone()[0]
-        
-        # 良性包数量
-        cursor.execute('''
-            SELECT COUNT(*) FROM scan_records 
-            WHERE risk_level = 'low' AND scan_status = 'completed'
-        ''')
-        total_benign = cursor.fetchone()[0]
     else:
         # 普通用户只能看到自己的数据
         cursor.execute('''
-            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type, source
+            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type
             FROM scan_records 
             WHERE user_id = ?
             AND scan_status = 'completed' 
@@ -102,29 +89,6 @@ def index():
             LIMIT 5
         ''', (session['user_id'],))
         recent_malicious_packages = cursor.fetchall()
-        
-        # 所有用户可以看到自动检测的恶意包
-        cursor.execute('''
-            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type, source
-            FROM scan_records 
-            WHERE risk_level = 'high'
-            AND scan_status = 'completed'
-            AND source = 'auto'
-            ORDER BY created_at DESC 
-            LIMIT 5
-        ''')
-        auto_detected_packages = cursor.fetchall()
-        
-        # 良性包（低风险包）
-        cursor.execute('''
-            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type, source
-            FROM scan_records 
-            WHERE risk_level = 'low'
-            AND scan_status = 'completed'
-            ORDER BY created_at DESC 
-            LIMIT 5
-        ''')
-        benign_packages = cursor.fetchall()
         
         # 用户自己的统计信息
         cursor.execute('''
@@ -139,23 +103,12 @@ def index():
         ''', (session['user_id'],))
         total_scans = cursor.fetchone()[0]
         
-        # 自动检测的恶意包数量
-        cursor.execute('''
-            SELECT COUNT(*) FROM scan_records 
-            WHERE risk_level = 'high' AND scan_status = 'completed' AND source = 'auto'
-        ''')
-        total_auto_detected = cursor.fetchone()[0]
-        
-        # 良性包数量
-        cursor.execute('''
-            SELECT COUNT(*) FROM scan_records 
-            WHERE risk_level = 'low' AND scan_status = 'completed'
-        ''')
-        total_benign = cursor.fetchone()[0]
-        
         total_users = None
         total_samples = None
     
+    # 获取最新的异常上报
+    latest_anomalies = AnomalyReport.get_latest(limit=5)
+
     # 格式化数据
     malicious_packages = []
     for pkg in recent_malicious_packages:
@@ -167,113 +120,92 @@ def index():
             'confidence': pkg['confidence'] * 100 if pkg['confidence'] else 0,
             'created_at': pkg['created_at'],
             'package_type': pkg['package_type'] if 'package_type' in pkg.keys() else 'unknown',
-            'user_id': pkg['user_id'] if is_admin and 'user_id' in pkg.keys() else session['user_id'],
-            'source': pkg['source'] if 'source' in pkg.keys() else 'manual'
-        })
-    
-    # 格式化自动检测的恶意包数据
-    auto_packages = []
-    for pkg in auto_detected_packages:
-        auto_packages.append({
-            'id': pkg['id'],
-            'filename': pkg['filename'],
-            'file_size': format_size(pkg['file_size']) if pkg['file_size'] else "未知",
-            'risk_level': pkg['risk_level'],
-            'confidence': pkg['confidence'] * 100 if pkg['confidence'] else 0,
-            'created_at': pkg['created_at'],
-            'package_type': pkg['package_type'] if 'package_type' in pkg.keys() else 'unknown',
-            'user_id': pkg['user_id'] if is_admin and 'user_id' in pkg.keys() else None,
-            'source': 'auto'
-        })
-    
-    # 格式化良性包数据
-    safe_packages = []
-    for pkg in benign_packages:
-        safe_packages.append({
-            'id': pkg['id'],
-            'filename': pkg['filename'],
-            'file_size': format_size(pkg['file_size']) if pkg['file_size'] else "未知",
-            'risk_level': pkg['risk_level'],
-            'confidence': pkg['confidence'] * 100 if pkg['confidence'] else 0,
-            'created_at': pkg['created_at'],
-            'package_type': pkg['package_type'] if 'package_type' in pkg.keys() else 'unknown',
-            'user_id': pkg['user_id'] if is_admin and 'user_id' in pkg.keys() else None,
-            'source': pkg['source'] if 'source' in pkg.keys() else 'manual'
+            'user_id': pkg['user_id'] if is_admin and 'user_id' in pkg.keys() else session['user_id']
         })
     
     conn.close()
     
     return render_template('index.html', 
                           malicious_packages=malicious_packages,
-                          auto_packages=auto_packages,
-                          safe_packages=safe_packages,
                           total_malicious=total_malicious,
                           total_scans=total_scans,
                           total_users=total_users,
                           total_samples=total_samples,
-                          total_auto_detected=total_auto_detected,
-                          total_benign=total_benign,
                           is_admin=is_admin,
-                          form=form)
+                          latest_anomalies=latest_anomalies)
+
+@user_bp.route('/report_issue', methods=['GET', 'POST'])
+@login_required
+def report_issue():
+    scan_id = request.args.get('scan_id')
+    scan_record = None
+    if scan_id:
+        scan_record = ScanRecord.get_by_id(scan_id)
+
+    if request.method == 'POST':
+        title = request.form.get('title')
+        description = request.form.get('description')
+        scan_id = request.form.get('scan_id') # 再次获取以防万一
+
+        if not title or not description:
+            flash('标题和详细描述不能为空。', 'error')
+            return render_template('community/report_anomaly.html', scan_record=scan_record, title=title, description=description)
+
+        report = AnomalyReport(
+            user_id=session['user_id'],
+            scan_record_id=scan_id if scan_id and scan_id != 'None' else None,
+            title=title,
+            description=description,
+            status='pending'
+        )
+        report.save()
+        flash('您的报告已成功提交，感谢您的贡献！', 'success')
+        return redirect(url_for('user.index'))
+
+    return render_template('community/report_anomaly.html', scan_record=scan_record)
 
 @user_bp.route('/history')
 @login_required
 def history():
-    # 创建一个空的ScanForm，防止模板中使用form变量时出错
-    form = ScanForm()
-    
-    conn = sqlite3.connect(Config.DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-    
-    # 管理员可以看到所有用户的历史记录
-    is_admin = session.get('role') == 'admin'
-    
-    if is_admin:
-        cursor.execute('''
-            SELECT id, filename, file_size, risk_level, confidence, created_at, scan_status, package_type, user_id, source
-            FROM scan_records 
-            ORDER BY created_at DESC
-        ''')
-    else:
-        cursor.execute('''
-            SELECT id, filename, file_size, risk_level, confidence, created_at, scan_status, package_type, source
-            FROM scan_records 
-            WHERE user_id = ?
-            ORDER BY created_at DESC
-        ''', (session['user_id'],))
-    
-    scan_records = cursor.fetchall()
-    conn.close()
-    
-    # 格式化数据
-    records = []
-    for record in scan_records:
-        records.append({
-            'id': record['id'],
-            'filename': record['filename'],
-            'file_size': format_size(record['file_size']) if record['file_size'] else "未知",
-            'risk_level': record['risk_level'],
-            'confidence': record['confidence'] * 100 if record['confidence'] else 0,
-            'created_at': record['created_at'],
-            'scan_status': record['scan_status'],
-            'package_type': record['package_type'] if 'package_type' in record.keys() else 'unknown',
-            'user_id': record['user_id'] if is_admin and 'user_id' in record.keys() else session['user_id'],
-            'source': record['source'] if 'source' in record.keys() else 'manual'
-        })
-    
-    return render_template('history.html', records=records, is_admin=is_admin, form=form)
+    conn = None
+    try:
+        conn = sqlite3.connect(Config.DATABASE_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # 管理员可以看到所有用户的记录，普通用户只能看到自己的
+        if session.get('role') == 'admin':
+            cursor.execute('''
+                SELECT r.id, r.filename, r.file_size, r.risk_level, r.confidence, r.scan_status, r.created_at, 
+                       r.package_type, u.username
+                FROM scan_records r
+                JOIN users u ON r.user_id = u.id
+                ORDER BY r.created_at DESC
+            ''')
+        else:
+            cursor.execute('''
+                SELECT id, filename, file_size, risk_level, confidence, scan_status, created_at, package_type
+                FROM scan_records 
+                WHERE user_id = ?
+                ORDER BY created_at DESC
+            ''', (session['user_id'],))
+        
+        records = cursor.fetchall()
+        return render_template('history.html', records=records)
+    except Exception as e:
+        print(f"Error in history: {e}")
+        flash('获取历史记录时出现错误', 'error')
+        return render_template('history.html', records=[])
+    finally:
+        if conn:
+            conn.close()
 
 @user_bp.route('/guide')
 def guide():
-    # 创建一个空的ScanForm，防止模板中使用form变量时出错
-    form = ScanForm()
-    return render_template('guide.html', form=form)
+    return render_template('guide.html')
 
 @user_bp.route('/knowledge')
 def knowledge():
-    # 创建一个空的ScanForm，防止模板中使用form变量时出错
-    form = ScanForm()
     # 入门指南内容
     getting_started_articles = [
         {
@@ -502,32 +434,36 @@ def get_scan_result(scan_id):
             time.sleep(5)
                 </pre>
             '''
-        },
+        }
+    ]
+    
+    # 故障排除内容
+    troubleshooting_articles = [
         {
             'id': 'common-issues',
             'title': '常见问题',
             'desc': '''
-                <h4>扫描问题</h4>
+                <h4>上传问题</h4>
                 <ul>
                     <li>
-                        <strong>问题</strong>: 扫描进度卡在某一步骤<br>
-                        <strong>解决方法</strong>: 检查包大小是否过大，系统资源是否充足，可以尝试重新上传或将包分割为更小的部分
+                        <strong>问题</strong>: 文件上传失败<br>
+                        <strong>解决方法</strong>: 检查文件大小是否超过限制(50MB)，确认文件格式是否受支持，检查网络连接
                     </li>
                     <li>
-                        <strong>问题</strong>: 某些文件类型无法解析<br>
-                        <strong>解决方法</strong>: 检查文件格式是否正确，可能需要预处理或转换为标准格式
+                        <strong>问题</strong>: 无法识别包类型<br>
+                        <strong>解决方法</strong>: 确保上传的是标准格式的组件包，包含必要的元数据文件（如setup.py、package.json等）
                     </li>
                 </ul>
                 
-                <h4>性能问题</h4>
+                <h4>检测问题</h4>
                 <ul>
                     <li>
-                        <strong>问题</strong>: 系统运行缓慢<br>
-                        <strong>解决方法</strong>: 检查系统资源占用，关闭不必要的进程，考虑增加服务器资源
+                        <strong>问题</strong>: 检测过程卡住不动<br>
+                        <strong>解决方法</strong>: 检查网络连接，确保API服务可用；对于特别大的包可能需要更长时间
                     </li>
                     <li>
-                        <strong>问题</strong>: 大型包检测超时<br>
-                        <strong>解决方法</strong>: 调整配置文件中的超时设置，或将包分割为多个部分单独检测
+                        <strong>问题</strong>: 检测失败，无结果<br>
+                        <strong>解决方法</strong>: 查看系统日志，检查包文件完整性，尝试重新上传或使用"重试检测"功能
                     </li>
                 </ul>
             '''
@@ -536,81 +472,57 @@ def get_scan_result(scan_id):
             'id': 'error-messages',
             'title': '错误信息',
             'desc': '''
-                <h4>常见错误代码</h4>
+                <h4>常见错误代码及解决方案</h4>
                 <table border="1" style="border-collapse: collapse; width: 100%;">
                     <tr style="background-color: #f3f4f6;">
                         <th style="padding: 8px; text-align: left;">错误代码</th>
-                        <th style="padding: 8px; text-align: left;">含义</th>
-                        <th style="padding: 8px; text-align: left;">解决方案</th>
+                        <th style="padding: 8px; text-align: left;">描述</th>
+                        <th style="padding: 8px; text-align: left;">解决方法</th>
                     </tr>
                     <tr>
-                        <td style="padding: 8px;">E001</td>
+                        <td style="padding: 8px;">ERR-001</td>
                         <td style="padding: 8px;">文件格式不支持</td>
-                        <td style="padding: 8px;">转换为支持的格式后重试</td>
+                        <td style="padding: 8px;">使用受支持的包格式(.zip, .tar.gz, .whl, .jar等)</td>
                     </tr>
                     <tr>
-                        <td style="padding: 8px;">E002</td>
-                        <td style="padding: 8px;">文件大小超限</td>
-                        <td style="padding: 8px;">压缩或分割后重试</td>
+                        <td style="padding: 8px;">ERR-002</td>
+                        <td style="padding: 8px;">API调用失败</td>
+                        <td style="padding: 8px;">检查API密钥和网络连接，确认DeepSeek服务可用</td>
                     </tr>
                     <tr>
-                        <td style="padding: 8px;">E003</td>
-                        <td style="padding: 8px;">解析失败</td>
-                        <td style="padding: 8px;">检查文件完整性</td>
+                        <td style="padding: 8px;">ERR-003</td>
+                        <td style="padding: 8px;">特征提取失败</td>
+                        <td style="padding: 8px;">检查包文件是否完整，尝试重新上传</td>
                     </tr>
                     <tr>
-                        <td style="padding: 8px;">E004</td>
-                        <td style="padding: 8px;">模型加载失败</td>
-                        <td style="padding: 8px;">联系管理员</td>
+                        <td style="padding: 8px;">ERR-004</td>
+                        <td style="padding: 8px;">存储空间不足</td>
+                        <td style="padding: 8px;">清理临时文件目录，为上传文件释放空间</td>
                     </tr>
                 </table>
-                
-                <h4>故障排除步骤</h4>
-                <ol>
-                    <li>检查日志文件了解详细错误信息</li>
-                    <li>确保系统环境满足要求</li>
-                    <li>检查网络连接和API状态</li>
-                    <li>尝试使用不同的浏览器或客户端</li>
-                    <li>联系技术支持团队获取帮助</li>
-                </ol>
             '''
         },
         {
             'id': 'performance',
             'title': '性能优化',
             'desc': '''
-                <h4>提高扫描性能</h4>
+                <h4>系统性能优化建议</h4>
+                <p>如果系统运行缓慢或检测效率不高，可以尝试以下优化措施：</p>
+                
                 <ul>
-                    <li>
-                        <strong>预处理大型包</strong>: 对于超过50MB的包，建议事先分割或只扫描关键部分
-                    </li>
-                    <li>
-                        <strong>批量扫描优化</strong>: 使用API接口进行批量扫描时，建议控制并发数量在5-10个之间
-                    </li>
-                    <li>
-                        <strong>缓存利用</strong>: 对于已扫描过的包，系统会缓存结果，可通过文件哈希值查询
-                    </li>
+                    <li><strong>增加硬件资源</strong>: 对于大型部署，建议至少16GB内存和4核处理器</li>
+                    <li><strong>优化数据库</strong>: 定期清理旧的检测记录和临时文件</li>
+                    <li><strong>调整并发设置</strong>: 在<code>config.py</code>中调整最大并发检测任务数</li>
+                    <li><strong>使用缓存</strong>: 启用结果缓存可以加快重复检测的速度</li>
                 </ul>
                 
-                <h4>服务器配置建议</h4>
-                <table border="1" style="border-collapse: collapse; width: 100%;">
-                    <tr style="background-color: #f3f4f6;">
-                        <th style="padding: 8px; text-align: left;">用户规模</th>
-                        <th style="padding: 8px; text-align: left;">建议配置</th>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px;">小型团队 (< 10人)</td>
-                        <td style="padding: 8px;">2 CPU, 8GB RAM, 100GB SSD</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px;">中型团队 (10-50人)</td>
-                        <td style="padding: 8px;">4 CPU, 16GB RAM, 500GB SSD</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px;">大型团队 (> 50人)</td>
-                        <td style="padding: 8px;">8+ CPU, 32GB+ RAM, 1TB+ SSD</td>
-                    </tr>
-                </table>
+                <h4>大型包处理策略</h4>
+                <p>处理超大型包（>100MB）时的建议：</p>
+                <ul>
+                    <li>增加超时时间设置</li>
+                    <li>使用分块分析模式</li>
+                    <li>优先分析关键文件而非全量分析</li>
+                </ul>
             '''
         }
     ]
@@ -834,120 +746,6 @@ def get_scan_result(scan_id):
         }
     ]
     
-    # 故障排除内容
-    troubleshooting_articles = [
-        {
-            'id': 'common-issues',
-            'title': '常见问题',
-            'desc': '''
-                <h4>扫描问题</h4>
-                <ul>
-                    <li>
-                        <strong>问题</strong>: 扫描进度卡在某一步骤<br>
-                        <strong>解决方法</strong>: 检查包大小是否过大，系统资源是否充足，可以尝试重新上传或将包分割为更小的部分
-                    </li>
-                    <li>
-                        <strong>问题</strong>: 某些文件类型无法解析<br>
-                        <strong>解决方法</strong>: 检查文件格式是否正确，可能需要预处理或转换为标准格式
-                    </li>
-                </ul>
-                
-                <h4>性能问题</h4>
-                <ul>
-                    <li>
-                        <strong>问题</strong>: 系统运行缓慢<br>
-                        <strong>解决方法</strong>: 检查系统资源占用，关闭不必要的进程，考虑增加服务器资源
-                    </li>
-                    <li>
-                        <strong>问题</strong>: 大型包检测超时<br>
-                        <strong>解决方法</strong>: 调整配置文件中的超时设置，或将包分割为多个部分单独检测
-                    </li>
-                </ul>
-            '''
-        },
-        {
-            'id': 'error-messages',
-            'title': '错误信息',
-            'desc': '''
-                <h4>常见错误代码</h4>
-                <table border="1" style="border-collapse: collapse; width: 100%;">
-                    <tr style="background-color: #f3f4f6;">
-                        <th style="padding: 8px; text-align: left;">错误代码</th>
-                        <th style="padding: 8px; text-align: left;">含义</th>
-                        <th style="padding: 8px; text-align: left;">解决方案</th>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px;">E001</td>
-                        <td style="padding: 8px;">文件格式不支持</td>
-                        <td style="padding: 8px;">转换为支持的格式后重试</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px;">E002</td>
-                        <td style="padding: 8px;">文件大小超限</td>
-                        <td style="padding: 8px;">压缩或分割后重试</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px;">E003</td>
-                        <td style="padding: 8px;">解析失败</td>
-                        <td style="padding: 8px;">检查文件完整性</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px;">E004</td>
-                        <td style="padding: 8px;">模型加载失败</td>
-                        <td style="padding: 8px;">联系管理员</td>
-                    </tr>
-                </table>
-                
-                <h4>故障排除步骤</h4>
-                <ol>
-                    <li>检查日志文件了解详细错误信息</li>
-                    <li>确保系统环境满足要求</li>
-                    <li>检查网络连接和API状态</li>
-                    <li>尝试使用不同的浏览器或客户端</li>
-                    <li>联系技术支持团队获取帮助</li>
-                </ol>
-            '''
-        },
-        {
-            'id': 'performance',
-            'title': '性能优化',
-            'desc': '''
-                <h4>提高扫描性能</h4>
-                <ul>
-                    <li>
-                        <strong>预处理大型包</strong>: 对于超过50MB的包，建议事先分割或只扫描关键部分
-                    </li>
-                    <li>
-                        <strong>批量扫描优化</strong>: 使用API接口进行批量扫描时，建议控制并发数量在5-10个之间
-                    </li>
-                    <li>
-                        <strong>缓存利用</strong>: 对于已扫描过的包，系统会缓存结果，可通过文件哈希值查询
-                    </li>
-                </ul>
-                
-                <h4>服务器配置建议</h4>
-                <table border="1" style="border-collapse: collapse; width: 100%;">
-                    <tr style="background-color: #f3f4f6;">
-                        <th style="padding: 8px; text-align: left;">用户规模</th>
-                        <th style="padding: 8px; text-align: left;">建议配置</th>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px;">小型团队 (< 10人)</td>
-                        <td style="padding: 8px;">2 CPU, 8GB RAM, 100GB SSD</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px;">中型团队 (10-50人)</td>
-                        <td style="padding: 8px;">4 CPU, 16GB RAM, 500GB SSD</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px;">大型团队 (> 50人)</td>
-                        <td style="padding: 8px;">8+ CPU, 32GB+ RAM, 1TB+ SSD</td>
-                    </tr>
-                </table>
-            '''
-        }
-    ]
-    
     # 整合文章内容
     articles = getting_started_articles + basic_usage_articles + features_articles + security_articles + troubleshooting_articles + api_articles
     
@@ -995,7 +793,7 @@ def get_scan_result(scan_id):
         }
     ]
     
-    return render_template('knowledge.html', articles=articles, faqs=faqs, form=form)
+    return render_template('knowledge.html', articles=articles, faqs=faqs)
 
 @user_bp.route('/download_report/<int:scan_id>/<format>')
 @login_required
@@ -1058,3 +856,174 @@ def download_report(scan_id, format):
                         download_name=f'security_report_{scan_id}.pdf')
     
     return jsonify({'error': '不支持的格式'}), 400
+
+@user_bp.route('/package_encyclopedia')
+def package_encyclopedia():
+    """包百科主页 - 按语言分类"""
+    from app.models.db_models import PackageEncyclopedia
+    
+    search_query = request.args.get('search', '')
+    
+    if search_query:
+        # 如果有搜索查询，则直接跳转到列表页显示搜索结果
+        return redirect(url_for('user.package_list', search=search_query))
+    
+    # 获取所有包数据
+    packages = PackageEncyclopedia.get_all()
+    
+    # 按语言分组
+    language_groups = defaultdict(lambda: {'packages': [], 'tags': set()})
+    for pkg in packages:
+        group = language_groups[pkg.package_type]
+        group['packages'].append(pkg)
+        if pkg.tags:
+            group['tags'].update(tag.strip() for tag in pkg.tags.split(','))
+            
+    # 准备传递给模板的数据
+    language_cards = []
+    for lang, data in language_groups.items():
+        language_cards.append({
+            'name': lang,
+            'count': len(data['packages']),
+            'tags': sorted(list(data['tags']))[:5] # 最多显示5个标签
+        })
+    
+    # 按包数量排序
+    language_cards.sort(key=lambda x: x['count'], reverse=True)
+    
+    return render_template('package_encyclopedia_landing.html', 
+                          language_cards=language_cards,
+                          search_query=search_query)
+
+@user_bp.route('/packages/<package_type>')
+@user_bp.route('/packages')
+def package_list(package_type=None):
+    """包百科列表页"""
+    from app.models.db_models import PackageEncyclopedia
+    
+    search_query = request.args.get('search', '')
+    
+    if search_query:
+        packages = PackageEncyclopedia.search(search_query)
+        page_title = f'搜索 "{search_query}" 的结果'
+    elif package_type:
+        packages = PackageEncyclopedia.get_by_type(package_type)
+        page_title = f"{package_type} 包"
+    else:
+        packages = PackageEncyclopedia.get_all()
+        page_title = "所有包"
+        
+    return render_template('package_list.html', 
+                          packages=packages, 
+                          page_title=page_title,
+                          search_query=search_query)
+
+@user_bp.route('/package_encyclopedia/<int:package_id>')
+def package_detail(package_id):
+    """包百科详情页"""
+    from app.models.db_models import PackageEncyclopedia
+    
+    package = PackageEncyclopedia.get_by_id(package_id)
+    if not package:
+        flash('包百科条目不存在', 'error')
+        return redirect(url_for('user.package_encyclopedia'))
+    
+    return render_template('package_detail.html', package=package)
+
+@user_bp.route('/package_encyclopedia/add', methods=['GET', 'POST'])
+@login_required
+def add_package():
+    """添加包百科条目（仅管理员）"""
+    if session.get('role') != 'admin':
+        flash('权限不足', 'error')
+        return redirect(url_for('user.package_encyclopedia'))
+    
+    if request.method == 'POST':
+        from app.models.db_models import PackageEncyclopedia
+        
+        package = PackageEncyclopedia(
+            package_name=request.form.get('package_name'),
+            package_type=request.form.get('package_type'),
+            description=request.form.get('description'),
+            version=request.form.get('version'),
+            author=request.form.get('author'),
+            license=request.form.get('license'),
+            repository=request.form.get('repository'),
+            official_website=request.form.get('official_website'),
+            security_notes=request.form.get('security_notes'),
+            common_risks=request.form.get('common_risks'),
+            best_practices=request.form.get('best_practices'),
+            alternatives=request.form.get('alternatives'),
+            tags=request.form.get('tags')
+        )
+        
+        try:
+            package.save()
+            flash('包百科条目添加成功', 'success')
+            return redirect(url_for('user.package_encyclopedia'))
+        except Exception as e:
+            flash(f'添加失败: {str(e)}', 'error')
+    
+    return render_template('add_package.html')
+
+@user_bp.route('/package_encyclopedia/edit/<int:package_id>', methods=['GET', 'POST'])
+@login_required
+def edit_package(package_id):
+    """编辑包百科条目（仅管理员）"""
+    if session.get('role') != 'admin':
+        flash('权限不足', 'error')
+        return redirect(url_for('user.package_encyclopedia'))
+    
+    from app.models.db_models import PackageEncyclopedia
+    package = PackageEncyclopedia.get_by_id(package_id)
+    
+    if not package:
+        flash('包百科条目不存在', 'error')
+        return redirect(url_for('user.package_encyclopedia'))
+    
+    if request.method == 'POST':
+        package.package_name = request.form.get('package_name')
+        package.package_type = request.form.get('package_type')
+        package.description = request.form.get('description')
+        package.version = request.form.get('version')
+        package.author = request.form.get('author')
+        package.license = request.form.get('license')
+        package.repository = request.form.get('repository')
+        package.official_website = request.form.get('official_website')
+        package.security_notes = request.form.get('security_notes')
+        package.common_risks = request.form.get('common_risks')
+        package.best_practices = request.form.get('best_practices')
+        package.alternatives = request.form.get('alternatives')
+        package.tags = request.form.get('tags')
+        
+        try:
+            package.save()
+            flash('包百科条目更新成功', 'success')
+            return redirect(url_for('user.package_detail', package_id=package.id))
+        except Exception as e:
+            flash(f'更新失败: {str(e)}', 'error')
+    
+    return render_template('edit_package.html', package=package)
+
+@user_bp.route('/package_encyclopedia/delete/<int:package_id>', methods=['POST'])
+@login_required
+def delete_package(package_id):
+    """删除包百科条目（仅管理员）"""
+    if session.get('role') != 'admin':
+        flash('权限不足', 'error')
+        return redirect(url_for('user.package_encyclopedia'))
+    
+    from app.models.db_models import PackageEncyclopedia
+    package = PackageEncyclopedia.get_by_id(package_id)
+    
+    if not package:
+        flash('包百科条目不存在', 'error')
+        return redirect(url_for('user.package_encyclopedia'))
+    
+    try:
+        package.delete()
+        flash('包百科条目删除成功', 'success')
+    except Exception as e:
+        flash(f'删除失败: {str(e)}', 'error')
+    
+    return redirect(url_for('user.package_encyclopedia'))

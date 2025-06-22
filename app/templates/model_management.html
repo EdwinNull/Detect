@@ -3,78 +3,60 @@
 {% block title %}模型管理 - 开源组件包安全检测平台{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container mt-4">
     <h2>模型管理</h2>
     
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for message in messages %}
-                <div class="flash-message flash-info">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    
-    <div class="card mb-4" style="background: white; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px;">
-        <div class="card-header" style="padding: 15px 20px; border-bottom: 1px solid #eee;">
-            <h4>当前模型状态</h4>
+    <div class="row mt-4">
+        {% for model_type in model_types %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>{{ model_type }}模型</h5>
+                </div>
+                <div class="card-body">
+                    <p>状态: {% if model_info[model_type]['exists'] %}
+                        <span class="badge bg-success">已加载</span>
+                        {% else %}
+                        <span class="badge bg-danger">未加载</span>
+                        {% endif %}
+                    </p>
+                    {% if model_info[model_type]['exists'] %}
+                    <p>最后修改时间: {{ model_info[model_type]['last_modified'] }}</p>
+                    <p>文件大小: {{ (model_info[model_type]['size'] / 1024)|round(2) }} KB</p>
+                    {% endif %}
+                    
+                    <form method="post" class="mt-3">
+                        <input type="hidden" name="model_type" value="{{ model_type }}">
+                        <div class="btn-group" role="group">
+                            <button type="submit" name="action" value="switch" class="btn btn-primary">
+                                切换到此模型
+                            </button>
+                            {% if model_type in ['xgboost', 'random_forest'] %}
+                            <button type="submit" name="action" value="retrain" class="btn btn-warning">
+                                重新训练
+                            </button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div class="card-body" style="padding: 20px;">
-            {% if model_info.exists %}
-                <p><strong>模型文件：</strong> 已存在</p>
-                <p><strong>最后修改时间：</strong> {{ model_info.last_modified }}</p>
-                <p><strong>文件大小：</strong> {{ (model_info.size / 1024)|round(2) }} KB</p>
-            {% else %}
-                <p><strong>模型文件：</strong> 不存在</p>
-            {% endif %}
-        </div>
+        {% endfor %}
     </div>
     
-    <div class="card" style="background: white; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px;">
-        <div class="card-header" style="padding: 15px 20px; border-bottom: 1px solid #eee;">
-            <h4>模型操作</h4>
-        </div>
-        <div class="card-body" style="padding: 20px;">
-            <form method="POST" action="{{ url_for('admin.model_management') }}">
-                <div style="margin-bottom: 15px;">
-                    <label for="model_type" style="display: block; margin-bottom: 8px;">选择模型类型</label>
-                    <select id="model_type" name="model_type" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                        <option value="xgboost">XGBoost</option>
-                        <option value="randomforest">Random Forest</option>
-                    </select>
-                </div>
-                
-                <div style="margin-bottom: 15px;">
-                    <button type="submit" name="action" value="retrain" class="btn btn-primary" style="margin-right: 10px;">
-                        重新训练模型
-                    </button>
-                    <button type="submit" name="action" value="switch" class="btn btn-outline" style="background: #f8f9fa; color: #333;">
-                        切换模型类型
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
-    <div class="card" style="background: white; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-        <div class="card-header" style="padding: 15px 20px; border-bottom: 1px solid #eee;">
-            <h4>模型说明</h4>
-        </div>
-        <div class="card-body" style="padding: 20px;">
-            <h5>XGBoost模型</h5>
-            <ul>
-                <li>基于梯度提升树的集成学习模型</li>
-                <li>适合处理非线性关系</li>
-                <li>训练速度较快</li>
-                <li>对异常值较为鲁棒</li>
-            </ul>
-            
-            <h5>Random Forest模型</h5>
-            <ul>
-                <li>基于决策树的集成学习模型</li>
-                <li>训练速度快</li>
-                <li>不容易过拟合</li>
-                <li>适合处理高维特征</li>
-            </ul>
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h4>说明:</h4>
+                <ul>
+                    <li>XGBoost模型: 通用模型,适用于所有类型的软件包</li>
+                    <li>Random Forest模型: 备选通用模型</li>
+                    <li>JS模型: 专门用于JavaScript/Node.js包分析</li>
+                    <li>Python模型: 专门用于Python包分析</li>
+                    <li>跨语言模型: 适用于多语言混合的项目</li>
+                </ul>
+                <p>注意: 专用模型(JS/Python/跨语言)为预训练模型,不支持重新训练。如需更新,请联系管理员。</p>
+            </div>
         </div>
     </div>
 </div>

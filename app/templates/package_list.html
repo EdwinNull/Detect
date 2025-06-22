@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .encyclopedia-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 24px;
+    }
+    
+    .list-header {
+        background: white;
+        padding: 32px;
+        border-radius: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+    }
+    
+    .list-title {
+        font-size: 32px;
+        font-weight: 700;
+        color: #343a40;
+        margin-bottom: 12px;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #4A4DE6;
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 24px;
+    }
+    
+    .packages-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+    
+    .package-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .package-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .package-header {
+        padding: 20px;
+        border-bottom: 1px solid #f3f4f6;
+        flex-grow: 1;
+    }
+    
+    .package-name {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1e40af;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .package-type-badge {
+        background: #dbeafe;
+        color: #1e40af;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .package-version {
+        color: #6b7280;
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+    
+    .package-description {
+        color: #374151;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 16px;
+    }
+    
+    .package-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+        color: #9ca3af;
+    }
+    
+    .package-actions {
+        padding: 16px 20px;
+        background: #f9fafb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .view-details-btn {
+        padding: 8px 16px;
+        background: #2563eb;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .view-details-btn:hover {
+        background: #1d4ed8;
+    }
+    
+    .admin-actions {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .edit-btn, .delete-btn {
+        padding: 6px 12px;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .edit-btn { background: #f59e0b; }
+    .edit-btn:hover { background: #d97706; }
+    .delete-btn { background: #ef4444; }
+    .delete-btn:hover { background: #dc2626; }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .add-package-btn {
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="encyclopedia-container">
+    <a href="{{ url_for('user.package_encyclopedia') }}" class="back-link">
+        &larr; 返回百科主页
+    </a>
+    <div class="list-header">
+        <h1 class="list-title">{{ page_title }}</h1>
+        <p class="text-muted">共找到 {{ packages|length }} 个相关包</p>
+    </div>
+    
+    {% if packages %}
+    <div class="packages-grid">
+        {% for package in packages %}
+        <div class="package-card">
+            <div class="package-header">
+                <div class="package-name">
+                    {{ package.package_name }}
+                    <span class="package-type-badge">{{ package.package_type }}</span>
+                </div>
+                <p class="package-description">{{ (package.description or '')[:120] }}...</p>
+            </div>
+            
+            <div class="package-actions">
+                <a href="{{ url_for('user.package_detail', package_id=package.id) }}" class="view-details-btn">
+                    查看详情
+                </a>
+                {% if session.role == 'admin' %}
+                <div class="admin-actions">
+                    <a href="{{ url_for('user.edit_package', package_id=package.id) }}" class="edit-btn">编辑</a>
+                    <form action="{{ url_for('user.delete_package', package_id=package.id) }}" method="POST" onsubmit="return confirm('确定要删除吗？');" style="display:inline;">
+                        <button type="submit" class="delete-btn">删除</button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h3>未找到任何包</h3>
+        <p>没有找到与您的查询匹配的包。管理员可以添加新的包条目。</p>
+        {% if session.role == 'admin' %}
+        <a href="{{ url_for('user.add_package') }}" class="add-package-btn">添加包条目</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

@@ -2,679 +2,915 @@ import zipfile
 import tarfile
 import os
 import numpy as np
-import shutil
-import tempfile
 import re
-import json
+import magic
 import hashlib
-from werkzeug.utils import secure_filename
-import glob
+import math
+import json
+from collections import Counter
+import time
+import toml
+import io
 
 class FeatureExtractor:
     def __init__(self):
-        self.temp_dir = tempfile.gettempdir()
-        self.file_categories = {
-            'executable': ['.exe', '.dll', '.so', '.dylib', '.bin', '.com', '.bat', '.cmd', '.sh'],
-            'script': ['.py', '.js', '.php', '.rb', '.pl', '.sh', '.bash', '.ps1', '.psm1', '.psd1'],
-            'config': ['.json', '.xml', '.yaml', '.yml', '.ini', '.conf', '.cfg', '.toml'],
-            'data': ['.csv', '.txt', '.md', '.rst', '.log', '.dat', '.data'],
-            'image': ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.ico'],
-            'document': ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx'],
-            'archive': ['.zip', '.tar', '.gz', '.tgz', '.bz2', '.rar', '.7z', '.xz'],
-            'package': ['.whl', '.egg', '.jar', '.war', '.npm']
+        self.features = {}
+        self.file_content = None
+        self.file_path = None
+        self.max_content_size = 1024 * 1024  # 1MB 限制
+        
+        # 预编译正则表达式以提高性能
+        self.regex_patterns = {
+            'control_structures': re.compile(r'\b(if|for|while|case|catch|&&|\|\|)\b'),
+            'functions': re.compile(r'\b(function|=>|def|class)\b'),
+            'camel_case': re.compile(r'\b[a-z][a-zA-Z0-9]*[A-Z][a-zA-Z0-9]*\b'),
+            'snake_case': re.compile(r'\b[a-z]+(_[a-z]+)+\b'),
+            'const_case': re.compile(r'\b[A-Z][A-Z0-9_]*\b'),
+            'error_patterns': re.compile(r'\b(try|catch|throw|finally|error|Exception|Error)\b', re.IGNORECASE),
+            'performance_patterns': re.compile(r'\b(cache|memo|optimiz|performance|async|await|promise|setTimeout)\b', re.IGNORECASE),
+            'malicious_patterns': re.compile(r'(eval\s*\(.*\)|exec\s*\(.*\)|Function\s*\(.*\)|setTimeout\s*\(\s*[\'"`]|setInterval\s*\(\s*[\'"`]|document\.write\s*\(|\.innerHTML\s*=|window\.location\s*=|document\.cookie|localStorage\.|sessionStorage\.|indexedDB\.|new\s+Function|debugger|\[native\s+code\]|prototype\.)'),
+            'vulnerability_patterns': re.compile(r'(sql\s*injection|xss|csrf|buffer\s*overflow|race\s*condition|path\s*traversal|command\s*injection)'),
+            'injection_patterns': re.compile(r'(innerHTML|outerHTML|document\.write|eval|exec|Function)'),
+            'crypto_patterns': re.compile(r'\b(crypto|cipher|encrypt|decrypt|hash|md5|sha1|sha256|base64)\b'),
+            'network_patterns': re.compile(r'\b(http|https|fetch|axios|request|url|api|endpoint)\b'),
+            'fs_patterns': re.compile(r'\b(fs\.|readFile|writeFile|unlink|rmdir|mkdir|chmod|chown)\b'),
+            'process_patterns': re.compile(r'\b(exec|spawn|fork|child_process|subprocess|os\.system|os\.popen)\b'),
+            'privilege_patterns': re.compile(r'\b(sudo|su|runas|elevate|admin|root|privilege)\b'),
+            'data_patterns': re.compile(r'\b(password|secret|key|token|credential|private)\b'),
+            'auth_patterns': re.compile(r'\b(login|auth|authenticate|authorize|jwt|oauth|session)\b'),
+            'base64_pattern': re.compile(r'[A-Za-z0-9+/]{20,}={0,2}'),
+            'ip_pattern': re.compile(r'\b(?:\d{1,3}\.){3}\d{1,3}\b'),
+            'url_pattern': re.compile(r'https?://[^\s<>"{}|\\^`\[\]]+'),
+            'suspicious_patterns': re.compile(r'\b(eval\s*\(|exec\s*\(|Function\s*\(|setTimeout\s*\(\s*[\'"`]|setInterval\s*\(\s*[\'"`]|document\.write\s*\(|\.innerHTML\s*=|\.outerHTML\s*=|window\.location\s*=|document\.cookie\s*=|localStorage\s*\.|sessionStorage\s*\.|indexedDB\s*\.|debugger\s*;|prototype\s*\.|constructor\s*\.|__proto__\s*\.|toString\s*\(|valueOf\s*\(|hasOwnProperty\s*\(|isPrototypeOf\s*\(|propertyIsEnumerable\s*\(|toLocaleString\s*\(|toSource\s*\(|unwatch\s*\(|watch\s*\()'),
+            'file_extensions': re.compile(r'\.([a-zA-Z0-9]+)(?:\?|$)'),
         }
         
-        # 可疑的扩展名列表
-        self.suspicious_extensions = [
-            '.exe', '.dll', '.so', '.dylib', '.bin', '.com', '.bat', '.cmd', 
-            '.ps1', '.psm1', '.psd1', '.vbs', '.js', '.scr', '.msi', '.reg'
-        ]
-    
     def extract_features(self, file_path):
-        """提取软件包的安全特征"""
+        """提取文件特征 - 返回CSV格式特征"""
+        start_time = time.time()
+        print(f"开始提取特征: {file_path}")
+        
         try:
-            # 获取文件基本信息
+            self.file_path = file_path
+            self.features = {}
+            
+            # 检查文件是否存在
+            if not os.path.exists(file_path):
+                print(f"文件不存在: {file_path}")
+                return None
+            
+            # 新增：自动识别包名
+            self.features['package_name'] = self._extract_package_name(file_path)
+            
+            # 获取文件信息
             file_info = self._get_file_info(file_path)
+            if file_info:
+                self.features.update(file_info)
             
-            # 解压文件
-            extract_dir = self._extract_package(file_path)
-            if not extract_dir:
-                return self._generate_error_features(file_path, "解压失败")
+            # 根据文件类型提取特征
+            file_extension = os.path.splitext(file_path)[1]
+            file_extension = file_extension.lower() if file_extension else ''
             
-            # 扫描解压后的文件
-            file_list = self._scan_directory(extract_dir)
-            file_count = len(file_list)
-            print(f"解压后共发现 {file_count} 个文件")
+            if file_extension in ['.zip', '.tar', '.gz', '.bz2', '.tgz']:
+                self._extract_archive_features(file_path)
+            else:
+                self._extract_single_file_features(file_path)
             
-            # 分析代码文件
-            python_files = [f for f in file_list if f.endswith('.py')]
-            js_files = [f for f in file_list if f.endswith('.js')]
-            c_files = [f for f in file_list if f.endswith('.c') or f.endswith('.cpp') or f.endswith('.h')]
+            # 确保所有CSV特征都存在
+            self._ensure_csv_features()
             
-            # 提取代码特征
-            code_features = self._extract_code_features(extract_dir, python_files, js_files, c_files)
+            print(f"提取了 {len(self.features)} 个特征")
+            print(f"特征提取完成，耗时: {time.time() - start_time:.2f}秒")
             
-            # 提取元数据特征
-            metadata_features = self._extract_metadata_features(extract_dir)
+            print("【调试】主要特征统计：")
+            print("代码总词数：", self.features.get('Number of Words in source code'))
+            print("代码总行数：", self.features.get('Number of lines in source code'))
+            print("文件类型分布：", {k: v for k, v in self.features.items() if k.startswith('.') and v > 0})
+            print("包名：", self.features.get('package_name'))
             
-            # 提取安装脚本特征
-            install_features = self._extract_install_features(extract_dir)
+            return self.features
             
-            # 提取依赖特征
-            dependency_features = self._extract_dependency_features(extract_dir)
+        except Exception as e:
+            print(f"特征提取错误: {str(e)}")
+            return None
+    
+    def _ensure_csv_features(self):
+        """确保所有CSV格式的特征都存在"""
+        # CSV特征列表（基于npm_feature_extracted.csv的列名）
+        csv_features = [
+            # 基础统计特征
+            'Number of Words in source code', 'Number of lines in source code',
             
-            # 提取文件系统特征
-            filesystem_features = self._extract_filesystem_features(extract_dir, file_list)
+            # 字符比率特征
+            'plus ratio mean', 'plus ratio max', 'plus ratio std', 'plus ratio q3',
+            'eq ratio mean', 'eq ratio max', 'eq ratio std', 'eq ratio q3',
+            'bracket ratio mean', 'bracket ratio max', 'bracket ratio std', 'bracket ratio q3',
             
-            # 合并所有特征
-            features = {
-                **file_info,
-                **code_features,
-                **metadata_features,
-                **install_features,
-                **dependency_features,
-                **filesystem_features
+            # 安全特征
+            'Number of base64 chunks in source code', 'Number of IP adress in source code', 
+            'Number of sospicious token in source code',
+            
+            # 元数据特征
+            'Number of Words in metadata', 'Number of lines in metadata',
+            'Number of base64 chunks in metadata', 'Number of IP adress in metadata',
+            'Number of sospicious token in metadata',
+            
+            # 文件类型特征 (带点的格式，与CSV一致)
+            '.bat', '.bz2', '.c', '.cert', '.conf', '.cpp', '.crt', '.css', '.csv', '.deb',
+            '.erb', '.gemspec', '.gif', '.gz', '.h', '.html', '.ico', '.ini', '.jar', '.java',
+            '.jpg', '.js', '.json', '.key', '.m4v', '.markdown', '.md', '.pdf', '.pem', '.png',
+            '.ps', '.py', '.rb', '.rpm', '.rst', '.sh', '.svg', '.toml', '.ttf', '.txt', '.xml',
+            '.yaml', '.yml', '.eot', '.exe', '.jpeg', '.properties', '.sql', '.swf', '.tar',
+            '.woff', '.woff2', '.aac', '.bmp', '.cfg', '.dcm', '.dll', '.doc', '.flac', '.flv',
+            '.ipynb', '.m4a', '.mid', '.mkv', '.mp3', '.mp4', '.mpg', '.ogg', '.otf', '.pickle',
+            '.pkl', '.psd', '.pxd', '.pxi', '.pyc', '.pyx', '.r', '.rtf', '.so', '.sqlite',
+            '.tif', '.tp', '.wav', '.webp', '.whl', '.xcf', '.xz', '.zip', '.mov', '.wasm', '.webm',
+            
+            # 项目特征
+            'repository', 'presence of installation script',
+            
+            # 熵特征
+            'shannon mean ID source code', 'shannon std ID source code', 
+            'shannon max ID source code', 'shannon q3 ID source code',
+            'shannon mean string source code', 'shannon std string source code',
+            'shannon max string source code', 'shannon q3 string source code',
+            
+            # 标识符和字符串特征
+            'homogeneous identifiers in source code', 'homogeneous strings in source code',
+            'heteregeneous identifiers in source code', 'heterogeneous strings in source code',
+            'URLs in source code',
+            
+            # 元数据熵特征
+            'shannon mean ID metadata', 'shannon std ID metadata',
+            'shannon max ID metadata', 'shannon q3 ID metadata',
+            'shannon mean string metadata', 'shannon std string metadata',
+            'shannon max string metadata', 'shannon q3 string metadata',
+            
+            # 元数据标识符和字符串特征
+            'homogeneous identifiers in metadata', 'homogeneous strings in metadata',
+            'heterogeneous strings in metadata', 'URLs in metadata',
+            'heteregeneous identifiers in metadata'
+        ]
+        
+        # 确保所有CSV特征都存在，缺失的设为0
+        for feature in csv_features:
+            if feature not in self.features:
+                self.features[feature] = 0
+    
+    def _extract_csv_based_features(self, content):
+        """基于CSV数据提取特征"""
+        try:
+            # 1. 基础统计特征 (对应CSV中的前几列)
+            lines = content.splitlines()
+            words = re.findall(r'\b\w+\b', content)
+            
+            self.features['Number of Words in source code'] = len(words)
+            self.features['Number of lines in source code'] = len(lines)
+            
+            # 2. 字符比率特征 (对应CSV中的比率特征)
+            self._extract_char_ratios_enhanced(content)
+            
+            # 3. 安全特征 (对应CSV中的base64, IP, suspicious token)
+            self._extract_security_features_enhanced(content)
+            
+            # 4. 元数据特征 (对应CSV中的metadata相关列)
+            self._extract_metadata_features()
+            
+            # 5. 文件类型特征 (对应CSV中的各种文件扩展名)
+            self._extract_file_type_features()
+            
+            # 6. 熵特征 (对应CSV中的shannon entropy相关列)
+            self._extract_entropy_features_enhanced(content)
+            
+            # 7. 标识符和字符串特征 (对应CSV中的homogeneous/heterogeneous列)
+            self._extract_identifier_string_features(content)
+            
+            print(f"提取了 {len(self.features)} 个特征")
+            
+        except Exception as e:
+            print(f"CSV特征提取错误: {str(e)}")
+    
+    def _extract_char_ratios_enhanced(self, content):
+        """增强的字符比率提取 - 对应CSV中的比率特征"""
+        if not content:
+            return
+            
+        total_chars = len(content)
+        if total_chars == 0:
+            return
+        
+        lines = content.splitlines()
+        
+        # 加号比率
+        plus_ratios = []
+        for line in lines:
+            if line:
+                plus_ratios.append(line.count('+') / len(line))
+            else:
+                plus_ratios.append(0)
+        
+        if plus_ratios:
+            self.features['plus ratio mean'] = np.mean(plus_ratios)
+            self.features['plus ratio max'] = max(plus_ratios)
+            self.features['plus ratio std'] = np.std(plus_ratios)
+            self.features['plus ratio q3'] = np.percentile(plus_ratios, 75)
+        else:
+            self.features['plus ratio mean'] = 0
+            self.features['plus ratio max'] = 0
+            self.features['plus ratio std'] = 0
+            self.features['plus ratio q3'] = 0
+        
+        # 等号比率
+        eq_ratios = []
+        for line in lines:
+            if line:
+                eq_ratios.append(line.count('=') / len(line))
+            else:
+                eq_ratios.append(0)
+        
+        if eq_ratios:
+            self.features['eq ratio mean'] = np.mean(eq_ratios)
+            self.features['eq ratio max'] = max(eq_ratios)
+            self.features['eq ratio std'] = np.std(eq_ratios)
+            self.features['eq ratio q3'] = np.percentile(eq_ratios, 75)
+        else:
+            self.features['eq ratio mean'] = 0
+            self.features['eq ratio max'] = 0
+            self.features['eq ratio std'] = 0
+            self.features['eq ratio q3'] = 0
+        
+        # 括号比率
+        bracket_chars = '()[]{}'
+        bracket_ratios = []
+        for line in lines:
+            if line:
+                bracket_ratios.append(sum(line.count(c) for c in bracket_chars) / len(line))
+            else:
+                bracket_ratios.append(0)
+        
+        if bracket_ratios:
+            self.features['bracket ratio mean'] = np.mean(bracket_ratios)
+            self.features['bracket ratio max'] = max(bracket_ratios)
+            self.features['bracket ratio std'] = np.std(bracket_ratios)
+            self.features['bracket ratio q3'] = np.percentile(bracket_ratios, 75)
+        else:
+            self.features['bracket ratio mean'] = 0
+            self.features['bracket ratio max'] = 0
+            self.features['bracket ratio std'] = 0
+            self.features['bracket ratio q3'] = 0
+    
+    def _extract_security_features_enhanced(self, content):
+        """增强的安全特征提取 - 对应CSV中的安全相关列"""
+        # Base64块
+        base64_matches = self.regex_patterns['base64_pattern'].findall(content)
+        self.features['Number of base64 chunks in source code'] = len(base64_matches)
+        
+        # IP地址
+        ip_matches = self.regex_patterns['ip_pattern'].findall(content)
+        self.features['Number of IP adress in source code'] = len(ip_matches)
+        
+        # 可疑token
+        suspicious_matches = self.regex_patterns['suspicious_patterns'].findall(content)
+        self.features['Number of sospicious token in source code'] = len(suspicious_matches)
+    
+    def _extract_metadata_features(self):
+        """提取元数据特征 - 对应CSV中的metadata相关列"""
+        try:
+            project_dir = os.path.dirname(self.file_path)
+            
+            # 查找package.json
+            package_json_path = os.path.join(project_dir, 'package.json')
+            if os.path.exists(package_json_path):
+                with open(package_json_path, 'r', encoding='utf-8') as f:
+                    package_data = json.load(f)
+                    
+                # 提取package.json内容作为元数据
+                metadata_content = json.dumps(package_data, indent=2)
+                metadata_lines = metadata_content.splitlines()
+                metadata_words = re.findall(r'\b\w+\b', metadata_content)
+                
+                self.features['Number of Words in metadata'] = len(metadata_words)
+                self.features['Number of lines in metadata'] = len(metadata_lines)
+                
+                # 元数据中的安全特征
+                base64_matches = self.regex_patterns['base64_pattern'].findall(metadata_content)
+                self.features['Number of base64 chunks in metadata'] = len(base64_matches)
+                
+                ip_matches = self.regex_patterns['ip_pattern'].findall(metadata_content)
+                self.features['Number of IP adress in metadata'] = len(ip_matches)
+                
+                suspicious_matches = self.regex_patterns['suspicious_patterns'].findall(metadata_content)
+                self.features['Number of sospicious token in metadata'] = len(suspicious_matches)
+            else:
+                # 如果没有package.json，使用默认值
+                self.features['Number of Words in metadata'] = 0
+                self.features['Number of lines in metadata'] = 0
+                self.features['Number of base64 chunks in metadata'] = 0
+                self.features['Number of IP adress in metadata'] = 0
+                self.features['Number of sospicious token in metadata'] = 0
+                
+        except Exception as e:
+            print(f"元数据特征提取错误: {str(e)}")
+            # 设置默认值
+            self.features['Number of Words in metadata'] = 0
+            self.features['Number of lines in metadata'] = 0
+            self.features['Number of base64 chunks in metadata'] = 0
+            self.features['Number of IP adress in metadata'] = 0
+            self.features['Number of sospicious token in metadata'] = 0
+    
+    def _extract_file_type_features(self):
+        """提取文件类型特征 - 对应CSV中的文件扩展名列"""
+        try:
+            project_dir = os.path.dirname(self.file_path)
+            
+            # 文件扩展名映射 (对应CSV中的列名)
+            extension_mapping = {
+                '.bat': 'bat',
+                '.bz2': 'bz2',
+                '.c': 'c',
+                '.cert': 'cert',
+                '.conf': 'conf',
+                '.cpp': 'cpp',
+                '.crt': 'crt',
+                '.css': 'css',
+                '.csv': 'csv',
+                '.deb': 'deb',
+                '.erb': 'erb',
+                '.gemspec': 'gemspec',
+                '.gif': 'gif',
+                '.gz': 'gz',
+                '.h': 'h',
+                '.html': 'html',
+                '.ico': 'ico',
+                '.ini': 'ini',
+                '.jar': 'jar',
+                '.java': 'java',
+                '.jpg': 'jpg',
+                '.js': 'js',
+                '.json': 'json',
+                '.key': 'key',
+                '.m4v': 'm4v',
+                '.markdown': 'markdown',
+                '.md': 'md',
+                '.pdf': 'pdf',
+                '.pem': 'pem',
+                '.png': 'png',
+                '.ps': 'ps',
+                '.py': 'py',
+                '.rb': 'rb',
+                '.rpm': 'rpm',
+                '.rst': 'rst',
+                '.sh': 'sh',
+                '.svg': 'svg',
+                '.toml': 'toml',
+                '.ttf': 'ttf',
+                '.txt': 'txt',
+                '.xml': 'xml',
+                '.yaml': 'yaml',
+                '.yml': 'yml',
+                '.eot': 'eot',
+                '.exe': 'exe',
+                '.jpeg': 'jpeg',
+                '.properties': 'properties',
+                '.sql': 'sql',
+                '.swf': 'swf',
+                '.tar': 'tar',
+                '.woff': 'woff',
+                '.woff2': 'woff2',
+                '.aac': 'aac',
+                '.bmp': 'bmp',
+                '.cfg': 'cfg',
+                '.dcm': 'dcm',
+                '.dll': 'dll',
+                '.doc': 'doc',
+                '.flac': 'flac',
+                '.flv': 'flv',
+                '.ipynb': 'ipynb',
+                '.m4a': 'm4a',
+                '.mid': 'mid',
+                '.mkv': 'mkv',
+                '.mp3': 'mp3',
+                '.mp4': 'mp4',
+                '.mpg': 'mpg',
+                '.ogg': 'ogg',
+                '.otf': 'otf',
+                '.pickle': 'pickle',
+                '.pkl': 'pkl',
+                '.psd': 'psd',
+                '.pxd': 'pxd',
+                '.pxi': 'pxi',
+                '.pyc': 'pyc',
+                '.pyx': 'pyx',
+                '.r': 'r',
+                '.rtf': 'rtf',
+                '.so': 'so',
+                '.sqlite': 'sqlite',
+                '.tif': 'tif',
+                '.tp': 'tp',
+                '.wav': 'wav',
+                '.webp': 'webp',
+                '.whl': 'whl',
+                '.xcf': 'xcf',
+                '.xz': 'xz',
+                '.zip': 'zip',
+                '.mov': 'mov',
+                '.wasm': 'wasm',
+                '.webm': 'webm'
             }
             
-            # 清理临时目录
-            self._cleanup_extract_dir(extract_dir)
+            # 初始化所有文件类型计数为0
+            for ext in extension_mapping.values():
+                self.features[ext] = 0
             
-            # 添加特征总数统计
-            feature_count = len(features)
-            print(f"特征提取完成，共提取 {feature_count} 个特征")
+            # 统计文件类型
+            for root, _, files in os.walk(project_dir):
+                for file in files:
+                    file_lower = file.lower() if file else ''
+                    _, ext = os.path.splitext(file_lower)
+                    if ext in extension_mapping:
+                        self.features[extension_mapping[ext]] += 1
             
-            # 处理特征不足的情况
-            if feature_count < 100:  # 模型期望141个特征
-                print(f"警告: 提取的特征数量({feature_count})不足，可能影响模型预测准确性")
-                # 添加额外补充特征
-                additional_features = self._generate_additional_features(features, file_path)
-                features.update(additional_features)
-                print(f"已添加补充特征，当前特征总数: {len(features)}")
+            # 添加repository和installation script特征
+            self.features['repository'] = 1 if self._has_repository(project_dir) else 0
+            self.features['presence of installation script'] = 1 if self._has_installation_script(project_dir) else 0
             
-            return features
         except Exception as e:
-            print(f"特征提取错误: {e}")
-            import traceback
-            traceback.print_exc()
-            return self._generate_error_features(file_path, str(e))
+            print(f"文件类型特征提取错误: {str(e)}")
     
-    def _extract_file(self, file_path, extract_dir):
-        """解压各种类型的归档文件"""
-        file_extension = os.path.splitext(file_path)[1].lower()
-        
-        if file_extension in ['.zip', '.whl', '.egg']:
-            with zipfile.ZipFile(file_path, 'r') as zip_ref:
-                zip_ref.extractall(extract_dir)
-        elif file_extension in ['.tar', '.tgz', '.gz', '.bz2', '.xz']:
-            if tarfile.is_tarfile(file_path):
-                with tarfile.open(file_path, 'r:*') as tar_ref:
-                    # 过滤掉可能包含绝对路径的成员
-                    members = []
-                    for member in tar_ref.getmembers():
-                        if member.name.startswith('/') or '..' in member.name:
-                            continue
-                        members.append(member)
-                    tar_ref.extractall(extract_dir, members=members)
+    def _extract_entropy_features_enhanced(self, content):
+        """增强的熵特征提取 - 对应CSV中的shannon entropy相关列"""
+        try:
+            # 提取标识符
+            identifiers = re.findall(r'\b[a-zA-Z_]\w*\b', content)
+            # 提取字符串
+            strings = re.findall(r'["\'].*?["\']', content)
+            
+            # 计算标识符的熵
+            if identifiers:
+                id_entropies = [self._calculate_entropy(id) for id in identifiers]
+                self.features['shannon mean ID source code'] = np.mean(id_entropies)
+                self.features['shannon std ID source code'] = np.std(id_entropies)
+                self.features['shannon max ID source code'] = max(id_entropies)
+                self.features['shannon q3 ID source code'] = np.percentile(id_entropies, 75)
             else:
-                # 如果不是tar文件，可能是单独的gzip或bzip2文件
-                shutil.copy2(file_path, extract_dir)
-        elif file_extension == '.jar':
-            with zipfile.ZipFile(file_path, 'r') as zip_ref:
-                zip_ref.extractall(extract_dir)
-        else:
-            # 对于不支持的格式，将文件复制到目标目录
-            shutil.copy2(file_path, extract_dir)
+                self.features['shannon mean ID source code'] = 0
+                self.features['shannon std ID source code'] = 0
+                self.features['shannon max ID source code'] = 0
+                self.features['shannon q3 ID source code'] = 0
+            
+            # 计算字符串的熵
+            if strings:
+                str_entropies = [self._calculate_entropy(s) for s in strings]
+                self.features['shannon mean string source code'] = np.mean(str_entropies)
+                self.features['shannon std string source code'] = np.std(str_entropies)
+                self.features['shannon max string source code'] = max(str_entropies)
+                self.features['shannon q3 string source code'] = np.percentile(str_entropies, 75)
+            else:
+                self.features['shannon mean string source code'] = 0
+                self.features['shannon std string source code'] = 0
+                self.features['shannon max string source code'] = 0
+                self.features['shannon q3 string source code'] = 0
+            
+            # 元数据熵特征 (简化处理，使用相同的值)
+            self.features['shannon mean ID metadata'] = self.features['shannon mean ID source code']
+            self.features['shannon std ID metadata'] = self.features['shannon std ID source code']
+            self.features['shannon max ID metadata'] = self.features['shannon max ID source code']
+            self.features['shannon q3 ID metadata'] = self.features['shannon q3 ID source code']
+            self.features['shannon mean string metadata'] = self.features['shannon mean string source code']
+            self.features['shannon std string metadata'] = self.features['shannon std string source code']
+            self.features['shannon max string metadata'] = self.features['shannon max string source code']
+            self.features['shannon q3 string metadata'] = self.features['shannon q3 string source code']
+            
+        except Exception as e:
+            print(f"熵特征提取错误: {str(e)}")
     
-    def _get_all_files(self, directory):
-        """获取目录下的所有文件"""
-        file_list = []
-        for root, dirs, files in os.walk(directory):
-            for file in files:
-                file_list.append(os.path.join(root, file))
-        return file_list
+    def _extract_identifier_string_features(self, content):
+        """提取标识符和字符串特征 - 对应CSV中的homogeneous/heterogeneous列"""
+        try:
+            # 提取标识符
+            identifiers = re.findall(r'\b[a-zA-Z_]\w*\b', content)
+            # 提取字符串
+            strings = re.findall(r'["\'].*?["\']', content)
+            
+            # 计算同质标识符 (简化处理)
+            self.features['homogeneous identifiers in source code'] = len(identifiers) // 2  # 简化估计
+            self.features['homogeneous strings in source code'] = len(strings) // 2  # 简化估计
+            
+            # 计算异质标识符
+            self.features['heteregeneous identifiers in source code'] = len(identifiers) - self.features['homogeneous identifiers in source code']
+            self.features['heterogeneous strings in source code'] = len(strings) - self.features['homogeneous strings in source code']
+            
+            # URL特征
+            urls = self.regex_patterns['url_pattern'].findall(content)
+            self.features['URLs in source code'] = len(urls)
+            
+            # 元数据中的相应特征 (简化处理)
+            self.features['homogeneous identifiers in metadata'] = 0
+            self.features['homogeneous strings in metadata'] = 0
+            self.features['heterogeneous strings in metadata'] = 0
+            self.features['URLs in metadata'] = 0
+            self.features['heteregeneous identifiers in metadata'] = 0
+            
+        except Exception as e:
+            print(f"标识符字符串特征提取错误: {str(e)}")
     
-    def _get_max_directory_depth(self, directory):
-        """获取目录的最大深度"""
-        max_depth = 0
-        for root, dirs, files in os.walk(directory):
-            depth = root.count(os.sep) - directory.count(os.sep)
-            max_depth = max(max_depth, depth)
-        return max_depth
+    def _has_repository(self, project_dir):
+        """检查是否有仓库信息"""
+        git_dir = os.path.join(project_dir, '.git')
+        svn_dir = os.path.join(project_dir, '.svn')
+        return os.path.exists(git_dir) or os.path.exists(svn_dir)
     
-    def _count_files_by_extensions(self, file_list, extensions):
-        """计算具有特定扩展名的文件数量"""
-        return sum(1 for f in file_list if os.path.splitext(f)[1].lower() in extensions)
-    
-    def _count_binary_files(self, file_list):
-        """计算二进制文件数量"""
-        binary_count = 0
-        for file_path in file_list:
+    def _has_installation_script(self, project_dir):
+        """检查是否有安装脚本"""
+        install_scripts = ['install.sh', 'setup.sh', 'install.bat', 'setup.bat', 'install.ps1', 'setup.ps1']
+        for script in install_scripts:
+            if os.path.exists(os.path.join(project_dir, script)):
+                return True
+        return False
+
+    def _read_file_content(self):
+        """读取文件内容"""
+        if not self.file_content:
             try:
-                if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-                    with open(file_path, 'rb') as f:
-                        content = f.read(1024)
-                        if b'\x00' in content:
-                            binary_count += 1
-            except:
-                continue
-        return binary_count
+                # 检查是否为zip文件
+                file_path_lower = self.file_path.lower() if self.file_path else ''
+                basename_lower = os.path.basename(self.file_path).lower() if self.file_path else ''
+                if file_path_lower.endswith('.zip') or basename_lower == 'zip':
+                    print(f"检测到ZIP文件，提取源代码内容")
+                    self.file_content = self._extract_zip_content()
+                else:
+                    # 普通文件读取
+                    with open(self.file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        self.file_content = f.read()
+            except Exception as e:
+                print(f"读取文件内容时出错: {e}")
+                self.file_content = ""
+        return self.file_content
     
-    def _count_text_files(self, file_list):
-        """计算文本文件数量"""
-        return len(file_list) - self._count_binary_files(file_list)
-    
-    def _count_hidden_files(self, file_list):
-        """计算隐藏文件数量"""
-        return sum(1 for f in file_list if os.path.basename(f).startswith('.'))
-    
-    def _count_suspicious_names(self, file_list):
-        """计算可疑文件名数量"""
-        suspicious_patterns = [
-            r'backdoor', r'exploit', r'hack', r'crack', r'keylog', r'steal', 
-            r'trojan', r'virus', r'malware', r'rootkit', r'spy', r'RAT'
-        ]
-        pattern = '|'.join(suspicious_patterns)
-        return sum(1 for f in file_list if re.search(pattern, f, re.IGNORECASE))
-    
-    def _check_for_obfuscation(self, file_list):
-        """检查是否存在混淆代码"""
-        obfuscation_count = 0
-        for file_path in file_list:
-            try:
-                if file_path.endswith('.py') or file_path.endswith('.js'):
-                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        content = f.read()
-                        # 检查长变量名或函数名
-                        if re.search(r'\b[a-zA-Z_][a-zA-Z0-9_]{30,}\b', content):
-                            obfuscation_count += 1
-                        # 检查大量的base64编码字符串
-                        elif re.search(r'[A-Za-z0-9+/=]{40,}', content):
-                            obfuscation_count += 1
-                        # 检查eval、exec等函数与字符串的组合
-                        elif re.search(r'(eval|exec|Function)\s*\(\s*([\'"`][^\'"`]*[\'"`]|\w+)', content):
-                            obfuscation_count += 1
-            except:
-                continue
-        return obfuscation_count
-    
-    def _check_for_malicious_imports(self, file_list):
-        """检查是否存在恶意导入"""
-        malicious_imports = [
-            r'socket', r'subprocess', r'os\.system', r'os\.popen', r'pty', r'child_process',
-            r'exec', r'eval', r'base64', r'hashlib', r'crypt', r'pickle', r'marshal', r'ptrace'
-        ]
-        pattern = '|'.join(malicious_imports)
-        import_count = 0
-        for file_path in file_list:
-            try:
-                if file_path.endswith('.py'):
-                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        content = f.read()
-                        if re.search(r'import\s+(' + pattern + r')|from\s+(' + pattern + r')\s+import', content):
-                            import_count += 1
-            except:
-                continue
-        return import_count
-    
-    def _check_for_network_operations(self, file_list):
-        """检查是否存在网络操作"""
-        network_ops = [
-            r'socket', r'http[s]?://', r'urllib', r'requests', r'curl', r'wget',
-            r'connect\(', r'listen\(', r'bind\(', r'fetch', r'XMLHttpRequest'
-        ]
-        pattern = '|'.join(network_ops)
-        network_count = 0
-        for file_path in file_list:
-            try:
-                if file_path.endswith(('.py', '.js', '.php', '.rb')):
-                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        content = f.read()
-                        if re.search(pattern, content):
-                            network_count += 1
-            except:
-                continue
-        return network_count
-    
-    def _check_for_system_commands(self, file_list):
-        """检查是否存在系统命令执行"""
-        system_cmds = [
-            r'os\.system', r'subprocess', r'exec', r'execfile', r'spawn', r'popen',
-            r'shell_exec', r'passthru', r'eval\(', r'child_process', r'Process.Start'
-        ]
-        pattern = '|'.join(system_cmds)
-        cmd_count = 0
-        for file_path in file_list:
-            try:
-                if file_path.endswith(('.py', '.js', '.php', '.rb')):
-                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        content = f.read()
-                        if re.search(pattern, content):
-                            cmd_count += 1
-            except:
-                continue
-        return cmd_count
-    
-    def _check_for_crypto_operations(self, file_list):
-        """检查是否存在加密操作"""
-        crypto_ops = [
-            r'crypt', r'encrypt', r'decrypt', r'hashlib', r'md5', r'sha', r'aes',
-            r'blowfish', r'des', r'rsa', r'cipher', r'cryptography'
-        ]
-        pattern = '|'.join(crypto_ops)
-        crypto_count = 0
-        for file_path in file_list:
-            try:
-                if file_path.endswith(('.py', '.js', '.php', '.rb')):
-                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        content = f.read()
-                        if re.search(pattern, content):
-                            crypto_count += 1
-            except:
-                continue
-        return crypto_count
-    
-    def _check_for_file_operations(self, file_list):
-        """检查是否存在文件操作"""
-        file_ops = [
-            r'open\(', r'read\(', r'write\(', r'file\(', r'fopen', r'fwrite',
-            r'FileStream', r'readFile', r'writeFile', r'fs\.', r'io\.'
-        ]
-        pattern = '|'.join(file_ops)
-        file_op_count = 0
-        for file_path in file_list:
-            try:
-                if file_path.endswith(('.py', '.js', '.php', '.rb')):
-                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        content = f.read()
-                        if re.search(pattern, content):
-                            file_op_count += 1
-            except:
-                continue
-        return file_op_count
-    
-    def _check_for_privilege_escalation(self, file_list):
-        """检查是否存在权限提升操作"""
-        priv_esc = [
-            r'sudo', r'setuid', r'setgid', r'chmod', r'chown', r'suid', r'sgid',
-            r'runas', r'privilege', r'administrator', r'root', r'superuser'
-        ]
-        pattern = '|'.join(priv_esc)
-        priv_count = 0
-        for file_path in file_list:
-            try:
-                if file_path.endswith(('.py', '.js', '.php', '.rb', '.sh')):
-                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        content = f.read()
-                        if re.search(pattern, content):
-                            priv_count += 1
-            except:
-                continue
-        return priv_count
-    
-    def _get_empty_features(self):
-        """获取空特征向量"""
-        print("返回空特征向量")
-        return {
-            'file_count': 0,
-            'total_size': 0,
-            'avg_file_size': 0,
-            'directory_depth': 0,
-            'executable_files': 0,
-            'script_files': 0,
-            'config_files': 0,
-            'data_files': 0,
-            'image_files': 0,
-            'document_files': 0,
-            'archive_files': 0,
-            'package_files': 0,
-            'binary_files': 0,
-            'text_files': 0,
-            'hidden_files': 0,
-            'suspicious_extensions': 0,
-            'suspicious_names': 0,
-            'obfuscated_code': 0,
-            'malicious_imports': 0,
-            'network_operations': 0,
-            'system_commands': 0,
-            'crypto_operations': 0,
-            'file_operations': 0,
-            'privilege_escalation': 0,
-            'exec_ratio': 0,
-            'script_ratio': 0,
-            'config_ratio': 0,
-            'binary_ratio': 0,
-            'text_ratio': 0,
-            'suspicious_ratio': 0
-        }
+    def _extract_zip_content(self):
+        """从ZIP文件中提取源代码内容 - 优化版本"""
+        try:
+            start_time = time.time()
+            content = []
+            total_size = 0
+            
+            with zipfile.ZipFile(self.file_path, 'r') as zipf:
+                # 获取所有文件列表
+                file_list = zipf.namelist()
+                print(f"ZIP文件包含 {len(file_list)} 个文件")
+                
+                # 源代码文件扩展名 - 按重要性排序
+                source_extensions = {
+                    '.py', '.js', '.jsx', '.ts', '.tsx', '.java', '.cpp', '.c', '.h', 
+                    '.cs', '.php', '.rb', '.go', '.rs', '.swift', '.kt', '.scala',
+                    '.html', '.css', '.scss', '.sass', '.less', '.xml', '.json',
+                    '.yaml', '.yml', '.toml', '.ini', '.cfg', '.conf', '.sh', '.bat',
+                    '.ps1', '.sql', '.md', '.txt', '.rst'
+                }
+                
+                # 重要文件优先级
+                priority_files = [
+                    'setup.py', 'pyproject.toml', 'setup.cfg', 'PKG-INFO',
+                    'package.json', 'requirements.txt', 'Pipfile', 'poetry.lock',
+                    'Cargo.toml', 'pom.xml', 'build.gradle', 'Gemfile',
+                    'main.py', 'app.py', 'index.js', 'app.js', 'main.js'
+                ]
+                
+                # 过滤出源代码文件
+                source_files = [
+                    f for f in file_list 
+                    if not f.endswith('/') and  # 排除目录
+                    any(f.lower().endswith(ext) for ext in source_extensions) and
+                    not any(skip in f.lower() for skip in ['node_modules', '.git', '__pycache__', '.pytest_cache', 'venv', 'env', 'dist', 'build'])
+                ]
+                
+                print(f"找到 {len(source_files)} 个源代码文件")
+                
+                # 按优先级排序文件
+                def file_priority(f):
+                    filename = os.path.basename(f).lower()
+                    for i, priority in enumerate(priority_files):
+                        if filename == priority.lower():
+                            return i
+                    return len(priority_files)  # 其他文件优先级最低
+                
+                source_files.sort(key=file_priority)
+                
+                # 提取每个源代码文件的内容
+                extracted_files = 0
+                for file_name in source_files:
+                    # 检查内容大小限制
+                    if total_size >= self.max_content_size:
+                        print(f"达到内容大小限制 ({self.max_content_size} bytes)，停止提取")
+                        break
+                    
+                    # 限制文件数量
+                    if extracted_files >= 30:
+                        print(f"达到文件数量限制 (30个)，停止提取")
+                        break
+                    
+                    try:
+                        with zipf.open(file_name, 'r') as file:
+                            file_content = file.read()
+                            
+                            # 检查文件大小
+                            if len(file_content) > 100 * 1024:  # 100KB限制
+                                print(f"跳过大文件: {file_name} ({len(file_content)} bytes)")
+                                continue
+                            
+                            # 尝试解码为文本
+                            try:
+                                text_content = file_content.decode('utf-8')
+                            except UnicodeDecodeError:
+                                try:
+                                    text_content = file_content.decode('latin-1')
+                                except:
+                                    text_content = str(file_content)
+                            
+                            # 检查内容大小
+                            if total_size + len(text_content) > self.max_content_size:
+                                # 截断内容
+                                remaining_size = self.max_content_size - total_size
+                                text_content = text_content[:remaining_size]
+                                print(f"截断文件内容: {file_name}")
+                            
+                            content.append(f"=== {file_name} ===")
+                            content.append(text_content)
+                            content.append("\n")
+                            
+                            total_size += len(text_content)
+                            extracted_files += 1
+                            
+                    except Exception as e:
+                        print(f"提取文件 {file_name} 时出错: {e}")
+                        continue
+                
+                print(f"成功提取 {extracted_files} 个文件，总大小: {total_size} bytes")
+                
+                # 连接所有内容
+                result = "\n".join(content)
+                elapsed_time = time.time() - start_time
+                print(f"ZIP内容提取完成，耗时: {elapsed_time:.2f}秒")
+                return result
+                
+        except Exception as e:
+            print(f"提取ZIP内容时出错: {e}")
+            return ""
+        
+    def _calculate_entropy(self, data):
+        """计算香农熵 - 优化版本"""
+        if not data:
+            return 0
+        # 使用Counter提高性能
+        char_counts = Counter(data)
+        data_len = len(data)
+        entropy = 0
+        for count in char_counts.values():
+            p_x = count / data_len
+            if p_x > 0:
+                entropy += -p_x * math.log2(p_x)
+        return entropy
+        
+    def _map_features_to_classifier_format(self):
+        """将CSV格式特征直接传递给分类器，不进行映射"""
+        # 直接使用CSV格式的特征，不进行映射
+        # 这样可以保持与CSV数据的一致性
+        pass
 
     def _get_file_info(self, file_path):
         """获取文件基本信息"""
-        print(f"开始提取特征: {file_path}")
-        
-        # 检查文件是否存在
-        if not os.path.exists(file_path):
-            print(f"文件不存在: {file_path}")
+        try:
+            stat = os.stat(file_path)
+            return {
+                'file_size': stat.st_size,
+                'file_modified': stat.st_mtime
+            }
+        except Exception as e:
+            print(f"获取文件信息错误: {str(e)}")
             return {}
+    
+    def _extract_archive_features(self, file_path):
+        """递归遍历压缩包内所有文件，统计所有代码文件的特征"""
+        print(f"开始处理压缩包：{file_path}")
         
-        file_size = os.path.getsize(file_path)
-        file_name = os.path.basename(file_path)
-        file_extension = os.path.splitext(file_name)[1].lower()
+        # 初始化特征统计
+        total_words = 0
+        total_lines = 0
+        base64_chunks = 0
+        ip_count = 0
+        suspicious_token_count = 0
+        file_type_counts = {}  # 文件类型统计
+        package_name = None
         
-        print(f"文件 {file_name} 大小: {file_size}, 扩展名: {file_extension}")
+        # 用于存储所有文本内容，以便后续计算熵等特征
+        all_content = []
         
-        return {
-            'file_size': file_size,
-            'file_extension': file_extension,
-            'is_package': 1 if file_extension in ['.whl', '.egg', '.tar.gz', '.tgz', '.zip'] else 0
-        }
-
-    def _extract_package(self, file_path):
-        """解压软件包文件"""
-        file_name = os.path.basename(file_path)
-        extract_dir = os.path.join(self.temp_dir, 'extract_' + hashlib.md5(file_name.encode()).hexdigest())
-        os.makedirs(extract_dir, exist_ok=True)
-        
-        print(f"创建临时解压目录: {extract_dir}")
-        
-        try:
-            self._extract_file(file_path, extract_dir)
-            print(f"文件解压成功: {file_path} -> {extract_dir}")
-            return extract_dir
-        except Exception as e:
-            print(f"解压文件失败: {e}")
-            return None
-
-    def _scan_directory(self, directory):
-        """扫描目录获取所有文件"""
-        file_list = self._get_all_files(directory)
-        
-        if not file_list:
-            print(f"解压后未找到任何文件，可能是损坏的包")
-            return []
-        
-        return file_list
-
-    def _extract_code_features(self, extract_dir, python_files, js_files, c_files):
-        """提取代码相关特征"""
-        features = {}
-        
-        # 代码文件统计
-        features['python_file_count'] = len(python_files)
-        features['js_file_count'] = len(js_files)
-        features['c_file_count'] = len(c_files)
-        
-        # 检查可疑代码
-        features['obfuscated_code'] = self._check_for_obfuscation(python_files + js_files)
-        features['malicious_imports'] = self._check_for_malicious_imports(python_files)
-        features['network_operations'] = self._check_for_network_operations(python_files + js_files)
-        features['system_commands'] = self._check_for_system_commands(python_files + js_files + c_files)
-        features['crypto_operations'] = self._check_for_crypto_operations(python_files + js_files)
-        features['file_operations'] = self._check_for_file_operations(python_files + js_files + c_files)
-        features['privilege_escalation'] = self._check_for_privilege_escalation(python_files + c_files)
-        
-        # 检查JavaScript特有风险
-        features['eval_usage'] = self._check_for_pattern(js_files, [r'eval\(', r'new Function\('])
-        features['dom_manipulation'] = self._check_for_pattern(js_files, [r'document\.write', r'innerHTML'])
-        
-        # 检查Python特有风险
-        features['exec_usage'] = self._check_for_pattern(python_files, [r'exec\(', r'eval\('])
-        features['unsafe_deserialization'] = self._check_for_pattern(python_files, [r'pickle\.loads', r'yaml\.load\((?!.*Loader)'])
-        
-        # 检查C代码特有风险
-        features['buffer_operations'] = self._check_for_pattern(c_files, [r'strcpy\(', r'memcpy\(', r'strcat\('])
-        features['memory_allocation'] = self._check_for_pattern(c_files, [r'malloc\(', r'calloc\(', r'realloc\('])
-        
-        return features
-
-    def _extract_metadata_features(self, extract_dir):
-        """提取元数据相关特征"""
-        features = {}
-        
-        # 查找setup.py或package.json
-        setup_files = glob.glob(os.path.join(extract_dir, '**/setup.py'), recursive=True)
-        package_json_files = glob.glob(os.path.join(extract_dir, '**/package.json'), recursive=True)
-        
-        features['has_setup_py'] = 1 if setup_files else 0
-        features['has_package_json'] = 1 if package_json_files else 0
-        
-        # 分析setup.py
-        if setup_files:
-            setup_content = self._read_file_content(setup_files[0])
-            features['setup_py_size'] = len(setup_content)
-            features['setup_entry_points'] = 1 if 'entry_points' in setup_content else 0
-            features['setup_scripts'] = 1 if 'scripts' in setup_content else 0
-        else:
-            features['setup_py_size'] = 0
-            features['setup_entry_points'] = 0
-            features['setup_scripts'] = 0
-        
-        # 分析package.json
-        if package_json_files:
+        def process_file_content(content, filename):
+            nonlocal total_words, total_lines, base64_chunks, ip_count, suspicious_token_count, package_name
+            
             try:
-                with open(package_json_files[0], 'r', encoding='utf-8') as f:
-                    package_data = json.load(f)
-                    
-                features['npm_has_scripts'] = 1 if 'scripts' in package_data else 0
-                features['npm_dependencies'] = len(package_data.get('dependencies', {}))
-                features['npm_dev_dependencies'] = len(package_data.get('devDependencies', {}))
-                features['npm_has_install_script'] = 1 if 'install' in package_data.get('scripts', {}) else 0
-                features['npm_has_postinstall'] = 1 if 'postinstall' in package_data.get('scripts', {}) else 0
-            except:
-                features['npm_has_scripts'] = 0
-                features['npm_dependencies'] = 0
-                features['npm_dev_dependencies'] = 0
-                features['npm_has_install_script'] = 0
-                features['npm_has_postinstall'] = 0
-        else:
-            features['npm_has_scripts'] = 0
-            features['npm_dependencies'] = 0
-            features['npm_dev_dependencies'] = 0
-            features['npm_has_install_script'] = 0
-            features['npm_has_postinstall'] = 0
+                # 检查是否为二进制文件
+                if '\x00' in content[:1024]:
+                    print(f"跳过二进制文件: {filename}")
+                    return
+                
+                # 统计基本特征
+                lines = content.splitlines()
+                words = re.findall(r'\b\w+\b', content)
+                
+                print(f"处理文件 {filename}:")
+                print(f"- 行数: {len(lines)}")
+                print(f"- 词数: {len(words)}")
+                
+                # 尝试从setup.py或package.json提取包名
+                if filename.endswith('setup.py'):
+                    setup_name_match = re.search(r'name\s*=\s*[\'"]([^\'"]+)[\'"]', content)
+                    if setup_name_match:
+                        package_name = setup_name_match.group(1)
+                        print(f"从setup.py提取到包名: {package_name}")
+                elif filename.endswith('package.json'):
+                    try:
+                        pkg_data = json.loads(content)
+                        if 'name' in pkg_data:
+                            package_name = pkg_data['name']
+                            print(f"从package.json提取到包名: {package_name}")
+                    except json.JSONDecodeError:
+                        pass
+                
+                total_words += len(words)
+                total_lines += len(lines)
+                
+                # 统计安全相关特征
+                base64_matches = self.regex_patterns['base64_pattern'].findall(content)
+                ip_matches = self.regex_patterns['ip_pattern'].findall(content)
+                suspicious_matches = self.regex_patterns['suspicious_patterns'].findall(content)
+                
+                base64_chunks += len(base64_matches)
+                ip_count += len(ip_matches)
+                suspicious_token_count += len(suspicious_matches)
+                
+                # 统计文件类型
+                ext_raw = os.path.splitext(filename)[1]
+                ext = ext_raw.lower() if ext_raw else ''
+                if ext:
+                    file_type_counts[ext] = file_type_counts.get(ext, 0) + 1
+                
+                # 保存内容用于后续分析
+                all_content.append(content)
+                
+                print(f"- Base64块: {len(base64_matches)}")
+                print(f"- IP地址: {len(ip_matches)}")
+                print(f"- 可疑token: {len(suspicious_matches)}")
+                
+            except Exception as e:
+                print(f"处理文件 {filename} 时出错: {str(e)}")
         
-        return features
-
-    def _extract_install_features(self, extract_dir):
-        """提取安装脚本相关特征"""
-        features = {}
-        
-        # 检查setup.py的install命令
-        setup_files = glob.glob(os.path.join(extract_dir, '**/setup.py'), recursive=True)
-        if setup_files:
-            setup_content = self._read_file_content(setup_files[0])
-            features['setup_has_cmdclass'] = 1 if 'cmdclass' in setup_content else 0
-            features['setup_custom_install'] = 1 if re.search(r'class\s+(\w+Install|Install\w+)', setup_content) else 0
-        else:
-            features['setup_has_cmdclass'] = 0
-            features['setup_custom_install'] = 0
-        
-        # 检查特殊文件
-        features['has_preinstall'] = len(glob.glob(os.path.join(extract_dir, '**/preinstall.*'), recursive=True)) > 0
-        features['has_postinstall'] = len(glob.glob(os.path.join(extract_dir, '**/postinstall.*'), recursive=True)) > 0
-        features['has_install_script'] = len(glob.glob(os.path.join(extract_dir, '**/install.*'), recursive=True)) > 0
-        
-        return features
-
-    def _extract_dependency_features(self, extract_dir):
-        """提取依赖相关特征"""
-        features = {}
-        
-        # 查找requirements.txt
-        req_files = glob.glob(os.path.join(extract_dir, '**/requirements.txt'), recursive=True)
-        features['has_requirements'] = 1 if req_files else 0
-        
-        if req_files:
-            req_content = self._read_file_content(req_files[0])
-            req_lines = [line.strip() for line in req_content.split('\n') if line.strip() and not line.startswith('#')]
-            features['requirements_count'] = len(req_lines)
-            
-            # 检查可疑依赖
-            suspicious_deps = ['cryptography', 'pycrypto', 'paramiko', 'requests', 'socket', 'subprocess']
-            features['suspicious_dependencies'] = sum(1 for dep in req_lines if any(s in dep.lower() for s in suspicious_deps))
-        else:
-            features['requirements_count'] = 0
-            features['suspicious_dependencies'] = 0
-        
-        return features
-
-    def _extract_filesystem_features(self, extract_dir, file_list):
-        """提取文件系统相关特征"""
-        features = {}
-        
-        # 基本文件统计
-        features['file_count'] = len(file_list)
-        features['total_size'] = sum(os.path.getsize(f) for f in file_list if os.path.exists(f))
-        features['avg_file_size'] = features['total_size'] / features['file_count'] if features['file_count'] > 0 else 0
-        features['directory_depth'] = self._get_max_directory_depth(extract_dir)
-        
-        # 文件类型统计
-        features['executable_files'] = self._count_files_by_extensions(file_list, self.file_categories['executable'])
-        features['script_files'] = self._count_files_by_extensions(file_list, self.file_categories['script'])
-        features['config_files'] = self._count_files_by_extensions(file_list, self.file_categories['config'])
-        features['data_files'] = self._count_files_by_extensions(file_list, self.file_categories['data'])
-        features['image_files'] = self._count_files_by_extensions(file_list, self.file_categories['image'])
-        features['document_files'] = self._count_files_by_extensions(file_list, self.file_categories['document'])
-        features['archive_files'] = self._count_files_by_extensions(file_list, self.file_categories['archive'])
-        features['package_files'] = self._count_files_by_extensions(file_list, self.file_categories['package'])
-        features['binary_files'] = self._count_binary_files(file_list)
-        features['text_files'] = self._count_text_files(file_list)
-        features['hidden_files'] = self._count_hidden_files(file_list)
-        features['suspicious_extensions'] = self._count_files_by_extensions(file_list, self.suspicious_extensions)
-        features['suspicious_names'] = self._count_suspicious_names(file_list)
-        
-        # 文件类型比例
-        total_files = len(file_list)
-        if total_files > 0:
-            features['exec_ratio'] = features['executable_files'] / total_files
-            features['script_ratio'] = features['script_files'] / total_files
-            features['config_ratio'] = features['config_files'] / total_files
-            features['binary_ratio'] = features['binary_files'] / total_files
-            features['text_ratio'] = features['text_files'] / total_files
-            features['suspicious_ratio'] = features['suspicious_extensions'] / total_files
-        else:
-            features['exec_ratio'] = 0
-            features['script_ratio'] = 0
-            features['config_ratio'] = 0
-            features['binary_ratio'] = 0
-            features['text_ratio'] = 0
-            features['suspicious_ratio'] = 0
-        
-        return features
-
-    def _cleanup_extract_dir(self, extract_dir):
-        """清理临时解压目录"""
         try:
-            shutil.rmtree(extract_dir)
-            print(f"清理临时目录: {extract_dir}")
+            if file_path.endswith(('.tar.gz', '.tgz')):
+                print("检测到tar.gz格式文件")
+                with tarfile.open(file_path, 'r:gz') as tar:
+                    for member in tar.getmembers():
+                        if member.isfile():
+                            f = tar.extractfile(member)
+                            if f:
+                                try:
+                                    content = f.read().decode('utf-8', errors='ignore')
+                                    process_file_content(content, member.name)
+                                except Exception as e:
+                                    print(f"读取tar文件 {member.name} 失败: {str(e)}")
+                                    continue
+            
+            elif file_path.endswith('.zip'):
+                print("检测到zip格式文件")
+                with zipfile.ZipFile(file_path, 'r') as z:
+                    for name in z.namelist():
+                        if not name.endswith('/'):  # 跳过目录
+                            try:
+                                with z.open(name) as f:
+                                    content = f.read().decode('utf-8', errors='ignore')
+                                    process_file_content(content, name)
+                            except Exception as e:
+                                print(f"读取zip文件 {name} 失败: {str(e)}")
+                                continue
+            
+            # 更新特征字典
+            self.features.update({
+                'package_name': package_name,  # 添加包名特征
+                'Number of Words in source code': total_words,
+                'Number of lines in source code': total_lines,
+                'Number of base64 chunks in source code': base64_chunks,
+                'Number of IP adress in source code': ip_count,
+                'Number of sospicious token in source code': suspicious_token_count
+            })
+            
+            # 更新文件类型统计
+            for ext, count in file_type_counts.items():
+                ext_key = ext if ext.startswith('.') else f'.{ext}'
+                self.features[ext_key] = count
+            
+            # 如果有内容，计算其他特征
+            if all_content:
+                combined_content = '\n'.join(all_content)
+                self._extract_char_ratios_enhanced(combined_content)
+                self._extract_entropy_features_enhanced(combined_content)
+                self._extract_identifier_string_features(combined_content)
+            
+            print("\n特征提取统计:")
+            print(f"包名: {package_name}")
+            print(f"总词数: {total_words}")
+            print(f"总行数: {total_lines}")
+            print(f"Base64块总数: {base64_chunks}")
+            print(f"IP地址总数: {ip_count}")
+            print(f"可疑token总数: {suspicious_token_count}")
+            print("文件类型分布:", file_type_counts)
+            
+            print(f"[DEBUG] 最终特征字典中的包名: {self.features.get('package_name')}")
+            
         except Exception as e:
-            print(f"清理临时目录失败: {extract_dir}, 错误: {e}")
-
-    def _generate_error_features(self, file_path, error_message):
-        """生成错误情况下的特征字典"""
-        print(f"生成错误特征: {error_message}")
-        features = self._get_empty_features()
-        features['error'] = 1
-        features['error_message'] = error_message
-        return features
-
-    def _generate_additional_features(self, current_features, file_path):
-        """生成额外补充特征以匹配模型期望"""
-        print("生成补充特征以匹配模型期望数量")
-        additional_features = {}
-        
-        # 填充常见统计特征的空值
-        common_features = [
-            'code_complexity', 'function_count', 'class_count',
-            'comment_ratio', 'string_entropy', 'variable_entropy',
-            'imports_count', 'exports_count', 'third_party_imports'
-        ]
-        
-        for feature in common_features:
-            if feature not in current_features:
-                additional_features[feature] = 0
-        
-        # 填充高级代码分析特征
-        advanced_features = [
-            'dynamic_imports', 'reflection_usage', 'monkey_patching',
-            'binary_payload', 'shellcode_detection', 'string_obfuscation',
-            'anti_debugging', 'anti_vm', 'anti_analysis',
-            'persistence_mechanism', 'privilege_abuse', 'data_exfiltration'
-        ]
-        
-        for feature in advanced_features:
-            if feature not in current_features:
-                additional_features[feature] = 0
-        
-        # 填充网络行为特征
-        network_features = [
-            'dns_queries', 'http_requests', 'https_requests',
-            'unusual_ports', 'known_bad_ips', 'known_bad_domains',
-            'network_protocols', 'socket_usage', 'remote_connections'
-        ]
-        
-        for feature in network_features:
-            if feature not in current_features:
-                additional_features[feature] = 0
-        
-        # 填充安全相关特征
-        security_features = [
-            'encryption_usage', 'decryption_usage', 'hashing_usage',
-            'random_usage', 'temp_file_usage', 'registry_access',
-            'process_creation', 'memory_manipulation', 'hooking_functions'
-        ]
-        
-        for feature in security_features:
-            if feature not in current_features:
-                additional_features[feature] = 0
-        
-        # 历史和元数据特征
-        metadata_features = [
-            'author_reputation', 'package_age', 'update_frequency',
-            'download_count', 'community_score', 'dependency_count',
-            'is_popular', 'recent_updates', 'version_pattern'
-        ]
-        
-        for feature in metadata_features:
-            if feature not in current_features:
-                additional_features[feature] = 0
-        
-        # 统计当前特征和额外特征后的总数
-        total_features = len(current_features) + len(additional_features)
-        print(f"当前特征: {len(current_features)}, 补充特征: {len(additional_features)}, 总特征: {total_features}")
-        
-        # 如果仍然不足，添加空白特征直到达到目标数量
-        target_feature_count = 141  # 模型期望的特征数量
-        if total_features < target_feature_count:
-            remaining = target_feature_count - total_features
-            for i in range(1, remaining + 1):
-                additional_features[f'placeholder_feature_{i}'] = 0
-            
-            print(f"添加 {remaining} 个占位特征以达到目标特征数量: {target_feature_count}")
-        
-        return additional_features
-
-    def _check_for_pattern(self, file_list, patterns):
-        """在文件列表中检查特定模式"""
-        count = 0
-        for file_path in file_list:
-            content = self._read_file_content(file_path)
-            if not content:
-                continue
-            
-            for pattern in patterns:
-                if re.search(pattern, content):
-                    count += 1
-                    break
-        
-        return count
-
-    def _read_file_content(self, file_path, max_size=1024*1024):
-        """安全地读取文件内容，限制大小"""
+            print(f"处理压缩包时出错: {str(e)}")
+            raise
+    
+    def _extract_single_file_features(self, file_path):
+        """提取单个文件特征"""
         try:
-            if not os.path.exists(file_path) or os.path.getsize(file_path) > max_size:
-                return ""
+            # 读取文件内容
+            file_content = self._read_file_content()
+            if not file_content:
+                return
             
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                return f.read()
-        except:
-            return ""
+            # 基于CSV数据的特征提取
+            self._extract_csv_based_features(file_content)
+            
+        except Exception as e:
+            print(f"提取单个文件特征错误: {str(e)}")
+
+    def _extract_package_name(self, file_path):
+        """从压缩包或源码目录中提取包名"""
+        # 1. 只支持tar.gz/zip源码包
+        ext = os.path.splitext(file_path)[1].lower()
+        name = None
+        try:
+            if ext in ['.gz', '.tgz', '.tar']:
+                with tarfile.open(file_path, 'r:*') as tar:
+                    for member in tar.getmembers():
+                        # PKG-INFO
+                        if member.name.endswith('PKG-INFO'):
+                            f = tar.extractfile(member)
+                            if f:
+                                for line in f:
+                                    line = line.decode(errors='ignore')
+                                    if line.startswith('Name:'):
+                                        name = line.split(':',1)[1].strip()
+                                        return name
+                        # pyproject.toml
+                        if member.name.endswith('pyproject.toml'):
+                            f = tar.extractfile(member)
+                            if f:
+                                data = f.read().decode(errors='ignore')
+                                try:
+                                    t = toml.loads(data)
+                                    if 'project' in t and 'name' in t['project']:
+                                        return t['project']['name']
+                                    if 'tool' in t and 'poetry' in t['tool'] and 'name' in t['tool']['poetry']:
+                                        return t['tool']['poetry']['name']
+                                except Exception:
+                                    pass
+                        # setup.py
+                        if member.name.endswith('setup.py'):
+                            f = tar.extractfile(member)
+                            if f:
+                                data = f.read().decode(errors='ignore')
+                                m = re.search(r'name\s*=\s*[\'\"]([\w\-\.]+)[\'\"]', data)
+                                if m:
+                                    return m.group(1)
+            elif ext == '.zip':
+                with zipfile.ZipFile(file_path) as z:
+                    for member in z.namelist():
+                        if member.endswith('PKG-INFO'):
+                            with z.open(member) as f:
+                                for line in f:
+                                    line = line.decode(errors='ignore')
+                                    if line.startswith('Name:'):
+                                        name = line.split(':',1)[1].strip()
+                                        return name
+                        if member.endswith('pyproject.toml'):
+                            with z.open(member) as f:
+                                data = f.read().decode(errors='ignore')
+                                try:
+                                    t = toml.loads(data)
+                                    if 'project' in t and 'name' in t['project']:
+                                        return t['project']['name']
+                                    if 'tool' in t and 'poetry' in t['tool'] and 'name' in t['tool']['poetry']:
+                                        return t['tool']['poetry']['name']
+                                except Exception:
+                                    pass
+                        if member.endswith('setup.py'):
+                            with z.open(member) as f:
+                                data = f.read().decode(errors='ignore')
+                                m = re.search(r'name\s*=\s*[\'\"]([\w\-\.]+)[\'\"]', data)
+                                if m:
+                                    return m.group(1)
+        except Exception as e:
+            print(f"[包名提取异常]{e}")
+        # 兜底：用文件名
+        return os.path.basename(file_path).split('-')[0]

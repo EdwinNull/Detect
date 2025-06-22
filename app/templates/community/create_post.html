@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}发布帖子 - 安全社区{% endblock %}
+
+{% block extra_css %}
+<style>
+    .create-post-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+    
+    .create-post-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .create-post-form {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .form-textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 16px;
+        min-height: 200px;
+        resize: vertical;
+        font-family: inherit;
+    }
+    
+    .form-textarea:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .scan-info {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .scan-info h4 {
+        margin-top: 0;
+        color: #667eea;
+    }
+    
+    .scan-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+    
+    .scan-detail {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .scan-detail:last-child {
+        border-bottom: none;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #f5f5f5;
+        color: #666;
+        margin-right: 10px;
+    }
+    
+    .btn-secondary:hover {
+        background: #e5e5e5;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+    }
+    
+    .tips {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .tips h4 {
+        margin-top: 0;
+        color: #856404;
+    }
+    
+    .tips ul {
+        margin-bottom: 0;
+        color: #856404;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="create-post-container">
+    <div class="create-post-header">
+        <h1>📝 发布新帖子</h1>
+        <p>分享您的安全检测发现，帮助社区用户提高安全意识</p>
+    </div>
+    
+    <div class="create-post-form">
+        <div class="tips">
+            <h4>💡 发帖建议</h4>
+            <ul>
+                <li>详细描述恶意包的特征和行为</li>
+                <li>提供具体的防护建议和解决方案</li>
+                <li>分享检测过程中的经验和技巧</li>
+                <li>使用清晰的语言，便于其他用户理解</li>
+            </ul>
+        </div>
+        
+        {% if scan_record %}
+        <div class="scan-info">
+            <h4>📦 关联检测记录</h4>
+            <div class="scan-details">
+                <div class="scan-detail">
+                    <span>文件名：</span>
+                    <span>{{ scan_record.filename }}</span>
+                </div>
+                <div class="scan-detail">
+                    <span>包类型：</span>
+                    <span>{{ scan_record.package_type or '未知' }}</span>
+                </div>
+                <div class="scan-detail">
+                    <span>风险等级：</span>
+                    <span>{{ scan_record.risk_level or '未知' }}</span>
+                </div>
+                <div class="scan-detail">
+                    <span>置信度：</span>
+                    <span>{{ "%.1f"|format(scan_record.confidence or 0) }}%</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <form method="post">
+            {% if scan_record %}
+            <input type="hidden" name="scan_id" value="{{ scan_record.id }}">
+            {% endif %}
+            
+            <div class="form-group">
+                <label for="title" class="form-label">标题 *</label>
+                <input type="text" id="title" name="title" class="form-input" 
+                       placeholder="请输入帖子标题..." required
+                       value="{{ scan_record.filename + ' - 安全检测发现' if scan_record else '' }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="content" class="form-label">内容 *</label>
+                <textarea id="content" name="content" class="form-textarea" 
+                          placeholder="请详细描述您的发现..." required>{% if scan_record %}
+检测发现：{{ scan_record.filename }}
+
+风险等级：{{ scan_record.risk_level or '未知' }}
+置信度：{{ "%.1f"|format(scan_record.confidence or 0) }}%
+
+详细分析：
+[请在此处详细描述检测结果、恶意行为特征、潜在危害等]
+
+防护建议：
+[请在此处提供具体的防护措施和建议]
+
+{% endif %}</textarea>
+            </div>
+            
+            <div class="form-actions">
+                <div>
+                    <a href="{{ url_for('community.index') }}" class="btn btn-secondary">取消</a>
+                </div>
+                <div>
+                    <button type="submit" class="btn btn-primary">发布帖子</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 

@@ -10,24 +10,40 @@ from datetime import datetime, timedelta
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.model_selection import train_test_split
 import joblib
-from app.utils import admin_required, login_required
+from app.utils import admin_required
 from app.services.extractor import FeatureExtractor
 from app.services.classifier import SecurityClassifier
-from config import Config
+from config.config import Config
 from app.utils.helpers import detect_package_type
-from app.utils.forms import ScanForm
+import sys
+import subprocess
+import zipfile
+import tarfile
+import tempfile
+import shutil
+from pathlib import Path
+import requests
+import time
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import logging
+from flask import current_app, g
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+import pickle
+from xgboost import XGBClassifier
+import warnings
+warnings.filterwarnings('ignore')
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 @admin_bp.route('/')
-@login_required
 @admin_required
 def admin():
-    form = ScanForm()
-    return render_template('admin.html', form=form)
+    return render_template('admin.html')
 
 @admin_bp.route('/model', methods=['GET', 'POST'])
-@login_required
 @admin_required
 def model_management():
     if request.method == 'POST':
@@ -38,27 +54,30 @@ def model_management():
             classifier = SecurityClassifier(model_type=model_type)
             success = classifier.retrain()
             if success:
-                flash('模型重新训练成功')
+                flash(f'{model_type}模型重新训练成功')
             else:
-                flash('模型训练失败')
+                flash(f'{model_type}模型训练失败')
         elif action == 'switch':
             # 切换模型类型
             classifier = SecurityClassifier(model_type=model_type)
             flash(f'已切换到{model_type}模型')
     
-    # 获取当前模型信息
-    model_path = 'models/security_model.json'
-    model_info = {
-        'exists': os.path.exists(model_path),
-        'last_modified': datetime.fromtimestamp(os.path.getmtime(model_path)).strftime('%Y-%m-%d %H:%M:%S') if os.path.exists(model_path) else None,
-        'size': os.path.getsize(model_path) if os.path.exists(model_path) else 0
-    }
+    # 获取所有模型信息
+    model_info = {}
+    model_types = ['xgboost', 'random_forest', 'js_model', 'py_model', 'cross_language']
     
-    form = ScanForm()
-    return render_template('model_management.html', model_info=model_info, form=form)
+    for model_type in model_types:
+        classifier = SecurityClassifier(model_type=model_type)
+        model_path = classifier.model_path
+        model_info[model_type] = {
+            'exists': os.path.exists(model_path),
+            'last_modified': datetime.fromtimestamp(os.path.getmtime(model_path)).strftime('%Y-%m-%d %H:%M:%S') if os.path.exists(model_path) else None,
+            'size': os.path.getsize(model_path) if os.path.exists(model_path) else 0
+        }
+    
+    return render_template('model_management.html', model_info=model_info, model_types=model_types)
 
 @admin_bp.route('/samples', methods=['GET'])
-@login_required
 @admin_required
 def sample_management():
     conn = sqlite3.connect(Config.DATABASE_PATH)
@@ -80,11 +99,9 @@ def sample_management():
             'package_type': sample['package_type'] if 'package_type' in sample.keys() else 'unknown'
         })
     
-    form = ScanForm()
-    return render_template('sample_management.html', samples=sample_list, form=form)
+    return render_template('sample_management.html', samples=sample_list)
 
 @admin_bp.route('/samples/upload', methods=['POST'])
-@login_required
 @admin_required
 def upload_samples():
     if 'samples' not in request.files:
@@ -169,7 +186,6 @@ def upload_samples():
         }), 400
 
 @admin_bp.route('/samples/delete', methods=['POST'])
-@login_required
 @admin_required
 def delete_samples():
     data = request.get_json()
@@ -207,7 +223,6 @@ def delete_samples():
     })
 
 @admin_bp.route('/samples/train', methods=['POST'])
-@login_required
 @admin_required
 def train_with_samples():
     model_type = request.form.get('model_type', 'xgboost')
@@ -281,7 +296,6 @@ def train_with_samples():
     return redirect(url_for('admin.sample_management'))
 
 @admin_bp.route('/users')
-@login_required
 @admin_required
 def user_management():
     conn = sqlite3.connect(Config.DATABASE_PATH)
@@ -307,16 +321,13 @@ def user_management():
     
     conn.close()
     
-    form = ScanForm()
     return render_template('user_management.html', 
                           users=users, 
                           total_users=total_users,
                           admin_count=admin_count,
-                          active_users=active_users,
-                          form=form)
+                          active_users=active_users)
 
 @admin_bp.route('/users/add', methods=['POST'])
-@login_required
 @admin_required
 def add_user():
     username = request.form.get('username')
@@ -357,7 +368,6 @@ def add_user():
     return redirect(url_for('admin.user_management'))
 
 @admin_bp.route('/users/edit/<int:user_id>', methods=['GET', 'POST'])
-@login_required
 @admin_required
 def edit_user(user_id):
     conn = sqlite3.connect(Config.DATABASE_PATH)
@@ -402,11 +412,9 @@ def edit_user(user_id):
         return redirect(url_for('admin.user_management'))
     
     conn.close()
-    form = ScanForm()
-    return render_template('edit_user.html', user=user, form=form)
+    return render_template('edit_user.html', user=user)
 
 @admin_bp.route('/users/delete/<int:user_id>', methods=['POST'])
-@login_required
 @admin_required
 def delete_user(user_id):
     conn = sqlite3.connect(Config.DATABASE_PATH)
@@ -433,7 +441,6 @@ def delete_user(user_id):
     return redirect(url_for('admin.user_management'))
 
 @admin_bp.route('/users/reset_password/<int:user_id>', methods=['POST'])
-@login_required
 @admin_required
 def reset_password(user_id):
     conn = sqlite3.connect(Config.DATABASE_PATH)
@@ -459,7 +466,6 @@ def reset_password(user_id):
     return redirect(url_for('admin.user_management'))
 
 @admin_bp.route('/samples/update_types', methods=['POST'])
-@login_required
 @admin_required
 def update_sample_types():
     if 'user_id' not in session or session.get('role') != 'admin':
@@ -494,7 +500,6 @@ def update_sample_types():
     })
 
 @admin_bp.route('/settings', methods=['GET', 'POST'])
-@login_required
 @admin_required
 def settings():
     conn = sqlite3.connect(Config.DATABASE_PATH)
@@ -520,5 +525,27 @@ def settings():
     settings = cursor.fetchall()
     conn.close()
     
-    form = ScanForm()
-    return render_template('settings.html', settings=settings, form=form)
+    return render_template('settings.html', settings=settings)
+
+@admin_bp.route('/crawl_packages', methods=['GET', 'POST'])
+@admin_required
+def crawl_packages():
+    result = None
+    if request.method == 'POST':
+        pkg_type = request.form.get('pkg_type', 'npm')
+        limit = request.form.get('limit', 5)
+        try:
+            limit = int(limit)
+        except Exception:
+            limit = 5
+        # 构造命令
+        script_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'package_crawler.py')
+        if pkg_type not in ['npm', 'pypi']:
+            pkg_type = 'npm'
+        cmd = [sys.executable, script_path, pkg_type, str(limit)]
+        try:
+            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            result = proc.stdout + '\n' + proc.stderr
+        except Exception as e:
+            result = f'抓取失败: {e}'
+    return render_template('crawl_packages.html', result=result)

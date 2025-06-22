@@ -7,69 +7,58 @@
     <h2 style="margin-bottom: 20px; color: #667eea;">安全扫描</h2>
     
     <p style="margin-bottom: 25px; font-size: 16px; line-height: 1.6;">
-        选择上传本地组件包进行安全检测，或者从包仓库抓取最新的包进行分析，系统将自动识别潜在的恶意代码和风险。
+        上传你的组件包，系统将自动进行安全检测，识别潜在的恶意代码和风险。
     </p>
     
-    <div class="scan-options" style="display: flex; margin-bottom: 25px;">
-        <button id="uploadBtn" class="option-btn active" style="flex: 1; padding: 10px; border: 1px solid #ddd; background: #f8f9fa; border-radius: 6px 0 0 6px; cursor: pointer; font-weight: 500;">上传文件</button>
-        <button id="fetchBtn" class="option-btn" style="flex: 1; padding: 10px; border: 1px solid #ddd; background: #fff; border-radius: 0 6px 6px 0; cursor: pointer; font-weight: 500;">抓取包检测</button>
-    </div>
-    
-    <div id="uploadSection">
-        <form method="POST" action="{{ url_for('scan.scan') }}" enctype="multipart/form-data" id="scanForm">
-            {{ form.csrf_token }}
-            <div style="margin-bottom: 20px;">
-                <label for="scan_file" style="display: block; margin-bottom: 8px; font-weight: 500;">选择要扫描的文件</label>
-                {{ form.scan_file(style="display: block; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;", required=true) }}
-                <div style="font-size: 13px; color: #666; margin-top: 6px;">支持 .zip, .tar.gz, .whl, .jar, .tgz, .npm 等格式</div>
-            </div>
-            
-            {{ form.submit(class="btn btn-primary", style="width: 100%;") }}
-        </form>
-    </div>
-    
-    <div id="fetchSection" style="display: none;">
-        <form method="POST" action="{{ url_for('scan.fetch_packages') }}" id="fetchForm">
-            {{ form.csrf_token }}
-            <div style="margin-bottom: 20px;">
-                <p style="font-size: 15px; line-height: 1.5; color: #555;">
-                    系统将自动从包仓库抓取20个最新的包进行安全分析，适合监控最新上传的包是否存在恶意代码。
-                </p>
-            </div>
-            
-            <button type="submit" class="btn btn-primary" style="width: 100%;">开始抓取并检测</button>
-        </form>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <div style="margin-bottom: 20px;">
+            <label for="file" style="display: block; margin-bottom: 8px; font-weight: 500;">选择要扫描的文件</label>
+            <input type="file" id="file" name="file" required style="display: block; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+            <div style="font-size: 13px; color: #666; margin-top: 6px;">支持 .zip, .tar.gz, .whl, .jar, .tgz, .npm 等格式</div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" style="width: 100%;">开始扫描</button>
+    </form>
+
+    <div id="progressContainer" style="display: none; margin-top: 20px;">
+        <div class="progress">
+            <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+        </div>
+        <p id="statusText" style="margin-top: 10px; text-align: center;"></p>
     </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const uploadBtn = document.getElementById('uploadBtn');
-        const fetchBtn = document.getElementById('fetchBtn');
-        const uploadSection = document.getElementById('uploadSection');
-        const fetchSection = document.getElementById('fetchSection');
-        
-        uploadBtn.addEventListener('click', function() {
-            uploadBtn.classList.add('active');
-            fetchBtn.classList.remove('active');
-            uploadSection.style.display = 'block';
-            fetchSection.style.display = 'none';
-            
-            // 修改样式
-            uploadBtn.style.background = '#f8f9fa';
-            fetchBtn.style.background = '#fff';
-        });
-        
-        fetchBtn.addEventListener('click', function() {
-            fetchBtn.classList.add('active');
-            uploadBtn.classList.remove('active');
-            fetchSection.style.display = 'block';
-            uploadSection.style.display = 'none';
-            
-            // 修改样式
-            fetchBtn.style.background = '#f8f9fa';
-            uploadBtn.style.background = '#fff';
-        });
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    var formData = new FormData();
+    var fileInput = document.getElementById('file');
+    formData.append('file', fileInput.files[0]);
+    
+    // 显示进度条
+    document.getElementById('progressContainer').style.display = 'block';
+    var progressBar = document.querySelector('.progress-bar');
+    var statusText = document.getElementById('statusText');
+    
+    fetch('/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusText.textContent = data.message;
+            // 重定向到进度页面
+            window.location.href = '/progress/' + data.scan_id;
+        } else {
+            statusText.textContent = data.error || '上传失败';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        statusText.textContent = '上传失败: ' + error.message;
     });
+});
 </script>
 {% endblock %} 

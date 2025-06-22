@@ -6,56 +6,35 @@ import hashlib
 import json
 import sqlite3
 from app.utils import login_required
-from app.utils.forms import ScanForm
-from app.tasks import background_scan, scan_tasks, execute_immediate_scan
-from config import Config
+from app.tasks import background_scan, scan_tasks
+from config.config import Config
 from app.utils.helpers import detect_package_type
+from app.models.db_models import ScanRecord, FeatureData
+import zipfile
+import tarfile
+import tempfile
+import shutil
+from datetime import datetime
+from pathlib import Path
+import requests
+import time
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, confusion_matrix
+import pickle
+import joblib
+from xgboost import XGBClassifier
+import warnings
+warnings.filterwarnings('ignore')
 
 scan_bp = Blueprint('scan', __name__)
 
-@scan_bp.route('/scan', methods=['GET', 'POST'])
+@scan_bp.route('/scan')
 @login_required
 def scan():
-    form = ScanForm()
-    if form.validate_on_submit():
-        file = form.scan_file.data
-        if file:
-            filename = secure_filename(file.filename)
-            file_path = os.path.join(Config.UPLOAD_FOLDER, filename)
-            file.save(file_path)
-            # 计算文件哈希
-            with open(file_path, 'rb') as f:
-                file_hash = hashlib.md5(f.read()).hexdigest()
-            file_size = os.path.getsize(file_path)
-            # 检测包类型
-            package_type = detect_package_type(file_path)
-            # 创建扫描记录
-            conn = sqlite3.connect(Config.DATABASE_PATH)
-            cursor = conn.cursor()
-            cursor.execute('''
-                INSERT INTO scan_records (user_id, filename, file_size, file_hash, scan_status, package_type, source)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (session['user_id'], filename, file_size, file_hash, 'pending', package_type, 'manual'))
-            scan_id = cursor.lastrowid
-            conn.commit()
-            conn.close()
-            # 初始化任务状态
-            scan_tasks[scan_id] = {
-                'status': 'pending',
-                'progress': 0,
-                'current_task': '开始检测'
-            }
-            # 启动后台扫描任务
-            thread = threading.Thread(target=background_scan, args=(scan_id, file_path, session['user_id']))
-            thread.daemon = True
-            thread.start()
-            
-            flash('已开始扫描您的文件', 'success')
-            
-            # 重定向到进度页面
-            return redirect(url_for('scan.progress', scan_id=scan_id))
-    
-    return render_template('scan.html', form=form)
+    return render_template('scan.html')
 
 @scan_bp.route('/upload', methods=['POST'])
 @login_required
@@ -82,9 +61,9 @@ def upload_file():
         conn = sqlite3.connect(Config.DATABASE_PATH)
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO scan_records (user_id, filename, file_size, file_hash, scan_status, package_type, source)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (session['user_id'], filename, file_size, file_hash, 'pending', package_type, 'manual'))
+            INSERT INTO scan_records (user_id, filename, file_size, file_hash, scan_status, package_type)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (session['user_id'], filename, file_size, file_hash, 'pending', package_type))
         scan_id = cursor.lastrowid
         conn.commit()
         conn.close()
@@ -137,51 +116,84 @@ def scan_status(scan_id):
 @scan_bp.route('/results/<int:scan_id>')
 @login_required
 def results(scan_id):
-    # 创建一个空的ScanForm，防止模板中使用form变量时出错
-    form = ScanForm()
-    
-    conn = sqlite3.connect(Config.DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT * FROM scan_records 
-        WHERE id = ? AND user_id = ?
-    ''', (scan_id, session['user_id']))
-    
-    record = cursor.fetchone()
-    if not record:
+    """显示扫描结果页面"""
+    # 获取扫描记录
+    scan_record = ScanRecord.get_by_id(scan_id)
+    if not scan_record:
         flash('扫描记录不存在')
         return redirect(url_for('user.index'))
     
     # 获取特征数据
-    cursor.execute('SELECT feature_data FROM features WHERE scan_id = ?', (scan_id,))
-    feature_result = cursor.fetchone()
-    features = json.loads(feature_result['feature_data']) if feature_result else {}
+    feature_data = FeatureData.get_by_scan_id(scan_id)
     
-    conn.close()
+    # 解析xgboost_result和llm_result
+    xgboost_result = {}
+    llm_result = {}
+
+    try:
+        xgboost_result = json.loads(scan_record.xgboost_result) if scan_record.xgboost_result else {}
+    except json.JSONDecodeError:
+        print(f"Error decoding xgboost_result for scan_id {scan_id}")
+
+    try:
+        llm_result = json.loads(scan_record.llm_result) if scan_record.llm_result else {}
+    except json.JSONDecodeError:
+        print(f"Error decoding llm_result for scan_id {scan_id}")
+        flash('AI分析结果存在格式问题，部分信息可能无法展示。', 'warning')
     
+    # 确保llm_result包含所有必要字段
+    if llm_result:
+        llm_result = {
+            'risk_level': llm_result.get('risk_level', 'unknown'),
+            'confidence': llm_result.get('confidence', 0.0),
+            'type': llm_result.get('type', '未知'),
+            'reason': llm_result.get('reason', '无'),
+            'top_features': llm_result.get('top_features', []),
+            'risk_points': llm_result.get('risk_points', '无'),
+            'advice_list': llm_result.get('advice_list', []),
+            'raw_analysis': llm_result.get('raw_analysis', '')
+        }
+    else:
+        llm_result = {
+            'risk_level': 'unknown',
+            'confidence': 0.0,
+            'type': '未知',
+            'reason': '无',
+            'top_features': [],
+            'risk_points': '无',
+            'advice_list': [],
+            'raw_analysis': ''
+        }
+    
+    # 准备数据
     scan_data = {
-        'id': record['id'],
-        'filename': record['filename'],
-        'file_size': record['file_size'],
-        'scan_status': record['scan_status'],
-        'risk_level': record['risk_level'],
-        'confidence': record['confidence'] or 0.5,
-        'xgboost_result': json.loads(record['xgboost_result']) if record['xgboost_result'] else {},
-        'llm_result': json.loads(record['llm_result']) if record['llm_result'] else {},
-        'risk_explanation': record['risk_explanation'],
-        'scan_time': record['scan_time'],
-        'created_at': record['created_at'],
-        'features': features
+        'id': scan_record.id,
+        'filename': scan_record.filename,
+        'file_size': scan_record.file_size,
+        'scan_time': scan_record.scan_time,
+        'risk_level': scan_record.risk_level,
+        'confidence': scan_record.confidence,
+        'features': json.loads(feature_data.feature_data) if feature_data and feature_data.feature_data else {},
+        'xgboost_result': {
+            'prediction': xgboost_result.get('prediction', 0),
+            'confidence': xgboost_result.get('confidence', 0.0),
+            'risk_score': xgboost_result.get('risk_score', 0.0),
+            'risk_level': xgboost_result.get('risk_level', 'unknown'),
+            'feature_importance': xgboost_result.get('feature_importance', {})
+        },
+        'llm_result': llm_result,
+        'malicious_code_snippet': scan_record.malicious_code_snippet,
+        'code_location': scan_record.code_location,
+        'malicious_action': scan_record.malicious_action,
+        'technical_details': scan_record.technical_details
     }
     
-    return render_template('results.html', scan_data=scan_data, form=form)
+    return render_template('results.html', scan_data=scan_data)
 
 @scan_bp.route('/progress/<int:scan_id>')
 @login_required
 def progress(scan_id):
-    form = ScanForm()
-    return render_template('progress.html', scan_id=scan_id, form=form)
+    return render_template('progress.html', scan_id=scan_id)
 
 @scan_bp.route('/cancel_scan/<int:scan_id>', methods=['POST'])
 @login_required
@@ -309,55 +321,3 @@ def delete_record(scan_id):
                 pass
     
     return jsonify({'success': True, 'message': '记录已删除'})
-
-@scan_bp.route('/fetch_packages', methods=['POST'])
-@login_required
-def fetch_packages():
-    """立即执行一次批量抓取和检测任务"""
-    # 检查是否是API调用
-    is_api_call = request.headers.get('Content-Type') == 'application/json'
-    
-    try:
-        print(f"用户 {session.get('username')} (ID: {session.get('user_id')}) 请求立即执行抓取任务")
-        
-        # 立即执行抓取任务
-        package_count = execute_immediate_scan()
-        
-        if package_count > 0:
-            print(f"立即抓取任务完成: 成功抓取并开始检测 {package_count} 个包")
-            success_message = f'成功抓取并开始检测 {package_count} 个包'
-            flash(success_message, 'success')
-            
-            # 根据是API调用还是表单提交，返回不同的响应
-            if is_api_call:
-                return jsonify({
-                    'success': True, 
-                    'message': success_message,
-                    'count': package_count
-                })
-            else:
-                return redirect(url_for('scan.scan'))
-        else:
-            print("立即抓取任务完成: 未能抓取到新包")
-            warning_message = '未能抓取到新包，请稍后再试'
-            flash(warning_message, 'warning')
-            
-            if is_api_call:
-                return jsonify({
-                    'success': True, 
-                    'message': warning_message,
-                    'count': 0
-                })
-            else:
-                return redirect(url_for('scan.scan'))
-    except Exception as e:
-        import traceback
-        print(f"执行抓取任务时出错: {str(e)}")
-        print(traceback.format_exc())
-        error_message = f'执行抓取任务时出错: {str(e)}'
-        flash(error_message, 'danger')
-        
-        if is_api_call:
-            return jsonify({'error': error_message}), 500
-        else:
-            return redirect(url_for('scan.scan'))

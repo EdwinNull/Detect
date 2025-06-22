@@ -250,6 +250,21 @@
         </div>
 
         <div class="category-section">
+            <div class="category-title">包百科</div>
+            <ul class="category-list">
+                <li class="category-item">
+                    <a href="{{ url_for('user.package_encyclopedia') }}">📦 包的百科</a>
+                    <ul class="subcategory-list">
+                        <li class="subcategory-item"><a href="{{ url_for('user.package_encyclopedia') }}?type=Python">Python 包</a></li>
+                        <li class="subcategory-item"><a href="{{ url_for('user.package_encyclopedia') }}?type=JavaScript">JavaScript 包</a></li>
+                        <li class="subcategory-item"><a href="{{ url_for('user.package_encyclopedia') }}?type=Java">Java 包</a></li>
+                        <li class="subcategory-item"><a href="{{ url_for('user.package_encyclopedia') }}?type=其他">其他语言包</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="category-section">
             <div class="category-title">API文档</div>
             <ul class="category-list">
                 <li class="category-item">

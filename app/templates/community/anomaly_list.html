@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}异常报告中心 - 安全社区{% endblock %}
+
+{% block extra_css %}
+<style>
+    .anomaly-center-container {
+        max-width: 1100px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+    .page-header {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        text-align: center;
+    }
+    .page-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    .page-header p {
+        font-size: 16px;
+        color: #666;
+    }
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+    .report-table th, .report-table td {
+        padding: 15px 20px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+    .report-table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        color: #333;
+    }
+    .report-table tr:hover {
+        background-color: #f9fafc;
+    }
+    .status-badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+        display: inline-block;
+        text-transform: capitalize;
+    }
+    .status-pending { background-color: #ffc107; color: #333; }
+    .status-investigating { background-color: #17a2b8; }
+    .status-resolved { background-color: #28a745; }
+    .status-dismissed { background-color: #6c757d; }
+    .action-btn {
+        padding: 6px 14px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        background: white;
+        color: #666;
+        text-decoration: none;
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+    .action-btn:hover {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="anomaly-center-container">
+    <div class="page-header">
+        <h1>异常报告中心</h1>
+        <p>这里汇总了社区用户提交的所有检测结果异常报告。感谢每一位贡献者！</p>
+    </div>
+
+    <div class="report-list">
+        {% if reports %}
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>文件名</th>
+                    <th>上报用户</th>
+                    <th>上报原因</th>
+                    <th>上报时间</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in reports %}
+                <tr>
+                    <td><strong>{{ report.scan_record.filename if report.scan_record else 'N/A' }}</strong></td>
+                    <td>
+                        <div class="user-info">
+                            <span>{{ report.user.username if report.user else '匿名' }}</span>
+                        </div>
+                    </td>
+                    <td>{{ report.reason }}</td>
+                    <td>{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td><span class="status-badge status-{{ report.status }}">{{ report.status }}</span></td>
+                    <td>
+                        <a href="{{ url_for('scan.result', scan_id=report.scan_record_id) }}" class="action-btn">查看扫描</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-center" style="padding: 40px; background: white; border-radius: 15px;">
+            <p>太棒了！目前没有需要处理的异常报告。</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

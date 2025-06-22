@@ -2,24 +2,13 @@
 
 {% block extra_css %}
 <style>
-    :root {
-        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        --success-color: #2ed573;
-        --warning-color: #ffa502;
-        --danger-color: #ff4757;
-        --info-color: #54a0ff;
-        --border-radius: 20px;
-        --card-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        --hover-shadow: 0 15px 35px rgba(0,0,0,0.12);
-    }
-
     .dashboard-container {
-        max-width: 1300px;
+        max-width: 1200px;
         margin: 20px auto;
         padding: 0 20px;
         display: grid;
         grid-template-columns: 1fr;
-        grid-gap: 25px;
+        grid-gap: 20px;
     }
     
     @media (min-width: 768px) {
@@ -28,46 +17,26 @@
         }
     }
     
+    @media (min-width: 992px) {
+        .dashboard-container {
+            grid-template-columns: 2fr 1fr;
+        }
+    }
+    
     .stats-container {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: 1fr 1fr;
         grid-gap: 15px;
         margin-bottom: 20px;
     }
     
     .stat-card {
-        background: rgba(255, 255, 255, 0.97);
+        background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
         padding: 20px;
-        border-radius: var(--border-radius);
-        box-shadow: var(--card-shadow);
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
         text-align: center;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--hover-shadow);
-    }
-    
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 4px;
-        background: var(--primary-gradient);
-    }
-    
-    .stat-icon {
-        font-size: 28px;
-        margin-bottom: 10px;
-        background: var(--primary-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
     }
     
     .stat-value {
@@ -83,62 +52,39 @@
     
     .quick-guide-small-btn {
         display: inline-block;
-        padding: 10px 18px;
+        padding: 8px 15px;
         background: rgba(75, 108, 183, 0.1);
         color: #4b6cb7;
         text-decoration: none;
-        border-radius: 50px;
+        border-radius: 6px;
         font-weight: 600;
         font-size: 14px;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
         border: 1px solid #4b6cb7;
-        box-shadow: 0 4px 10px rgba(75, 108, 183, 0.1);
     }
     
     .quick-guide-small-btn:hover {
         background: rgba(75, 108, 183, 0.2);
-        transform: translateY(-3px);
-        box-shadow: 0 6px 15px rgba(75, 108, 183, 0.2);
+        transform: translateY(-2px);
     }
     
     .guide-icon {
-        font-size: 16px;
-        margin-right: 8px;
+        font-size: 15px;
+        margin-right: 5px;
     }
     
-    .package-section {
-        background: rgba(255, 255, 255, 0.97);
+    .malicious-packages {
+        background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
         padding: 25px;
-        border-radius: var(--border-radius);
-        box-shadow: var(--card-shadow);
-        transition: box-shadow 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .package-section:hover {
-        box-shadow: var(--hover-shadow);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.1);
     }
     
     .section-header {
         margin-bottom: 20px;
         padding-bottom: 15px;
-        border-bottom: 1px solid rgba(0,0,0,0.05);
-        display: flex;
-        align-items: center;
-    }
-    
-    .section-icon {
-        font-size: 24px;
-        margin-right: 15px;
-        background: var(--primary-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    
-    .section-title-area {
-        flex: 1;
+        border-bottom: 1px solid #eee;
     }
     
     .section-header h2 {
@@ -154,71 +100,22 @@
     
     .package-list {
         margin-bottom: 20px;
-        max-height: 400px;
-        overflow-y: auto;
-        padding-right: 5px;
-    }
-    
-    .package-list::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    .package-list::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-    }
-    
-    .package-list::-webkit-scrollbar-thumb {
-        background: #ddd;
-        border-radius: 10px;
-    }
-    
-    .package-list::-webkit-scrollbar-thumb:hover {
-        background: #ccc;
     }
     
     .package-item {
-        background: rgba(250, 250, 255, 0.7);
-        border-radius: 15px;
+        background: rgba(248, 249, 255, 0.7);
+        border-radius: 12px;
         padding: 15px;
         margin-bottom: 15px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        transition: all 0.3s ease;
-        border: 1px solid transparent;
+        transition: transform 0.2s ease;
     }
     
     .package-item:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-    }
-    
-    .malicious-item {
-        border-left: 4px solid var(--danger-color);
-    }
-    
-    .malicious-item:hover {
-        border: 1px solid var(--danger-color);
-        border-left: 4px solid var(--danger-color);
-    }
-    
-    .safe-item {
-        border-left: 4px solid var(--success-color);
-    }
-    
-    .safe-item:hover {
-        border: 1px solid var(--success-color);
-        border-left: 4px solid var(--success-color);
-    }
-    
-    .auto-item {
-        border-left: 4px solid #8e44ad;
-    }
-    
-    .auto-item:hover {
-        border: 1px solid #8e44ad;
-        border-left: 4px solid #8e44ad;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
     }
     
     .package-info {
@@ -227,17 +124,8 @@
     
     .package-name {
         font-weight: 600;
-        margin-bottom: 8px;
+        margin-bottom: 5px;
         color: #333;
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-    
-    .package-icon {
-        margin-right: 10px;
-        color: #666;
-        font-size: 18px;
     }
     
     .package-meta {
@@ -245,78 +133,27 @@
         font-size: 13px;
         display: flex;
         gap: 15px;
-        flex-wrap: wrap;
     }
     
-    .meta-item {
-        display: flex;
-        align-items: center;
-    }
-    
-    .meta-icon {
-        margin-right: 5px;
-        color: #888;
-    }
-    
-    .badge {
+    .risk-badge {
         display: inline-block;
         padding: 5px 12px;
-        border-radius: 50px;
+        border-radius: 20px;
         font-size: 12px;
         font-weight: 600;
         color: white;
-        margin-left: 10px;
     }
     
     .risk-high {
-        background: var(--danger-color);
-    }
-    
-    .risk-medium {
-        background: var(--warning-color);
-    }
-    
-    .risk-low {
-        background: var(--success-color);
-    }
-    
-    .risk-actions {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    
-    .type-badge {
-        display: inline-block;
-        margin-left: 8px;
-        padding: 3px 10px;
-        border-radius: 50px;
-        font-size: 12px;
-        font-weight: 600;
-        color: #fff;
-    }
-    
-    .type-pypi { background: #3776ab; }
-    .type-npm { background: #cb3837; }
-    .type-unknown { background: #888; }
-    
-    .source-badge {
-        background: #8e44ad;
-        display: inline-block;
-        margin-left: 8px;
-        padding: 3px 10px;
-        border-radius: 50px;
-        font-size: 12px;
-        font-weight: 600;
-        color: #fff;
+        background: #ff4757;
     }
     
     .upload-container {
-        background: rgba(255, 255, 255, 0.97);
+        background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
-        padding: 30px;
-        border-radius: var(--border-radius);
-        box-shadow: var(--card-shadow);
+        padding: 25px;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.1);
     }
     
     .upload-area {
@@ -401,7 +238,7 @@
     .btn-large {
         padding: 12px 30px;
         font-size: 16px;
-        border-radius: 50px;
+        border-radius: 8px;
         border: none;
         cursor: pointer;
         transition: all 0.3s ease;
@@ -410,14 +247,13 @@
     }
     
     .btn-primary {
-        background: var(--primary-gradient);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.2);
     }
     
     .btn-primary:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 15px 30px rgba(102, 126, 234, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
     }
     
     .btn-secondary {
@@ -427,7 +263,6 @@
     
     .btn-secondary:hover {
         background: #eee;
-        transform: translateY(-2px);
     }
     
     .empty-state {
@@ -444,22 +279,19 @@
     
     .more-link {
         display: inline-block;
-        padding: 8px 18px;
+        padding: 8px 15px;
         color: #667eea;
         text-decoration: none;
         border: 1px solid #667eea;
-        border-radius: 50px;
+        border-radius: 6px;
         font-size: 14px;
         font-weight: 500;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 10px rgba(102, 126, 234, 0.1);
     }
     
     .more-link:hover {
         background: #667eea;
         color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(102, 126, 234, 0.2);
     }
     
     .center-text {
@@ -489,21 +321,119 @@
         100% { transform: rotate(360deg); }
     }
     
-    .dashboard-row {
-        grid-column: span 2;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-gap: 25px;
+    .type-badge {
+        display: inline-block;
+        margin-left: 8px;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #fff;
+    }
+    .type-pypi { background: #3776ab; }
+    .type-npm { background: #cb3837; }
+    .type-unknown { background: #888; }
+    
+    .anomaly-item {
+        border: none;
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .anomaly-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 4px;
+    }
+    .text-sm {
+        font-size: 0.85rem;
+    }
+    .anomaly-package {
+        font-size: 0.95rem;
+        margin-bottom: 6px;
+    }
+    .anomaly-reason {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 0;
+        padding-left: 10px;
+        border-left: 3px solid #e9ecef;
     }
     
-    @media (max-width: 768px) {
-        .stats-container {
-            grid-template-columns: 1fr 1fr;
-        }
-        
-        .dashboard-row {
-            grid-template-columns: 1fr;
-        }
+    .remove-file-btn:hover {
+        background: #e53935;
+    }
+
+    .right-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .community-alerts-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    .community-alerts-card .card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #ffc107;
+        color: #333;
+        padding: 15px 20px;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+        font-weight: 600;
+    }
+    
+    .community-alerts-card .card-header .fa-bullhorn {
+        font-size: 20px;
+    }
+
+    .alerts-list {
+        padding: 10px 20px 20px;
+    }
+
+    .alert-item {
+        padding: 15px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .alert-item:last-child {
+        border-bottom: none;
+    }
+
+    .alert-reason {
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 8px;
+    }
+
+    .alert-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+        color: #666;
+    }
+
+    .status-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        color: white;
+    }
+
+    .status-pending { background-color: #dc3545; }
+    .status-resolved { background-color: #28a745; }
+
+    .no-alerts {
+        text-align: center;
+        padding: 20px;
+        color: #888;
     }
 </style>
 {% endblock %}
@@ -511,7 +441,7 @@
 {% block content %}
 <div class="dashboard-container">
     <!-- 快速上手按钮 - 左上角 -->
-    <div style="grid-column: span 2; text-align: left; margin-bottom: 10px;">
+    <div style="grid-column: span 2; text-align: left; margin-bottom: 15px;">
         <a href="{{ url_for('user.guide') }}" class="quick-guide-small-btn">
             <i class="guide-icon">📘</i> 快速上手
         </a>
@@ -520,153 +450,29 @@
     <!-- 统计信息 -->
     <div class="stats-container" style="grid-column: span 2;">
         <div class="stat-card">
-            <div class="stat-icon">📊</div>
             <div class="stat-value">{{ total_scans }}</div>
             <div class="stat-label">总检测次数</div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon">⚠️</div>
             <div class="stat-value">{{ total_malicious }}</div>
             <div class="stat-label">已检测恶意包</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon">🤖</div>
-            <div class="stat-value">{{ total_auto_detected }}</div>
-            <div class="stat-label">自动检测恶意包</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon">✅</div>
-            <div class="stat-value">{{ total_benign }}</div>
-            <div class="stat-label">安全包数量</div>
-        </div>
     </div>
     
-    <!-- 分成两列的恶意包和安全包 -->
-    <div class="dashboard-row">
-        <!-- 恶意包列表 -->
-        <div class="package-section">
-            <div class="section-header">
-                <div class="section-icon">⚠️</div>
-                <div class="section-title-area">
-                    <h2>最近检测到的恶意包</h2>
-                    <p>最近检测到的高风险开源组件包</p>
-                </div>
-            </div>
-            
-            <div class="package-list">
-                {% if malicious_packages %}
-                    {% for pkg in malicious_packages %}
-                    <div class="package-item malicious-item">
-                        <div class="package-info">
-                            <div class="package-name">
-                                <span class="package-icon">📦</span> {{ pkg.filename }}
-                                {% if pkg.package_type == 'pypi' %}
-                                    <span class="type-badge type-pypi">PyPI</span>
-                                {% elif pkg.package_type == 'npm' %}
-                                    <span class="type-badge type-npm">npm</span>
-                                {% else %}
-                                    <span class="type-badge type-unknown">未知</span>
-                                {% endif %}
-                                {% if pkg.source == 'auto' %}
-                                    <span class="source-badge">自动检测</span>
-                                {% endif %}
-                            </div>
-                            <div class="package-meta">
-                                <span class="meta-item"><span class="meta-icon">📏</span> {{ pkg.file_size }}</span>
-                                <span class="meta-item"><span class="meta-icon">🕒</span> {{ pkg.created_at }}</span>
-                                <span class="meta-item"><span class="meta-icon">🔍</span> {{ "%.1f"|format(pkg.confidence) }}%</span>
-                            </div>
-                        </div>
-                        <div class="risk-actions">
-                            <span class="badge risk-high">高风险</span>
-                            <a href="{{ url_for('scan.results', scan_id=pkg.id) }}" class="more-link">查看详情</a>
-                        </div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="empty-state">
-                        <div class="empty-icon">🔍</div>
-                        <p>暂无检测到的恶意包</p>
-                    </div>
-                {% endif %}
-            </div>
-            
-            <div class="center-text">
-                <a href="{{ url_for('user.history') }}" class="more-link">查看所有历史</a>
-            </div>
-        </div>
-        
-        <!-- 安全包列表 -->
-        <div class="package-section">
-            <div class="section-header">
-                <div class="section-icon">✅</div>
-                <div class="section-title-area">
-                    <h2>安全开源组件包</h2>
-                    <p>最近检测的低风险安全组件包</p>
-                </div>
-            </div>
-            
-            <div class="package-list">
-                {% if safe_packages %}
-                    {% for pkg in safe_packages %}
-                    <div class="package-item safe-item">
-                        <div class="package-info">
-                            <div class="package-name">
-                                <span class="package-icon">📦</span> {{ pkg.filename }}
-                                {% if pkg.package_type == 'pypi' %}
-                                    <span class="type-badge type-pypi">PyPI</span>
-                                {% elif pkg.package_type == 'npm' %}
-                                    <span class="type-badge type-npm">npm</span>
-                                {% else %}
-                                    <span class="type-badge type-unknown">未知</span>
-                                {% endif %}
-                                {% if pkg.source == 'auto' %}
-                                    <span class="source-badge">自动检测</span>
-                                {% endif %}
-                            </div>
-                            <div class="package-meta">
-                                <span class="meta-item"><span class="meta-icon">📏</span> {{ pkg.file_size }}</span>
-                                <span class="meta-item"><span class="meta-icon">🕒</span> {{ pkg.created_at }}</span>
-                                <span class="meta-item"><span class="meta-icon">🔍</span> {{ "%.1f"|format(pkg.confidence) }}%</span>
-                            </div>
-                        </div>
-                        <div class="risk-actions">
-                            <span class="badge risk-low">安全</span>
-                            <a href="{{ url_for('scan.results', scan_id=pkg.id) }}" class="more-link">查看详情</a>
-                        </div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="empty-state">
-                        <div class="empty-icon">🔍</div>
-                        <p>暂无检测到的安全包</p>
-                    </div>
-                {% endif %}
-            </div>
-            
-            <div class="center-text">
-                <a href="{{ url_for('user.history') }}" class="more-link">查看所有历史</a>
-            </div>
-        </div>
-    </div>
-    
-    <!-- 自动检测恶意包 -->
-    <div class="package-section" style="grid-column: span 2;">
+    <!-- 恶意包列表 -->
+    <div class="malicious-packages">
         <div class="section-header">
-            <div class="section-icon">🤖</div>
-            <div class="section-title-area">
-                <h2>自动监测的恶意包</h2>
-                <p>系统自动从PyPI和npm官方源抓取并检测出的恶意包</p>
-            </div>
+            <h2>最近检测到的恶意包</h2>
+            <p>最近检测到的高风险开源组件包</p>
         </div>
         
         <div class="package-list">
-            {% if auto_packages %}
-                {% for pkg in auto_packages %}
-                <div class="package-item auto-item">
+            {% if malicious_packages %}
+                {% for pkg in malicious_packages %}
+                <div class="package-item">
                     <div class="package-info">
                         <div class="package-name">
-                            <span class="package-icon">🤖</span> {{ pkg.filename }}
+                            {{ pkg.filename }}
                             {% if pkg.package_type == 'pypi' %}
                                 <span class="type-badge type-pypi">PyPI</span>
                             {% elif pkg.package_type == 'npm' %}
@@ -674,71 +480,77 @@
                             {% else %}
                                 <span class="type-badge type-unknown">未知</span>
                             {% endif %}
-                            <span class="source-badge">自动检测</span>
                         </div>
                         <div class="package-meta">
-                            <span class="meta-item"><span class="meta-icon">📏</span> {{ pkg.file_size }}</span>
-                            <span class="meta-item"><span class="meta-icon">🕒</span> {{ pkg.created_at }}</span>
-                            <span class="meta-item"><span class="meta-icon">🔍</span> {{ "%.1f"|format(pkg.confidence) }}%</span>
+                            <span>大小: {{ pkg.file_size }}</span>
+                            <span>检测时间: {{ pkg.created_at }}</span>
+                            <span>置信度: {{ "%.1f"|format(pkg.confidence) }}%</span>
                         </div>
                     </div>
-                    <div class="risk-actions">
-                        <span class="badge risk-high">高风险</span>
+                    <div>
+                        <span class="risk-badge risk-high">高风险</span>
                         <a href="{{ url_for('scan.results', scan_id=pkg.id) }}" class="more-link">查看详情</a>
                     </div>
                 </div>
                 {% endfor %}
             {% else %}
                 <div class="empty-state">
-                    <div class="empty-icon">🤖</div>
-                    <p>暂无自动检测到的恶意包</p>
+                    <div class="empty-icon">🔍</div>
+                    <p>暂无检测到的恶意包</p>
                 </div>
             {% endif %}
         </div>
+        
+        <div class="center-text">
+            <a href="{{ url_for('user.history') }}" class="more-link">查看全部扫描记录 →</a>
+        </div>
     </div>
     
-    <!-- 上传检测区域 -->
-    <div class="upload-container" style="grid-column: span 2;">
-        <div class="section-header">
-            <div class="section-icon">📤</div>
-            <div class="section-title-area">
-                <h2>上传组件包进行检测</h2>
-                <p>上传开源组件包进行安全检测</p>
+    <div class="right-sidebar">
+        <div class="upload-container">
+            <div class="section-header">
+                <h2>开始新的扫描</h2>
+                <p>上传 .zip, .tar.gz, .tgz, 或 .whl 格式的包文件</p>
+            </div>
+            <div id="uploadArea" class="upload-area">
+                <input type="file" id="fileInput" class="file-input" name="package" hidden>
+                <div class="upload-icon">📦</div>
+                <div class="upload-text">点击或拖拽文件到此处</div>
+                <div class="upload-hint">最大支持 50MB</div>
+            </div>
+            <div id="selectedFile" class="selected-file" style="display: none;">
+                <span id="fileName"></span>
+                <button id="removeFile" class="remove-file-btn">×</button>
+            </div>
+            <button id="uploadButton" class="scan-button" disabled>
+                <span class="spinner" style="display: none;"></span>
+                开始检测
+            </button>
+        </div>
+
+        <div class="community-alerts-card">
+            <div class="card-header">
+                <i class="fas fa-bullhorn"></i>
+                <h3>最新社区警报</h3>
+            </div>
+            <div class="alerts-list">
+                {% if latest_anomalies %}
+                    {% for anomaly in latest_anomalies %}
+                    <div class="alert-item">
+                        <p class="alert-reason">{{ anomaly.title }}</p>
+                        <div class="alert-meta">
+                            <span>由 <strong>{{ anomaly.username }}</strong> 上报</span>
+                            {% if anomaly.filename %}
+                                <span>相关文件: {{ anomaly.filename }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-alerts">社区一片祥和，暂无警报！</p>
+                {% endif %}
             </div>
         </div>
-        
-        <form id="uploadForm" enctype="multipart/form-data">
-            <div class="upload-area" onclick="document.getElementById('fileInput').click()" 
-                 ondrop="dropHandler(event);" ondragover="dragOverHandler(event);" 
-                 ondragenter="dragEnterHandler(event);" ondragleave="dragLeaveHandler(event);">
-                <div class="upload-icon">📁</div>
-                <div class="upload-text">点击选择文件或拖拽文件到此处</div>
-                <div class="upload-hint">支持 .zip, .tar.gz, .jar, .npm 等格式</div>
-            </div>
-            
-            <input type="file" id="fileInput" name="file" class="file-input" 
-                   accept=".zip,.tar.gz,.jar,.npm,.tgz" onchange="fileSelected(event)">
-            
-            <div class="selected-file" id="selectedFile">
-                <div class="file-info">
-                    <div class="file-icon">📦</div>
-                    <div class="file-details">
-                        <h4 id="fileName">example-package.zip</h4>
-                        <p id="fileSize">2.5 MB</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="action-buttons">
-                <button type="button" class="btn-large btn-secondary" onclick="clearFile()">取消</button>
-                <button type="submit" class="btn-large btn-primary" id="submitBtn" disabled>开始检测</button>
-            </div>
-            
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <span>正在上传文件...</span>
-            </div>
-        </form>
     </div>
 </div>
 {% endblock %}
@@ -759,18 +571,8 @@ function fileSelected(event) {
 // 显示选中的文件
 function displaySelectedFile(file) {
     document.getElementById('fileName').textContent = file.name;
-    document.getElementById('fileSize').textContent = formatFileSize(file.size);
     document.getElementById('selectedFile').style.display = 'block';
-    document.getElementById('submitBtn').disabled = false;
-}
-
-// 格式化文件大小
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    document.getElementById('uploadButton').disabled = false;
 }
 
 // 清除文件
@@ -778,7 +580,7 @@ function clearFile() {
     selectedFile = null;
     document.getElementById('fileInput').value = '';
     document.getElementById('selectedFile').style.display = 'none';
-    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('uploadButton').disabled = true;
 }
 
 // 拖放处理
@@ -810,49 +612,43 @@ function dropHandler(event) {
                 break;
             }
         }
-    } else {
-        if (event.dataTransfer.files.length > 0) {
-            document.getElementById('fileInput').files = event.dataTransfer.files;
-            selectedFile = event.dataTransfer.files[0];
-            displaySelectedFile(selectedFile);
-        }
     }
 }
 
-// 提交表单
+// 表单提交
 document.getElementById('uploadForm').addEventListener('submit', function(event) {
     event.preventDefault();
     
-    if (!selectedFile) {
-        alert('请先选择文件');
-        return;
-    }
+    if (!selectedFile) return;
     
     const formData = new FormData();
     formData.append('file', selectedFile);
     
-    document.getElementById('submitBtn').disabled = true;
+    // 显示加载状态
     document.getElementById('loading').style.display = 'block';
+    document.getElementById('submitBtn').disabled = true;
     
+    // 发送请求
     fetch('/upload', {
         method: 'POST',
         body: formData
     })
     .then(response => response.json())
     .then(data => {
+        document.getElementById('loading').style.display = 'none';
+        
         if (data.success) {
-            window.location.href = `/progress/${data.scan_id}`;
+            // 重定向到进度页面
+            window.location.href = '/progress/' + data.scan_id;
         } else {
-            alert('上传失败: ' + data.error);
+            alert('上传失败: ' + data.message);
             document.getElementById('submitBtn').disabled = false;
-            document.getElementById('loading').style.display = 'none';
         }
     })
     .catch(error => {
-        console.error('错误:', error);
-        alert('上传失败，请稍后重试');
-        document.getElementById('submitBtn').disabled = false;
         document.getElementById('loading').style.display = 'none';
+        document.getElementById('submitBtn').disabled = false;
+        alert('上传出错: ' + error);
     });
 });
 </script>

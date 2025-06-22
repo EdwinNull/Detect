@@ -1,0 +1,551 @@
+{% extends "base.html" %}
+
+{% block title %}安全社区 - 开源组件包安全检测平台{% endblock %}
+
+{% block extra_css %}
+<style>
+    .community-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+    
+    .community-header {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+        color: white;
+        padding: 60px 40px;
+        border-radius: 20px;
+        text-align: center;
+        margin-bottom: 40px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .community-header h1 {
+        font-size: 2.5em;
+        margin-bottom: 20px;
+        font-weight: 700;
+    }
+    
+    .community-header p {
+        font-size: 1.2em;
+        opacity: 0.9;
+        max-width: 600px;
+        margin: 0 auto 30px;
+        line-height: 1.6;
+    }
+    
+    .community-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 30px;
+        margin: 40px auto;
+        max-width: 1200px;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-number {
+        font-size: 36px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 10px;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-size: 1.1em;
+    }
+    
+    .filters {
+        background: white;
+        padding: 20px 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .filter-group {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .action-buttons-group {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+    
+    .filter-label {
+        font-weight: 600;
+        color: #333;
+        min-width: 80px;
+    }
+    
+    .filter-select {
+        padding: 10px 15px;
+        border: 2px solid #eee;
+        border-radius: 10px;
+        background: white;
+        font-size: 1em;
+        color: #333;
+        min-width: 150px;
+        transition: all 0.3s ease;
+    }
+    
+    .filter-select:focus {
+        border-color: #667eea;
+        outline: none;
+    }
+    
+    .post-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+    
+    .post-card {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    
+    .post-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    
+    .post-header {
+        margin-bottom: 20px;
+    }
+    
+    .post-title {
+        font-size: 1.3em;
+        font-weight: 600;
+        color: #333;
+        text-decoration: none;
+        line-height: 1.4;
+        margin-bottom: 15px;
+        display: block;
+    }
+    
+    .post-title:hover {
+        color: #667eea;
+    }
+    
+    .post-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        font-size: 0.9em;
+        color: #666;
+        margin-bottom: 15px;
+        align-items: center;
+    }
+    
+    .post-meta span {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .post-content {
+        color: #555;
+        line-height: 1.8;
+        margin-bottom: 20px;
+        flex-grow: 1;
+        white-space: pre-line;
+        font-size: 1.1em;
+    }
+    
+    .post-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+        margin-top: auto;
+    }
+    
+    .post-actions {
+        display: flex;
+        gap: 15px;
+    }
+    
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 8px 12px;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        background: white;
+        color: #666;
+        text-decoration: none;
+        font-size: 0.9em;
+        transition: all 0.3s ease;
+    }
+    
+    .action-btn:hover {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+    
+    .create-post-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1.1em;
+        transition: all 0.3s ease;
+        display: inline-block;
+    }
+    
+    .create-post-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 40px;
+    }
+    
+    .page-link {
+        padding: 12px 20px;
+        border: 2px solid #eee;
+        border-radius: 10px;
+        text-decoration: none;
+        color: #666;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .page-link:hover {
+        border-color: #667eea;
+        color: #667eea;
+    }
+    
+    .page-link.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    
+    .empty-state h3 {
+        color: #333;
+        font-size: 1.5em;
+        margin-bottom: 15px;
+    }
+    
+    .empty-state p {
+        color: #666;
+        margin-bottom: 25px;
+    }
+    
+    .badge {
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 0.85em;
+        font-weight: 600;
+    }
+    
+    .risk-badge {
+        color: white;
+    }
+    
+    .risk-high { background: #dc3545; }
+    .risk-medium { background: #ffc107; color: #333; }
+    .risk-low { background: #28a745; }
+    
+    .package-badge {
+        color: white;
+    }
+    
+    .package-npm { background: #cb3837; }
+    .package-pypi { background: #3776ab; }
+    
+    .read-more {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-block;
+        margin-top: 10px;
+    }
+    
+    .read-more:hover {
+        color: #764ba2;
+        text-decoration: underline;
+    }
+    
+    .no-content {
+        color: #999;
+        font-style: italic;
+        text-align: center;
+        margin: 20px 0;
+    }
+    
+    @media (max-width: 768px) {
+        .community-header {
+            padding: 40px 20px;
+        }
+        
+        .community-header h1 {
+            font-size: 2em;
+        }
+        
+        .post-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .stat-card {
+            padding: 20px;
+        }
+        
+        .filter-group {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .filter-label {
+            margin-bottom: 5px;
+        }
+    }
+    
+    .btn-outline-danger {
+        color: #dc3545;
+        border-color: #dc3545;
+        padding: 10px 18px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-danger:hover {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-outline-secondary {
+        color: #6c757d;
+        border-color: #6c757d;
+        padding: 10px 18px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-secondary:hover {
+        background: #6c757d;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="community-container">
+    <!-- 社区头部 -->
+    <div class="community-header">
+        <h1>🔒 安全社区</h1>
+        <p>分享检测结果，交流安全经验，共建安全生态</p>
+        {% if session.user_id %}
+        <a href="{{ url_for('community.create_post') }}" class="create-post-btn">
+            <i class="fas fa-plus"></i> 发布新帖子
+        </a>
+        {% endif %}
+    </div>
+    
+    <!-- 社区统计 -->
+    <div class="community-stats">
+        <div class="stat-card">
+            <div class="stat-number">{{ posts|length }}</div>
+            <div class="stat-label">今日帖子</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">1,234</div>
+            <div class="stat-label">总用户数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">567</div>
+            <div class="stat-label">恶意包检出</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">89</div>
+            <div class="stat-label">活跃专家</div>
+        </div>
+    </div>
+    
+    <!-- 筛选器 -->
+    <div class="filters">
+        <div class="filter-group">
+            <span class="filter-label">筛选:</span>
+            <select id="typeFilter" class="filter-select">
+                <option value="">所有类型</option>
+                <option value="npm" {% if filter_type == 'npm' %}selected{% endif %}>NPM</option>
+                <option value="pypi" {% if filter_type == 'pypi' %}selected{% endif %}>PyPI</option>
+            </select>
+            <select id="orderFilter" class="filter-select">
+                <option value="created_at">最新发布</option>
+                <option value="likes">最多点赞</option>
+            </select>
+        </div>
+        <div class="action-buttons-group">
+            <a href="{{ url_for('community.anomaly_list') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-archive"></i> 报告中心
+            </a>
+            <a href="{{ url_for('user.report_issue') }}" class="btn btn-danger">
+                <i class="fas fa-bug"></i> 上报新的异常
+            </a>
+        </div>
+    </div>
+    
+    <!-- 帖子列表 -->
+    {% if posts %}
+    <div class="post-grid">
+        {% for post in posts %}
+        <div class="post-card">
+            <div class="post-header">
+                <a href="{{ url_for('community.post_detail', post_id=post.id) }}" class="post-title">
+                    {{ post.title }}
+                    {% if post.is_pinned %}
+                        <span style="color: #ffc107; margin-left: 5px;">📌</span>
+                    {% endif %}
+                    {% if post.is_verified %}
+                        <span style="color: #28a745; margin-left: 5px;">✅</span>
+                    {% endif %}
+                </a>
+                
+                <div class="post-meta">
+                    <span title="作者"><i class="fas fa-user"></i> {{ post.username }}</span>
+                    <span title="发布时间"><i class="far fa-clock"></i> {{ post.created_at }}</span>
+                    {% if post.package_name %}
+                        <span title="包名"><i class="fas fa-box"></i> {{ post.package_name }}</span>
+                    {% endif %}
+                    {% if post.package_type %}
+                        <span class="badge package-badge package-{{ post.package_type }}">{{ post.package_type.upper() }}</span>
+                    {% endif %}
+                    {% if post.risk_level %}
+                        <span class="badge risk-badge risk-{{ post.risk_level }}">{{ post.risk_level }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="post-content">
+                {% if post.content %}
+                    {{ post.content[:300]|replace('\n', '<br>')|safe }}{% if post.content|length > 300 %}
+                    <a href="{{ url_for('community.post_detail', post_id=post.id) }}" class="read-more">阅读更多...</a>
+                    {% endif %}
+                {% else %}
+                    <p class="no-content">暂无内容</p>
+                {% endif %}
+            </div>
+            
+            <div class="post-footer">
+                <div class="post-actions">
+                    <a href="{{ url_for('community.post_detail', post_id=post.id) }}" class="action-btn" title="评论">
+                        <i class="far fa-comment"></i> {{ post.comments_count }}
+                    </a>
+                    <a href="{{ url_for('community.post_detail', post_id=post.id) }}" class="action-btn" title="浏览">
+                        <i class="far fa-eye"></i> {{ post.views_count }}
+                    </a>
+                    <a href="{{ url_for('community.post_detail', post_id=post.id) }}" class="action-btn" title="点赞">
+                        <i class="far fa-thumbs-up"></i> {{ post.likes_count }}
+                    </a>
+                </div>
+                
+                {% if session.user_id %}
+                <form method="post" action="{{ url_for('community.like_post', post_id=post.id) }}" style="display: inline;">
+                    <button type="submit" class="action-btn" title="点赞">
+                        <i class="far fa-thumbs-up"></i> 点赞
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+        
+    <!-- 分页 -->
+    <div class="pagination">
+        {% if current_page > 1 %}
+            <a href="{{ url_for('community.index', page=current_page-1, type=filter_type) }}" class="page-link">上一页</a>
+        {% endif %}
+        
+        <span class="page-link active">{{ current_page }}</span>
+        
+        <a href="{{ url_for('community.index', page=current_page+1, type=filter_type) }}" class="page-link">下一页</a>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h3>暂无帖子</h3>
+        <p>成为第一个分享安全检测结果的用户吧！</p>
+        {% if session.user_id %}
+        <a href="{{ url_for('community.create_post') }}" class="create-post-btn">
+            <i class="fas fa-plus"></i> 发布新帖子
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function filterByType(type) {
+    const url = new URL(window.location);
+    if (type) {
+        url.searchParams.set('type', type);
+    } else {
+        url.searchParams.delete('type');
+    }
+    url.searchParams.delete('page');
+    window.location.href = url.toString();
+}
+
+function sortBy(order) {
+    const url = new URL(window.location);
+    url.searchParams.set('order', order);
+    url.searchParams.delete('page');
+    window.location.href = url.toString();
+}
+</script>
+{% endblock %} 

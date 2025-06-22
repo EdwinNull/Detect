@@ -398,6 +398,12 @@
             <button class="btn btn-primary">立即备份</button>
             <button class="btn btn-secondary">清理日志</button>
         </div>
+        
+        <div class="admin-card">
+            <div class="card-title">🌐 抓取开源包</div>
+            <p>自动从NPM/PyPI抓取最新开源包，便于安全检测和样本扩充。</p>
+            <a href="{{ url_for('admin.crawl_packages') }}" class="btn btn-primary" style="width:100%;margin-top:10px;">抓取开源包</a>
+        </div>
     </div>
 </div>
 
