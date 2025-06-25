@@ -3,9 +3,6 @@
 {% block title %}发布帖子 - 安全社区{% endblock %}
 
 {% block extra_css %}
-<<<<<<< HEAD
-<link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
-=======
 <style>
     .create-post-container {
         max-width: 800px;
@@ -160,27 +157,18 @@
         color: #856404;
     }
 </style>
->>>>>>> 7f1897f (latest)
 {% endblock %}
 
 {% block content %}
 <div class="create-post-container">
     <div class="create-post-header">
-<<<<<<< HEAD
-        <h1><i class="fas fa-edit"></i> 发布新帖子</h1>
-=======
         <h1>📝 发布新帖子</h1>
->>>>>>> 7f1897f (latest)
         <p>分享您的安全检测发现，帮助社区用户提高安全意识</p>
     </div>
     
     <div class="create-post-form">
         <div class="tips">
-<<<<<<< HEAD
-            <h4><i class="fas fa-lightbulb"></i> 发帖建议</h4>
-=======
             <h4>💡 发帖建议</h4>
->>>>>>> 7f1897f (latest)
             <ul>
                 <li>详细描述恶意包的特征和行为</li>
                 <li>提供具体的防护建议和解决方案</li>
@@ -191,11 +179,7 @@
         
         {% if scan_record %}
         <div class="scan-info">
-<<<<<<< HEAD
-            <h4><i class="fas fa-box-open"></i> 关联检测记录</h4>
-=======
             <h4>📦 关联检测记录</h4>
->>>>>>> 7f1897f (latest)
             <div class="scan-details">
                 <div class="scan-detail">
                     <span>文件名：</span>
@@ -207,13 +191,7 @@
                 </div>
                 <div class="scan-detail">
                     <span>风险等级：</span>
-<<<<<<< HEAD
-                    <span class="risk-badge risk-{{ scan_record.risk_level or 'low' }}">
-                        {{ scan_record.risk_level or '未知' }}
-                    </span>
-=======
                     <span>{{ scan_record.risk_level or '未知' }}</span>
->>>>>>> 7f1897f (latest)
                 </div>
                 <div class="scan-detail">
                     <span>置信度：</span>
@@ -229,32 +207,14 @@
             {% endif %}
             
             <div class="form-group">
-<<<<<<< HEAD
-                <label for="title" class="form-label">标题 <span style="color: #f56c6c">*</span></label>
-=======
                 <label for="title" class="form-label">标题 *</label>
->>>>>>> 7f1897f (latest)
                 <input type="text" id="title" name="title" class="form-input" 
                        placeholder="请输入帖子标题..." required
                        value="{{ scan_record.filename + ' - 安全检测发现' if scan_record else '' }}">
             </div>
             
             <div class="form-group">
-<<<<<<< HEAD
-                <label for="category" class="form-label">分类</label>
-                <select id="category" name="category" class="form-input">
-                    <option value="discovery" selected>安全发现</option>
-                    <option value="discussion">讨论</option>
-                    <option value="question">问题求助</option>
-                    <option value="tutorial">教程</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="content" class="form-label">内容 <span style="color: #f56c6c">*</span></label>
-=======
                 <label for="content" class="form-label">内容 *</label>
->>>>>>> 7f1897f (latest)
                 <textarea id="content" name="content" class="form-textarea" 
                           placeholder="请详细描述您的发现..." required>{% if scan_record %}
 检测发现：{{ scan_record.filename }}
@@ -273,21 +233,10 @@
             
             <div class="form-actions">
                 <div>
-<<<<<<< HEAD
-                    <a href="{{ url_for('community.index') }}" class="action-btn">
-                        <i class="fas fa-times"></i> 取消
-                    </a>
-                </div>
-                <div>
-                    <button type="submit" class="create-post-btn">
-                        <i class="fas fa-paper-plane"></i> 发布帖子
-                    </button>
-=======
                     <a href="{{ url_for('community.index') }}" class="btn btn-secondary">取消</a>
                 </div>
                 <div>
                     <button type="submit" class="btn btn-primary">发布帖子</button>
->>>>>>> 7f1897f (latest)
                 </div>
             </div>
         </form>

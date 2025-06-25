@@ -3,9 +3,6 @@
 {% block title %}安全社区 - 开源组件包安全检测平台{% endblock %}
 
 {% block extra_css %}
-<<<<<<< HEAD
-<link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
-=======
 <style>
     .community-container {
         max-width: 1400px;
@@ -384,63 +381,10 @@
         color: white;
     }
 </style>
->>>>>>> 7f1897f (latest)
 {% endblock %}
 
 {% block content %}
 <div class="community-container">
-<<<<<<< HEAD
-    <div class="community-header">
-        <h1>安全社区</h1>
-        <p>这里汇集了安全研究者和技术爱好者们的最新发现与讨论。共同探索，共同进步！</p>
-        
-        <a href="{{ url_for('community.create_post') }}" class="create-post-btn">
-            <i class="fas fa-plus-circle"></i> 发布新帖子
-        </a>
-    </div>
-    
-    <div class="community-stats">
-        <div class="stat-card">
-            <div class="stat-number">{{ posts_count }}</div>
-            <div class="stat-label">社区帖子</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ users_count }}</div>
-            <div class="stat-label">注册用户</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ views_count }}</div>
-            <div class="stat-label">总浏览量</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ anomaly_count }}</div>
-            <div class="stat-label">异常报告</div>
-        </div>
-    </div>
-    
-    <div class="filters">
-        <div class="filter-group">
-            <div class="filter-label">筛选：</div>
-            <select class="filter-select" id="categoryFilter">
-                <option value="all" {% if not request.args.get('category') %}selected{% endif %}>全部类别</option>
-                <option value="discussion" {% if request.args.get('category') == 'discussion' %}selected{% endif %}>讨论</option>
-                <option value="discovery" {% if request.args.get('category') == 'discovery' %}selected{% endif %}>安全发现</option>
-                <option value="question" {% if request.args.get('category') == 'question' %}selected{% endif %}>问题求助</option>
-                <option value="tutorial" {% if request.args.get('category') == 'tutorial' %}selected{% endif %}>教程</option>
-            </select>
-            
-            <select class="filter-select" id="sortFilter">
-                <option value="recent" {% if request.args.get('sort') == 'recent' or not request.args.get('sort') %}selected{% endif %}>最新发布</option>
-                <option value="popular" {% if request.args.get('sort') == 'popular' %}selected{% endif %}>最多浏览</option>
-                <option value="liked" {% if request.args.get('sort') == 'liked' %}selected{% endif %}>最多点赞</option>
-                <option value="commented" {% if request.args.get('sort') == 'commented' %}selected{% endif %}>最多评论</option>
-            </select>
-        </div>
-        
-        <div class="action-buttons-group">
-            <a href="{{ url_for('community.anomaly_list') }}" class="action-btn">
-                <i class="fas fa-exclamation-triangle"></i> 异常报告
-=======
     <!-- 社区头部 -->
     <div class="community-header">
         <h1>🔒 安全社区</h1>
@@ -492,38 +436,16 @@
             </a>
             <a href="{{ url_for('user.report_issue') }}" class="btn btn-danger">
                 <i class="fas fa-bug"></i> 上报新的异常
->>>>>>> 7f1897f (latest)
             </a>
         </div>
     </div>
     
-<<<<<<< HEAD
-=======
     <!-- 帖子列表 -->
->>>>>>> 7f1897f (latest)
     {% if posts %}
     <div class="post-grid">
         {% for post in posts %}
         <div class="post-card">
             <div class="post-header">
-<<<<<<< HEAD
-                <a href="{{ url_for('community.post_detail', post_id=post.id) }}" class="post-title">{{ post.title }}</a>
-                
-                <div class="post-meta">
-                    <span><i class="fas fa-user"></i> {{ post.username }}</span>
-                    <span><i class="far fa-calendar"></i> {{ post.created_at }}</span>
-                    <span><i class="far fa-eye"></i> {{ post.views_count }}</span>
-                    <span><i class="far fa-thumbs-up"></i> {{ post.likes_count }}</span>
-                    {% if post.risk_level %}
-                    <span class="risk-badge risk-{{ post.risk_level }}">
-                        <i class="fas fa-shield-alt"></i> {{ post.risk_level }}
-                    </span>
-                    {% endif %}
-                    {% if post.package_type %}
-                    <span class="package-badge package-{{ post.package_type }}">
-                        <i class="fas fa-box"></i> {{ post.package_type.upper() }}
-                    </span>
-=======
                 <a href="{{ url_for('community.post_detail', post_id=post.id) }}" class="post-title">
                     {{ post.title }}
                     {% if post.is_pinned %}
@@ -545,15 +467,11 @@
                     {% endif %}
                     {% if post.risk_level %}
                         <span class="badge risk-badge risk-{{ post.risk_level }}">{{ post.risk_level }}</span>
->>>>>>> 7f1897f (latest)
                     {% endif %}
                 </div>
             </div>
             
             <div class="post-content">
-<<<<<<< HEAD
-                {{ post.content[:150] ~ '...' if post.content|length > 150 else post.content }}
-=======
                 {% if post.content %}
                     {{ post.content[:300]|replace('\n', '<br>')|safe }}{% if post.content|length > 300 %}
                     <a href="{{ url_for('community.post_detail', post_id=post.id) }}" class="read-more">阅读更多...</a>
@@ -561,38 +479,10 @@
                 {% else %}
                     <p class="no-content">暂无内容</p>
                 {% endif %}
->>>>>>> 7f1897f (latest)
             </div>
             
             <div class="post-footer">
                 <div class="post-actions">
-<<<<<<< HEAD
-                    {% if session.user_id %}
-                    <form class="like-form" data-post-id="{{ post.id }}" data-liked="{% if post.id in user_liked_posts %}true{% else %}false{% endif %}">
-                        <button type="submit" class="action-btn {% if post.id in user_liked_posts %}liked{% endif %}">
-                            <i class="{% if post.id in user_liked_posts %}fas{% else %}far{% endif %} fa-thumbs-up"></i>
-                            {% if post.id in user_liked_posts %}已点赞{% else %}点赞{% endif %}
-                            {% if post.likes_count > 0 %}
-                            <span class="likes-count">{{ post.likes_count }}</span>
-                            {% endif %}
-                        </button>
-                    </form>
-                    {% else %}
-                    <span class="action-btn">
-                        <i class="far fa-thumbs-up"></i> 点赞
-                        {% if post.likes_count > 0 %}
-                        <span class="likes-count">{{ post.likes_count }}</span>
-                        {% endif %}
-                    </span>
-                    {% endif %}
-                    <a href="{{ url_for('community.post_detail', post_id=post.id) }}" class="action-btn">
-                        <i class="far fa-comment"></i> {{ post.comments_count if post.comments_count else 0 }} 评论
-                    </a>
-                </div>
-                <a href="{{ url_for('community.post_detail', post_id=post.id) }}" class="action-btn">
-                    <i class="fas fa-angle-right"></i> 阅读全文
-                </a>
-=======
                     <a href="{{ url_for('community.post_detail', post_id=post.id) }}" class="action-btn" title="评论">
                         <i class="far fa-comment"></i> {{ post.comments_count }}
                     </a>
@@ -611,38 +501,10 @@
                     </button>
                 </form>
                 {% endif %}
->>>>>>> 7f1897f (latest)
             </div>
         </div>
         {% endfor %}
     </div>
-<<<<<<< HEAD
-    
-    <div class="pagination">
-        {% if page > 1 %}
-        <a href="{{ url_for('community.index', page=page-1, category=request.args.get('category'), sort=request.args.get('sort')) }}" class="page-link">
-            <i class="fas fa-chevron-left"></i> 上一页
-        </a>
-        {% endif %}
-        
-        {% for p in range(max(1, page-2), min(total_pages+1, page+3)) %}
-        <a href="{{ url_for('community.index', page=p, category=request.args.get('category'), sort=request.args.get('sort')) }}" 
-           class="page-link {% if p == page %}active{% endif %}">{{ p }}</a>
-        {% endfor %}
-        
-        {% if page < total_pages %}
-        <a href="{{ url_for('community.index', page=page+1, category=request.args.get('category'), sort=request.args.get('sort')) }}" class="page-link">
-            下一页 <i class="fas fa-chevron-right"></i>
-        </a>
-        {% endif %}
-    </div>
-    {% else %}
-    <div class="text-center" style="padding: 40px; background: var(--card-bg-color); border-radius: 15px; text-align: center; margin-top: 20px;">
-        <p style="font-size: 18px; color: var(--text-color-light); margin-bottom: 20px;">暂无帖子</p>
-        <a href="{{ url_for('community.create_post') }}" class="create-post-btn">
-            <i class="fas fa-plus-circle"></i> 分享您的发现
-        </a>
-=======
         
     <!-- 分页 -->
     <div class="pagination">
@@ -663,129 +525,11 @@
             <i class="fas fa-plus"></i> 发布新帖子
         </a>
         {% endif %}
->>>>>>> 7f1897f (latest)
     </div>
     {% endif %}
 </div>
 
 <script>
-<<<<<<< HEAD
-    document.addEventListener('DOMContentLoaded', function() {
-        const categoryFilter = document.getElementById('categoryFilter');
-        const sortFilter = document.getElementById('sortFilter');
-        
-        categoryFilter.addEventListener('change', updateFilters);
-        sortFilter.addEventListener('change', updateFilters);
-        
-        function updateFilters() {
-            const category = categoryFilter.value;
-            const sort = sortFilter.value;
-            
-            let url = new URL(window.location);
-            if (category !== 'all') {
-                url.searchParams.set('category', category);
-            } else {
-                url.searchParams.delete('category');
-            }
-            
-            url.searchParams.set('sort', sort);
-            url.searchParams.delete('page');
-            
-            window.location.href = url.toString();
-        }
-    });
-</script>
-{% endblock %}
-
-{% block scripts %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // 获取所有点赞表单
-    const likeForms = document.querySelectorAll('.like-form');
-    
-    likeForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // 获取帖子ID和当前点赞状态
-            const postId = this.getAttribute('data-post-id');
-            const isLiked = this.getAttribute('data-liked') === 'true';
-            
-            // 获取点赞按钮和相关元素
-            const likeBtn = this.querySelector('.action-btn');
-            const likeIcon = likeBtn.querySelector('i');
-            const likesCountSpan = likeBtn.querySelector('.likes-count');
-            
-            // 确定请求URL
-            const url = isLiked 
-                ? `/community/post/${postId}/unlike` 
-                : `/community/post/${postId}/like`;
-            
-            // 发送Ajax请求
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                credentials: 'same-origin'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // 更新表单的data-liked属性
-                    form.setAttribute('data-liked', !isLiked);
-                    
-                    // 切换按钮样式
-                    likeBtn.classList.toggle('liked');
-                    
-                    // 更新图标和文本
-                    if (isLiked) {
-                        likeIcon.classList.replace('fas', 'far');
-                        // 更新文本节点
-                        likeBtn.childNodes.forEach(node => {
-                            if (node.nodeType === Node.TEXT_NODE) {
-                                node.nodeValue = node.nodeValue.replace('已点赞', '点赞');
-                            }
-                        });
-                    } else {
-                        likeIcon.classList.replace('far', 'fas');
-                        // 更新文本节点
-                        likeBtn.childNodes.forEach(node => {
-                            if (node.nodeType === Node.TEXT_NODE) {
-                                node.nodeValue = node.nodeValue.replace('点赞', '已点赞');
-                            }
-                        });
-                    }
-                    
-                    // 更新点赞数
-                    let likesCount = parseInt(likesCountSpan ? likesCountSpan.textContent : '0');
-                    if (isLiked) {
-                        likesCount--;
-                    } else {
-                        likesCount++;
-                    }
-                    
-                    // 更新或创建点赞数徽章
-                    if (likesCount > 0) {
-                        if (likesCountSpan) {
-                            likesCountSpan.textContent = likesCount;
-                        } else {
-                            const newSpan = document.createElement('span');
-                            newSpan.className = 'likes-count';
-                            newSpan.textContent = likesCount;
-                            likeBtn.appendChild(newSpan);
-                        }
-                    } else if (likesCountSpan) {
-                        likesCountSpan.remove();
-                    }
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        });
-    });
-});
-=======
 function filterByType(type) {
     const url = new URL(window.location);
     if (type) {
@@ -803,6 +547,5 @@ function sortBy(order) {
     url.searchParams.delete('page');
     window.location.href = url.toString();
 }
->>>>>>> 7f1897f (latest)
 </script>
 {% endblock %} 

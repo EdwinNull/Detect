@@ -3,10 +3,6 @@
 {% block title %}异常报告中心 - 安全社区{% endblock %}
 
 {% block extra_css %}
-<<<<<<< HEAD
-<link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
-=======
->>>>>>> 7f1897f (latest)
 <style>
     .anomaly-center-container {
         max-width: 1100px;
@@ -90,34 +86,6 @@
 
 {% block content %}
 <div class="anomaly-center-container">
-<<<<<<< HEAD
-    <div class="community-header">
-        <h1><i class="fas fa-exclamation-triangle"></i> 异常报告中心</h1>
-        <p>这里汇总了社区用户提交的所有检测结果异常报告，共建更安全的开源生态</p>
-    </div>
-
-    {% if reports %}
-    <div class="filters">
-        <div class="filter-group">
-            <div class="filter-label">筛选：</div>
-            <select class="filter-select" id="statusFilter">
-                <option value="all" {% if not request.args.get('status') %}selected{% endif %}>所有状态</option>
-                <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>待处理</option>
-                <option value="investigating" {% if request.args.get('status') == 'investigating' %}selected{% endif %}>调查中</option>
-                <option value="resolved" {% if request.args.get('status') == 'resolved' %}selected{% endif %}>已解决</option>
-                <option value="dismissed" {% if request.args.get('status') == 'dismissed' %}selected{% endif %}>已驳回</option>
-            </select>
-        </div>
-        
-        <div class="action-buttons-group">
-            <a href="{{ url_for('community.report_anomaly') }}" class="create-post-btn">
-                <i class="fas fa-bug"></i> 上报新异常
-            </a>
-        </div>
-    </div>
-    
-    <div class="report-table-container" style="border-radius: 15px; overflow: hidden;">
-=======
     <div class="page-header">
         <h1>异常报告中心</h1>
         <p>这里汇总了社区用户提交的所有检测结果异常报告。感谢每一位贡献者！</p>
@@ -125,7 +93,6 @@
 
     <div class="report-list">
         {% if reports %}
->>>>>>> 7f1897f (latest)
         <table class="report-table">
             <thead>
                 <tr>
@@ -143,10 +110,6 @@
                     <td><strong>{{ report.scan_record.filename if report.scan_record else 'N/A' }}</strong></td>
                     <td>
                         <div class="user-info">
-<<<<<<< HEAD
-                            <i class="fas fa-user"></i>
-=======
->>>>>>> 7f1897f (latest)
                             <span>{{ report.user.username if report.user else '匿名' }}</span>
                         </div>
                     </td>
@@ -154,93 +117,17 @@
                     <td>{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                     <td><span class="status-badge status-{{ report.status }}">{{ report.status }}</span></td>
                     <td>
-<<<<<<< HEAD
-                        <div style="display: flex; gap: 8px;">
-                            <a href="{{ url_for('scan.result', scan_id=report.scan_record_id) if report.scan_record_id else '#' }}" 
-                               class="action-btn" {% if not report.scan_record_id %}disabled{% endif %}>
-                                <i class="fas fa-search"></i> 查看
-                            </a>
-                            {% if session.role == 'admin' %}
-                            <a href="{{ url_for('admin.update_report_status', report_id=report.id) }}" class="action-btn">
-                                <i class="fas fa-edit"></i> 更新
-                            </a>
-                            {% endif %}
-                        </div>
-=======
                         <a href="{{ url_for('scan.result', scan_id=report.scan_record_id) }}" class="action-btn">查看扫描</a>
->>>>>>> 7f1897f (latest)
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-<<<<<<< HEAD
-    </div>
-    
-    {% if total_pages > 1 %}
-    <div class="pagination">
-        {% if page > 1 %}
-        <a href="{{ url_for('community.anomaly_list', page=page-1, status=request.args.get('status')) }}" class="page-link">
-            <i class="fas fa-chevron-left"></i> 上一页
-        </a>
-        {% endif %}
-        
-        {% for p in range(max(1, page-2), min(total_pages+1, page+3)) %}
-        <a href="{{ url_for('community.anomaly_list', page=p, status=request.args.get('status')) }}" 
-           class="page-link {% if p == page %}active{% endif %}">{{ p }}</a>
-        {% endfor %}
-        
-        {% if page < total_pages %}
-        <a href="{{ url_for('community.anomaly_list', page=page+1, status=request.args.get('status')) }}" class="page-link">
-            下一页 <i class="fas fa-chevron-right"></i>
-        </a>
-        {% endif %}
-    </div>
-    {% endif %}
-    
-    {% else %}
-    <div class="page-header">
-        <h1>异常报告中心</h1>
-        <p>这里汇总了社区用户提交的所有检测结果异常报告。感谢每一位贡献者！</p>
-    </div>
-    
-    <div style="text-align: center; padding: 40px; background: var(--card-bg-color); border-radius: 15px; margin-top: 20px;">
-        <p style="font-size: 18px; color: var(--text-color-light); margin-bottom: 20px;">
-            <i class="fas fa-check-circle" style="font-size: 48px; color: var(--success-color); margin-bottom: 20px; display: block;"></i>
-            太棒了！目前没有需要处理的异常报告。
-        </p>
-        <a href="{{ url_for('community.report_anomaly') }}" class="create-post-btn">
-            <i class="fas fa-bug"></i> 上报新异常
-        </a>
-    </div>
-    {% endif %}
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const statusFilter = document.getElementById('statusFilter');
-            
-            statusFilter.addEventListener('change', function() {
-                const status = statusFilter.value;
-                let url = new URL(window.location);
-                
-                if (status !== 'all') {
-                    url.searchParams.set('status', status);
-                } else {
-                    url.searchParams.delete('status');
-                }
-                
-                url.searchParams.delete('page');
-                window.location.href = url.toString();
-            });
-        });
-    </script>
-=======
         {% else %}
         <div class="text-center" style="padding: 40px; background: white; border-radius: 15px;">
             <p>太棒了！目前没有需要处理的异常报告。</p>
         </div>
         {% endif %}
     </div>
->>>>>>> 7f1897f (latest)
 </div>
 {% endblock %} 
