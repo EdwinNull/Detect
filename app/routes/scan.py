@@ -28,10 +28,6 @@ import joblib
 from xgboost import XGBClassifier
 import warnings
 import subprocess
-<<<<<<< HEAD
-import sys
-=======
->>>>>>> 7f1897f (latest)
 warnings.filterwarnings('ignore')
 
 scan_bp = Blueprint('scan', __name__)
@@ -44,104 +40,6 @@ def scan():
 @scan_bp.route('/upload', methods=['POST'])
 @login_required
 def upload_file():
-<<<<<<< HEAD
-    try:
-        if 'user_id' not in session:
-            return jsonify({'error': '请先登录'}), 401
-        if 'file' not in request.files:
-            return jsonify({'error': '没有选择文件'}), 400
-        
-        file = request.files['file']
-        if file.filename == '':
-            return jsonify({'error': '没有选择文件'}), 400
-            
-        if file:
-            # 确保上传目录存在
-            os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
-            
-            filename = secure_filename(file.filename)
-            file_path = os.path.join(Config.UPLOAD_FOLDER, filename)
-            
-            # 检查文件后缀是否合法
-            allowed_extensions = ['.zip', '.tar.gz', '.tgz', '.whl', '.jar', '.npm']
-            file_ext = os.path.splitext(filename)[1].lower()
-            if not any(filename.lower().endswith(ext) for ext in allowed_extensions):
-                return jsonify({'error': f'不支持的文件类型。请上传 {", ".join(allowed_extensions)} 格式的文件'}), 400
-            
-            # 保存文件
-            try:
-                file.save(file_path)
-            except Exception as e:
-                print(f"文件保存失败: {str(e)}")
-                return jsonify({'error': '文件保存失败，请重试'}), 500
-                
-            # 计算文件哈希
-            try:
-                with open(file_path, 'rb') as f:
-                    file_hash = hashlib.md5(f.read()).hexdigest()
-                file_size = os.path.getsize(file_path)
-            except Exception as e:
-                print(f"文件处理失败: {str(e)}")
-                if os.path.exists(file_path):
-                    os.remove(file_path)
-                return jsonify({'error': '文件处理失败，请重试'}), 500
-            
-            # 检测包类型
-            try:
-                package_type = detect_package_type(file_path)
-            except Exception as e:
-                print(f"包类型检测失败: {str(e)}")
-                package_type = 'unknown'
-            
-            # 创建扫描记录
-            try:
-                conn = sqlite3.connect(Config.DATABASE_PATH)
-                cursor = conn.cursor()
-                cursor.execute('''
-                    INSERT INTO scan_records (user_id, filename, file_size, file_hash, scan_status, package_type)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ''', (session['user_id'], filename, file_size, file_hash, 'pending', package_type))
-                scan_id = cursor.lastrowid
-                conn.commit()
-                conn.close()
-            except Exception as e:
-                print(f"数据库操作失败: {str(e)}")
-                if os.path.exists(file_path):
-                    os.remove(file_path)
-                return jsonify({'error': '创建扫描记录失败，请重试'}), 500
-            
-            # 初始化任务状态
-            scan_tasks[scan_id] = {
-                'status': 'pending',
-                'progress': 0,
-                'current_task': '开始检测'
-            }
-            
-            # 启动后台扫描任务
-            try:
-                thread = threading.Thread(target=background_scan, args=(scan_id, file_path, session['user_id']))
-                thread.daemon = True
-                thread.start()
-            except Exception as e:
-                print(f"启动扫描线程失败: {str(e)}")
-                # 更新任务状态为失败
-                conn = sqlite3.connect(Config.DATABASE_PATH)
-                cursor = conn.cursor()
-                cursor.execute('UPDATE scan_records SET scan_status = "failed", error_message = ? WHERE id = ?', 
-                            (str(e), scan_id))
-                conn.commit()
-                conn.close()
-                return jsonify({'error': '启动扫描失败，请重试'}), 500
-            
-            return jsonify({
-                'success': True,
-                'scan_id': scan_id,
-                'message': '文件上传成功，开始检测'
-            })
-    except Exception as e:
-        print(f"上传处理过程中发生未捕获的错误: {str(e)}")
-        return jsonify({'error': '上传过程中发生错误，请重试'}), 500
-=======
     if 'user_id' not in session:
         return jsonify({'error': '请先登录'}), 401
     if 'file' not in request.files:
@@ -185,7 +83,6 @@ def upload_file():
             'scan_id': scan_id,
             'message': '文件上传成功，开始检测'
         })
->>>>>>> 7f1897f (latest)
 
 @scan_bp.route('/scan_status/<int:scan_id>')
 @login_required
@@ -426,35 +323,6 @@ def delete_record(scan_id):
     
     return jsonify({'success': True, 'message': '记录已删除'})
 
-<<<<<<< HEAD
-@scan_bp.route('/crawl_packages', methods=['GET', 'POST'])
-@login_required
-def crawl_packages():
-    # 检查用户是否有管理员权限
-    if session.get('role') != 'admin':
-        flash('需要管理员权限来访问此功能', 'error')
-        return redirect(url_for('user.index'))
-        
-    result = None
-    if request.method == 'POST':
-        pkg_type = request.form.get('pkg_type', 'npm')
-        limit = request.form.get('limit', 5)
-        try:
-            limit = int(limit)
-        except Exception:
-            limit = 5
-        # 构造命令
-        script_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'scripts', 'package_crawler.py')
-        if pkg_type not in ['npm', 'pypi']:
-            pkg_type = 'npm'
-        cmd = [sys.executable, script_path, pkg_type, str(limit)]
-        try:
-            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-            result = proc.stdout + '\n' + proc.stderr
-        except Exception as e:
-            result = f'抓取失败: {e}'
-    return render_template('crawl_packages.html', result=result)
-=======
 # 辅助函数：下载包并返回路径
 def download_package(pkg_name, pkg_version, pkg_type):
     download_dir = Config.UPLOAD_FOLDER
@@ -547,4 +415,3 @@ def crawl_and_scan():
         'scan_id': scan_id,
         'message': '包抓取成功，已加入扫描队列'
     })
->>>>>>> 7f1897f (latest)

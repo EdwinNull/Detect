@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>登录 - 开源组件包安全检测平台</title>
-<<<<<<< HEAD
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css">
-=======
->>>>>>> 7f1897f (latest)
     <style>
         * {
             margin: 0;
@@ -17,11 +13,7 @@
         
         body {
             font-family: 'Microsoft YaHei', sans-serif;
-<<<<<<< HEAD
-            background: #f5f6fa;
-=======
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
->>>>>>> 7f1897f (latest)
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -30,99 +22,6 @@
         }
         
         .login-container {
-<<<<<<< HEAD
-            display: flex;
-            max-width: 900px;
-            width: 100%;
-            background: white;
-            border-radius: 6px;
-            overflow: hidden;
-            box-shadow: 0 5px 30px rgba(0,0,0,0.1);
-        }
-        
-        .login-banner {
-            flex: 1;
-            background: linear-gradient(135deg, #1a1f36 0%, #2a3042 100%);
-            color: white;
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .login-banner::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 100%;
-            height: 100%;
-            background: url('https://cdn-icons-png.flaticon.com/512/2092/2092757.png') no-repeat right center;
-            background-size: contain;
-            opacity: 0.1;
-        }
-        
-        .banner-header {
-            position: relative;
-            z-index: 2;
-        }
-        
-        .banner-title {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 15px;
-        }
-        
-        .banner-subtitle {
-            font-size: 16px;
-            opacity: 0.8;
-            line-height: 1.6;
-        }
-        
-        .banner-features {
-            position: relative;
-            z-index: 2;
-            margin-top: 40px;
-        }
-        
-        .feature-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .feature-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: rgba(0, 200, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-        }
-        
-        .feature-icon i {
-            color: #00c8ff;
-            font-size: 16px;
-        }
-        
-        .feature-text {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-        
-        .login-form {
-            flex: 1;
-            padding: 40px;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-=======
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             padding: 40px;
@@ -134,45 +33,10 @@
         
         .logo {
             text-align: center;
->>>>>>> 7f1897f (latest)
             margin-bottom: 30px;
         }
         
         .logo-icon {
-<<<<<<< HEAD
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #1a1f36;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 10px;
-        }
-        
-        .logo-icon i {
-            color: #00c8ff;
-            font-size: 20px;
-        }
-        
-        .logo-text {
-            color: #1a1f36;
-            font-size: 20px;
-            font-weight: 700;
-        }
-        
-        .form-title {
-            color: #1a1f36;
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-        
-        .form-subtitle {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 30px;
-=======
             font-size: 48px;
             margin-bottom: 15px;
         }
@@ -187,24 +51,15 @@
         .logo-subtitle {
             color: #666;
             font-size: 14px;
->>>>>>> 7f1897f (latest)
         }
         
         .form-group {
             margin-bottom: 20px;
-<<<<<<< HEAD
-            position: relative;
-=======
->>>>>>> 7f1897f (latest)
         }
         
         .form-label {
             display: block;
-<<<<<<< HEAD
-            color: #1a1f36;
-=======
             color: #333;
->>>>>>> 7f1897f (latest)
             font-size: 14px;
             font-weight: 600;
             margin-bottom: 8px;
@@ -212,69 +67,27 @@
         
         .form-input {
             width: 100%;
-<<<<<<< HEAD
-            padding: 12px 15px 12px 40px;
-            border: 1px solid #e6e8eb;
-            border-radius: 4px;
-            font-size: 14px;
-            transition: all 0.3s ease;
-=======
             padding: 12px 15px;
             border: 2px solid #e5e7eb;
             border-radius: 8px;
             font-size: 14px;
             transition: border-color 0.3s ease;
->>>>>>> 7f1897f (latest)
         }
         
         .form-input:focus {
             outline: none;
-<<<<<<< HEAD
-            border-color: #00c8ff;
-            box-shadow: 0 0 0 3px rgba(0, 200, 255, 0.15);
-        }
-        
-        .input-icon {
-            position: absolute;
-            left: 15px;
-            top: 38px;
-            color: #adb5bd;
-=======
             border-color: #667eea;
->>>>>>> 7f1897f (latest)
         }
         
         .btn {
             width: 100%;
             padding: 12px;
             border: none;
-<<<<<<< HEAD
-            border-radius: 4px;
-=======
             border-radius: 8px;
->>>>>>> 7f1897f (latest)
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-<<<<<<< HEAD
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .btn i {
-            margin-right: 8px;
-        }
-        
-        .btn-primary {
-            background: #00c8ff;
-            color: #1a1f36;
-        }
-        
-        .btn-primary:hover {
-            box-shadow: 0 4px 12px rgba(0, 200, 255, 0.3);
-=======
         }
         
         .btn-primary {
@@ -286,7 +99,6 @@
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
->>>>>>> 7f1897f (latest)
         }
         
         .flash-messages {
@@ -295,23 +107,6 @@
         
         .flash-message {
             padding: 12px 15px;
-<<<<<<< HEAD
-            border-radius: 4px;
-            margin-bottom: 10px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .flash-message i {
-            margin-right: 10px;
-        }
-        
-        .flash-error {
-            background: rgba(220, 53, 69, 0.1);
-            color: #dc3545;
-            border-left: 4px solid #dc3545;
-=======
             border-radius: 8px;
             margin-bottom: 10px;
             font-size: 14px;
@@ -321,31 +116,10 @@
             background: #fee;
             color: #c33;
             border: 1px solid #fcc;
->>>>>>> 7f1897f (latest)
         }
         
         .demo-info {
             margin-top: 30px;
-<<<<<<< HEAD
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 4px;
-            border: 1px solid #e6e8eb;
-        }
-        
-        .demo-title {
-            color: #1a1f36;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .demo-title i {
-            color: #00c8ff;
-            margin-right: 8px;
-=======
             padding: 20px;
             background: rgba(248, 249, 255, 0.8);
             border-radius: 10px;
@@ -357,40 +131,21 @@
             font-size: 14px;
             font-weight: 600;
             margin-bottom: 10px;
->>>>>>> 7f1897f (latest)
         }
         
         .demo-account {
             color: #666;
-<<<<<<< HEAD
-            font-size: 13px;
-=======
             font-size: 12px;
->>>>>>> 7f1897f (latest)
             line-height: 1.5;
         }
         
         .demo-account strong {
-<<<<<<< HEAD
-            color: #1a1f36;
-=======
             color: #333;
->>>>>>> 7f1897f (latest)
         }
         
         .register-link {
             margin-top: 20px;
             text-align: center;
-<<<<<<< HEAD
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .register-link a {
-            color: #00c8ff;
-            text-decoration: none;
-            font-weight: 600;
-=======
         }
         
         .register-link a {
@@ -398,124 +153,16 @@
             text-decoration: none;
             font-weight: 600;
             font-size: 14px;
->>>>>>> 7f1897f (latest)
             transition: all 0.3s ease;
         }
         
         .register-link a:hover {
             text-decoration: underline;
         }
-<<<<<<< HEAD
-        
-        @media (max-width: 768px) {
-            .login-container {
-                flex-direction: column;
-            }
-            
-            .login-banner {
-                padding: 30px;
-            }
-            
-            .banner-features {
-                display: none;
-            }
-        }
-=======
->>>>>>> 7f1897f (latest)
     </style>
 </head>
 <body>
     <div class="login-container">
-<<<<<<< HEAD
-        <div class="login-banner">
-            <div class="banner-header">
-                <div class="banner-title">开源组件包安全检测平台</div>
-                <div class="banner-subtitle">保障您的软件供应链安全，检测开源组件包中的恶意代码和安全风险</div>
-            </div>
-            
-            <div class="banner-features">
-                <div class="feature-item">
-                    <div class="feature-icon">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <div class="feature-text">先进的恶意代码检测技术</div>
-                </div>
-                
-                <div class="feature-item">
-                    <div class="feature-icon">
-                        <i class="fas fa-brain"></i>
-                    </div>
-                    <div class="feature-text">AI驱动的安全风险分析</div>
-                </div>
-                
-                <div class="feature-item">
-                    <div class="feature-icon">
-                        <i class="fas fa-project-diagram"></i>
-                    </div>
-                    <div class="feature-text">完整的依赖链安全评估</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="login-form">
-            <div class="logo">
-                <div class="logo-icon">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-                <div class="logo-text">安全检测平台</div>
-            </div>
-            
-            <div class="form-title">欢迎登录</div>
-            <div class="form-subtitle">请输入您的账号信息</div>
-            
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div class="flash-messages">
-                        {% for category, message in messages %}
-                            <div class="flash-message flash-{{ category }}">
-                                {% if category == 'error' %}
-                                    <i class="fas fa-exclamation-circle"></i>
-                                {% else %}
-                                    <i class="fas fa-info-circle"></i>
-                                {% endif %}
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            {% endwith %}
-            
-            <form method="POST">
-                <div class="form-group">
-                    <label for="username" class="form-label">用户名</label>
-                    <i class="fas fa-user input-icon"></i>
-                    <input type="text" id="username" name="username" class="form-input" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="password" class="form-label">密码</label>
-                    <i class="fas fa-lock input-icon"></i>
-                    <input type="password" id="password" name="password" class="form-input" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-sign-in-alt"></i> 登录
-                </button>
-            </form>
-            
-            <div class="register-link">
-                没有账号？<a href="{{ url_for('auth.register') }}">注册</a>
-            </div>
-            
-            <div class="demo-info">
-                <div class="demo-title">
-                    <i class="fas fa-info-circle"></i> 演示账户
-                </div>
-                <div class="demo-account">
-                    <strong>管理员：</strong>用户名 admin，密码 admin123<br>
-                    <strong>普通用户：</strong>用户名 user，密码 user123<br>
-                </div>
-=======
         <div class="logo">
             <div class="logo-icon">🔒</div>
             <div class="logo-text">安全检测平台</div>
@@ -555,7 +202,6 @@
             <div class="demo-account">
                 <strong>管理员：</strong>用户名 admin，密码 admin123<br>
                 <strong>普通用户：</strong>用户名 user，密码 user123<br>
->>>>>>> 7f1897f (latest)
             </div>
         </div>
     </div>

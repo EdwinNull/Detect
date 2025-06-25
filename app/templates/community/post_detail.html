@@ -3,9 +3,6 @@
 {% block title %}{{ post.title }} - 安全社区{% endblock %}
 
 {% block extra_css %}
-<<<<<<< HEAD
-<link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
-=======
 <style>
     .post-detail-container {
         max-width: 1000px;
@@ -218,87 +215,10 @@
         color: white;
     }
 </style>
->>>>>>> 7f1897f (latest)
 {% endblock %}
 
 {% block content %}
 <div class="post-detail-container">
-<<<<<<< HEAD
-    <a href="{{ url_for('community.index') }}" class="back-btn">
-        <i class="fas fa-arrow-left"></i> 返回社区
-    </a>
-    
-    <!-- 帖子头部 -->
-    <div class="post-detail-header">
-        <h1 class="post-detail-title">
-            {{ post.title }}
-            {% if post.is_pinned %}
-                <span style="color: var(--warning-color); margin-left: 10px;"><i class="fas fa-thumbtack"></i> 置顶</span>
-            {% endif %}
-            {% if post.is_verified %}
-                <span style="color: var(--success-color); margin-left: 10px;"><i class="fas fa-check-circle"></i> 已验证</span>
-            {% endif %}
-        </h1>
-        
-        <div class="post-detail-meta">
-            <span><i class="fas fa-user"></i> {{ post.username }}</span>
-            <span><i class="far fa-calendar"></i> {{ post.created_at }}</span>
-            <span><i class="far fa-eye"></i> {{ post.views_count }} 浏览</span>
-            <span><i class="far fa-thumbs-up"></i> {{ post.likes_count }} 点赞</span>
-            {% if post.package_name %}
-                <span><i class="fas fa-box"></i> {{ post.package_name }}</span>
-            {% endif %}
-            {% if post.package_type %}
-                <span class="package-badge package-{{ post.package_type }}"><i class="fas fa-box"></i> {{ post.package_type.upper() }}</span>
-            {% endif %}
-            {% if post.risk_level %}
-                <span class="risk-badge risk-{{ post.risk_level }}"><i class="fas fa-shield-alt"></i> {{ post.risk_level }}</span>
-            {% endif %}
-            {% if post.confidence %}
-                <span><i class="fas fa-chart-pie"></i> {{ "%.1f"|format(post.confidence) }}% 置信度</span>
-            {% endif %}
-        </div>
-    </div>
-    
-    <!-- 帖子内容 -->
-    <div class="post-detail-content">
-        {{ post.content|replace("\n", "<br>")|safe }}
-    </div>
-    
-    <!-- 帖子操作 -->
-    <div class="post-detail-actions">
-        <div class="left-actions">
-            <form method="post" action="{{ url_for('community.like_post', post_id=post.id) }}" class="like-form" data-post-id="{{ post.id }}" data-liked="{% if user_liked %}true{% else %}false{% endif %}" style="display: inline;">
-                <button type="submit" class="action-btn {% if user_liked %}liked{% endif %}">
-                    <i class="{% if user_liked %}fas{% else %}far{% endif %} fa-thumbs-up"></i> 
-                    {% if user_liked %}已点赞{% else %}点赞{% endif %}
-                    {% if post.likes_count > 0 %}
-                    <span class="likes-count">{{ post.likes_count }}</span>
-                    {% endif %}
-                </button>
-            </form>
-            
-            {% if post.scan_record %}
-            <a href="{{ url_for('scan.result', scan_id=post.scan_record_id) }}" class="action-btn">
-                <i class="fas fa-search"></i> 查看扫描结果
-            </a>
-            {% endif %}
-        </div>
-        
-        <div class="right-actions">
-            {% if session.user_id == post.user_id or session.role == 'admin' %}
-            <a href="{{ url_for('community.edit_post', post_id=post.id) }}" class="action-btn">
-                <i class="fas fa-edit"></i> 编辑
-            </a>
-            <a href="#" class="action-btn report-btn" onclick="if(confirm('确定要删除这篇帖子吗？此操作不可撤销。')) { window.location.href='{{ url_for('community.delete_post', post_id=post.id) }}'; } return false;">
-                <i class="fas fa-trash-alt"></i> 删除
-            </a>
-            {% else %}
-            <a href="{{ url_for('community.report_post', post_id=post.id) }}" class="action-btn report-btn">
-                <i class="fas fa-flag"></i> 举报
-            </a>
-            {% endif %}
-=======
     <a href="{{ url_for('community.index') }}" class="back-btn">← 返回社区</a>
     
     <!-- 帖子头部 -->
@@ -360,35 +280,16 @@
                 🔗 分享
             </a>
             -->
->>>>>>> 7f1897f (latest)
         </div>
     </div>
     
     <!-- 评论区 -->
     <div class="comments-section">
-<<<<<<< HEAD
-        <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 20px; color: var(--text-color);">
-            <i class="far fa-comments"></i> 评论 ({{ comments|length }})
-        </h3>
-=======
         <h3 class="comments-title">评论 ({{ comments|length }})</h3>
->>>>>>> 7f1897f (latest)
         
         {% if session.user_id %}
         <div class="comment-form">
             <form method="post" action="{{ url_for('community.add_comment', post_id=post.id) }}">
-<<<<<<< HEAD
-                <textarea name="content" class="comment-textarea" placeholder="分享你的观点..." required></textarea>
-                <div style="text-align: right;">
-                    <button type="submit" class="comment-submit">
-                        <i class="far fa-paper-plane"></i> 发布评论
-                    </button>
-                </div>
-            </form>
-        </div>
-        {% endif %}
-        
-=======
                 <textarea name="content" class="comment-textarea" 
                           placeholder="写下您的评论..." required></textarea>
                 <button type="submit" class="comment-submit">发表评论</button>
@@ -401,7 +302,6 @@
         {% endif %}
         
         <!-- 评论列表 -->
->>>>>>> 7f1897f (latest)
         {% if comments %}
             {% for comment in comments %}
             <div class="comment-item">
@@ -410,125 +310,15 @@
                     <span class="comment-time">{{ comment.created_at }}</span>
                 </div>
                 <div class="comment-content">
-<<<<<<< HEAD
-                    {{ comment.content|replace("\n", "<br>")|safe }}
-=======
                     {{ comment.content|nl2br }}
->>>>>>> 7f1897f (latest)
                 </div>
             </div>
             {% endfor %}
         {% else %}
-<<<<<<< HEAD
-            <div style="text-align: center; padding: 20px 0; color: var(--text-color-light);">
-                <p>暂无评论，成为第一个评论的人吧！</p>
-=======
             <div style="text-align: center; padding: 40px; color: #666;">
                 <p>暂无评论，成为第一个评论的用户吧！</p>
->>>>>>> 7f1897f (latest)
             </div>
         {% endif %}
     </div>
 </div>
-<<<<<<< HEAD
-{% endblock %}
-
-{% block scripts %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // 获取点赞表单
-    const likeForm = document.querySelector('.like-form');
-    
-    if (likeForm) {
-        // 阻止表单默认提交行为
-        likeForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // 获取帖子ID和当前点赞状态
-            const postId = this.getAttribute('data-post-id');
-            const isLiked = this.getAttribute('data-liked') === 'true';
-            
-            // 获取点赞按钮和相关元素
-            const likeBtn = this.querySelector('.action-btn');
-            const likeIcon = likeBtn.querySelector('i');
-            const likesCountSpan = likeBtn.querySelector('.likes-count');
-            
-            // 确定请求URL
-            const url = isLiked 
-                ? `/community/post/${postId}/unlike` 
-                : `/community/post/${postId}/like`;
-            
-            // 发送Ajax请求
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                credentials: 'same-origin'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // 更新表单的data-liked属性
-                    likeForm.setAttribute('data-liked', !isLiked);
-                    
-                    // 切换点赞状态
-                    likeBtn.classList.toggle('liked');
-                    
-                    // 更新图标和文本
-                    if (isLiked) {
-                        likeIcon.classList.replace('fas', 'far');
-                        // 更新文本节点
-                        likeBtn.childNodes.forEach(node => {
-                            if (node.nodeType === Node.TEXT_NODE) {
-                                node.nodeValue = node.nodeValue.replace('已点赞', '点赞');
-                            }
-                        });
-                    } else {
-                        likeIcon.classList.replace('far', 'fas');
-                        // 更新文本节点
-                        likeBtn.childNodes.forEach(node => {
-                            if (node.nodeType === Node.TEXT_NODE) {
-                                node.nodeValue = node.nodeValue.replace('点赞', '已点赞');
-                            }
-                        });
-                    }
-                    
-                    // 更新点赞数
-                    let likesCount = parseInt(likesCountSpan ? likesCountSpan.textContent : '0');
-                    if (isLiked) {
-                        likesCount--;
-                    } else {
-                        likesCount++;
-                    }
-                    
-                    // 更新或创建点赞数徽章
-                    if (likesCount > 0) {
-                        if (likesCountSpan) {
-                            likesCountSpan.textContent = likesCount;
-                        } else {
-                            const newSpan = document.createElement('span');
-                            newSpan.className = 'likes-count';
-                            newSpan.textContent = likesCount;
-                            likeBtn.appendChild(newSpan);
-                        }
-                    } else if (likesCountSpan) {
-                        likesCountSpan.remove();
-                    }
-                    
-                    // 更新页面上的其他点赞数显示
-                    const metaLikesSpan = document.querySelector('.post-detail-meta span:nth-child(4)');
-                    if (metaLikesSpan) {
-                        metaLikesSpan.innerHTML = `<i class="far fa-thumbs-up"></i> ${likesCount} 点赞`;
-                    }
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        });
-    }
-});
-</script>
-=======
->>>>>>> 7f1897f (latest)
 {% endblock %} 

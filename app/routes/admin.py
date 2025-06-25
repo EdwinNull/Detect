@@ -302,13 +302,8 @@ def user_management():
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     
-<<<<<<< HEAD
-    # 获取所有用户，注册时间代替创建时间
-    cursor.execute('SELECT * FROM users ORDER BY register_time DESC')
-=======
     # 获取所有用户
     cursor.execute('SELECT * FROM users ORDER BY created_at DESC')
->>>>>>> 7f1897f (latest)
     users = cursor.fetchall()
     
     # 统计信息
@@ -363,11 +358,7 @@ def add_user():
     # 创建用户
     password_hash = generate_password_hash(password)
     cursor.execute(
-<<<<<<< HEAD
-        'INSERT INTO users (username, email, password_hash, role, register_time) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)',
-=======
         'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
->>>>>>> 7f1897f (latest)
         (username, email, password_hash, role)
     )
     conn.commit()
@@ -534,9 +525,6 @@ def settings():
     settings = cursor.fetchall()
     conn.close()
     
-<<<<<<< HEAD
-    return render_template('settings.html', settings=settings)
-=======
     return render_template('settings.html', settings=settings)
 
 @admin_bp.route('/crawl_packages', methods=['GET', 'POST'])
@@ -561,4 +549,3 @@ def crawl_packages():
         except Exception as e:
             result = f'抓取失败: {e}'
     return render_template('crawl_packages.html', result=result)
->>>>>>> 7f1897f (latest)

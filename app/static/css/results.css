@@ -1,20 +1,3 @@
-<<<<<<< HEAD
-.results-container {
-    background: #f5f6fa;
-    padding: 20px;
-    margin: 0 auto;
-    max-width: 1200px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
-
-.results-header {
-    margin-bottom: 30px;
-}
-
-.scan-info {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-=======
 /* 奇安信天擎风格 - 安全检测平台样式 */
 
 /* 全局变量 */
@@ -98,16 +81,10 @@ body {
 .scan-info {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
->>>>>>> 7f1897f (latest)
     gap: 20px;
     margin-top: 20px;
 }
 
-<<<<<<< HEAD
-.risk-summary {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-=======
 .scan-info-item {
     background: rgba(30, 41, 59, 0.8);
     padding: 20px;
@@ -134,54 +111,12 @@ body {
 .risk-summary {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
->>>>>>> 7f1897f (latest)
     gap: 30px;
     margin-bottom: 40px;
 }
 
 .risk-level {
     text-align: center;
-<<<<<<< HEAD
-    padding: 20px;
-    border-radius: 10px;
-}
-
-.risk-badge {
-    font-size: 24px;
-    font-weight: bold;
-    margin-top: 10px;
-}
-
-.risk-high {
-    background: #fee2e2;
-    color: #dc2626;
-}
-
-.risk-medium {
-    background: #fef3c7;
-    color: #d97706;
-}
-
-.risk-low {
-    background: #d1fae5;
-    color: #059669;
-}
-
-.risk-unknown {
-    background: #f3f4f6;
-    color: #6b7280;
-}
-
-.confidence-score {
-    text-align: center;
-}
-
-.score-circle {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background: #f3f4f6;
-=======
     padding: 25px;
     border-radius: 16px;
     border: 2px solid transparent;
@@ -264,19 +199,10 @@ body {
     height: 140px;
     border-radius: 50%;
     background: var(--gradient-primary);
->>>>>>> 7f1897f (latest)
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 20px auto;
-<<<<<<< HEAD
-}
-
-.score {
-    font-size: 24px;
-    font-weight: bold;
-    color: #1f2937;
-=======
     box-shadow: var(--shadow-glow);
     position: relative;
 }
@@ -299,7 +225,6 @@ body {
     position: relative;
     z-index: 1;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
->>>>>>> 7f1897f (latest)
 }
 
 .confidence-score .score {
@@ -307,33 +232,6 @@ body {
     font-weight: 700;
 }
 
-<<<<<<< HEAD
-.detection-details {
-    margin-top: 40px;
-}
-
-.mal-advice {
-    list-style-type: disc;
-    padding-left: 20px;
-    margin: 10px 0;
-}
-
-.mal-advice li {
-    margin: 5px 0;
-    color: #374151;
-}
-
-.no-data {
-    color: #6b7280;
-    font-style: italic;
-}
-
-.llm-section {
-    margin: 20px 0;
-    padding: 15px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-=======
 /* 检测详情 */
 .detection-details {
     margin-top: 40px;
@@ -393,145 +291,17 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 12px;
     border-left: 4px solid var(--secondary-blue);
->>>>>>> 7f1897f (latest)
 }
 
 .llm-section h3 {
     margin-bottom: 15px;
-<<<<<<< HEAD
-    color: #1f2937;
-    font-size: 1.2em;
-}
-
-.mal-type, .mal-reason {
-    margin: 10px 0;
-}
-
-.mal-label {
-    font-weight: 600;
-    color: #4b5563;
-}
-
-.mal-value {
-    margin-left: 8px;
-    color: #1f2937;
-}
-
-.mal-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 10px 0;
-}
-
-.mal-table th,
-.mal-table td {
-    padding: 8px;
-    border: 1px solid #e5e7eb;
-    text-align: left;
-}
-
-.mal-table th {
-    background: #f9fafb;
-    font-weight: 600;
-}
-
-.risk-points-list {
-    margin-top: 10px;
-}
-
-.risk-points-list p {
-    margin: 5px 0;
-}
-
-.action-buttons {
-    margin-top: 30px;
-    display: flex;
-    gap: 15px;
-}
-
-.btn {
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-weight: 500;
-    text-decoration: none;
-    transition: background-color 0.2s;
-}
-
-.btn-primary {
-    background: #3b82f6;
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #2563eb;
-}
-
-.btn-secondary {
-    background: #6b7280;
-    color: white;
-}
-
-.btn-secondary:hover {
-    background: #4b5563;
-}
-
-.code-snippet-card {
-    background: #2d2d2d;
-    color: #f8f8f2;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    border-left: 5px solid #ff5555;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-.code-snippet-card h3 {
-    font-size: 1.2em;
-    margin-bottom: 15px;
-    color: #ff5555;
-=======
     color: var(--text-primary);
     font-size: 1.3em;
->>>>>>> 7f1897f (latest)
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-<<<<<<< HEAD
-.code-snippet-card pre {
-    background: #1e1e1e;
-    padding: 15px;
-    border-radius: 5px;
-    overflow-x: auto;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-}
-
-.code-snippet-card code {
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 0.95em;
-}
-
-.code-snippet-card .code-warning {
-    font-size: 0.8em;
-    color: #999;
-    margin-top: 15px;
-    text-align: center;
-}
-
-.detection-details {
-    background: #fff;
-    padding: 20px;
-}
-
-.card-item {
-    background-color: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    margin-bottom: 20px;
-    overflow: hidden;
-=======
 .llm-section h3::before {
     content: '🤖';
     font-size: 1.2em;
@@ -750,23 +520,11 @@ body {
     right: 0;
     height: 3px;
     background: var(--gradient-primary);
->>>>>>> 7f1897f (latest)
 }
 
 .card-header {
     display: flex;
     align-items: center;
-<<<<<<< HEAD
-    gap: 12px;
-    padding: 15px 20px;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
-}
-
-.card-header i {
-    font-size: 1.2em;
-    color: #667eea;
-=======
     gap: 15px;
     padding: 20px 25px;
     background: rgba(30, 41, 59, 0.9);
@@ -776,46 +534,10 @@ body {
 .card-header i {
     font-size: 1.3em;
     color: var(--secondary-blue);
->>>>>>> 7f1897f (latest)
 }
 
 .card-header h3 {
     margin: 0;
-<<<<<<< HEAD
-    font-size: 1.1em;
-    font-weight: 600;
-    color: #343a40;
-}
-
-.card-content {
-    padding: 20px;
-}
-
-.malicious-code-card {
-    background-color: #fff5f5;
-    border: 1px solid #fcc2c3;
-}
-
-.malicious-code-card .card-header {
-    background-color: transparent;
-    border-bottom: none;
-    padding-bottom: 10px;
-}
-
-.malicious-code-card .card-header i {
-    color: #e53e3e;
-}
-
-.malicious-code-card .card-header h3 {
-    color: #c53030;
-}
-
-.code-meta-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 15px;
-=======
     font-size: 1.2em;
     font-weight: 600;
     color: var(--text-primary);
@@ -850,7 +572,6 @@ body {
     grid-template-columns: 1fr 1fr;
     gap: 20px;
     margin-bottom: 20px;
->>>>>>> 7f1897f (latest)
 }
 
 .meta-item {
@@ -864,21 +585,6 @@ body {
 
 .meta-label {
     font-weight: 600;
-<<<<<<< HEAD
-    color: #c53030;
-    margin-bottom: 5px;
-    font-size: 0.9em;
-}
-
-.meta-value {
-    color: #4a5568;
-    font-size: 1em;
-}
-
-.malicious-code-card pre {
-    background: #2d3748;
-    color: #e2e8f0;
-=======
     color: var(--accent-orange);
     margin-bottom: 8px;
     font-size: 0.9em;
@@ -899,748 +605,18 @@ body {
 .malicious-code-card pre {
     background: var(--dark-bg);
     color: var(--text-primary);
->>>>>>> 7f1897f (latest)
     padding: 20px;
     border-radius: 8px;
     overflow-x: auto;
     white-space: pre-wrap;
     word-wrap: break-word;
     font-size: 0.9em;
-<<<<<<< HEAD
-=======
     border: 1px solid var(--border-color);
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
->>>>>>> 7f1897f (latest)
 }
 
 .malicious-code-card code {
     font-family: 'Fira Code', 'Courier New', monospace;
-<<<<<<< HEAD
-}
-
-/* 威胁评分与基本信息 */
-.threat-header {
-    display: flex;
-    background: #1a1f36;
-    border-radius: 8px;
-    overflow: hidden;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.threat-score-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 30px;
-    background: #1a1f36;
-    color: white;
-    min-width: 180px;
-    position: relative;
-}
-
-.threat-score {
-    font-size: 48px;
-    font-weight: 700;
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 15px;
-    position: relative;
-    z-index: 1;
-}
-
-.threat-score::before {
-    content: '';
-    position: absolute;
-    top: -5px;
-    left: -5px;
-    right: -5px;
-    bottom: -5px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.1);
-    z-index: -1;
-}
-
-.threat-score.high {
-    background: linear-gradient(135deg, #ff4d4d 0%, #dc2626 100%);
-    color: white;
-}
-
-.threat-score.medium {
-    background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
-    color: white;
-}
-
-.threat-score.low {
-    background: linear-gradient(135deg, #34d399 0%, #059669 100%);
-    color: white;
-}
-
-.threat-score.unknown {
-    background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
-    color: white;
-}
-
-.threat-level-text {
-    font-size: 16px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.package-info {
-    flex: 1;
-    padding: 30px;
-    color: white;
-}
-
-.package-name {
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 15px;
-}
-
-.package-meta {
-    font-size: 14px;
-}
-
-.meta-row {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-    gap: 15px;
-}
-
-.meta-label {
-    font-size: 0.9em;
-    color: #6b7280;
-    font-weight: 500;
-    margin-right: 5px;
-}
-
-.meta-value {
-    font-size: 0.95em;
-    color: #374151;
-    font-weight: 600;
-}
-
-.meta-tag {
-    display: inline-block;
-    padding: 2px 10px;
-    background: rgba(0, 200, 255, 0.2);
-    border: 1px solid rgba(0, 200, 255, 0.4);
-    border-radius: 12px;
-    color: #00c8ff;
-    font-size: 12px;
-    font-weight: 600;
-    margin-right: 8px;
-}
-
-/* 威胁详情卡片 */
-.threat-details-card {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-
-.threat-details-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 15px;
-}
-
-.detail-item {
-    display: flex;
-    align-items: center;
-}
-
-.detail-label {
-    color: #64748b;
-    font-size: 14px;
-    font-weight: 500;
-    margin-right: 10px;
-    min-width: 100px;
-}
-
-.detail-value {
-    color: #1e293b;
-    font-weight: 500;
-}
-
-/* 通用部分标题样式 */
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.section-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.section-title i {
-    color: #00c8ff;
-    font-size: 18px;
-}
-
-.section-title h3 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0;
-}
-
-/* 威胁评估雷达图 */
-.threat-assessment {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-
-.assessment-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-@media (max-width: 768px) {
-    .assessment-content {
-        grid-template-columns: 1fr;
-    }
-}
-
-.radar-chart-container {
-    width: 100%;
-    height: 300px;
-}
-
-.assessment-details {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-}
-
-.assessment-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.assessment-label {
-    width: 100px;
-    font-size: 14px;
-    color: #64748b;
-}
-
-.assessment-bar {
-    flex: 1;
-    height: 8px;
-    background: #e2e8f0;
-    border-radius: 4px;
-    margin: 0 15px;
-    overflow: hidden;
-}
-
-.assessment-progress {
-    height: 100%;
-    background: linear-gradient(90deg, #00c8ff 0%, #0077ff 100%);
-    border-radius: 4px;
-}
-
-.assessment-value {
-    width: 30px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #1e293b;
-}
-
-/* 漏洞技术信息 */
-.vulnerability-info {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-
-.vulnerability-details {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.vulnerability-details li {
-    display: flex;
-    align-items: flex-start;
-    padding: 12px 0;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.vulnerability-details li:last-child {
-    border-bottom: none;
-}
-
-.vuln-icon {
-    width: 24px;
-    color: #00c8ff;
-    margin-right: 10px;
-}
-
-.vuln-type {
-    width: 140px;
-    font-weight: 500;
-    color: #64748b;
-}
-
-.vuln-value {
-    flex: 1;
-    color: #1e293b;
-}
-
-/* 安全活动事件分析 */
-.security-events {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-
-.event-item {
-    display: flex;
-    align-items: flex-start;
-    padding: 15px;
-    background: #f8fafc;
-    border-radius: 6px;
-    margin-bottom: 15px;
-}
-
-.event-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: rgba(0, 200, 255, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 15px;
-    color: #00c8ff;
-}
-
-.event-details {
-    flex: 1;
-}
-
-.event-title {
-    font-weight: 600;
-    margin-bottom: 5px;
-    color: #1e293b;
-}
-
-.event-description {
-    color: #64748b;
-    font-size: 14px;
-    line-height: 1.5;
-}
-
-.more-details {
-    text-align: center;
-    margin-top: 15px;
-}
-
-.details-link {
-    color: #00c8ff;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 14px;
-    display: inline-flex;
-    align-items: center;
-}
-
-.details-link i {
-    margin-left: 5px;
-    font-size: 12px;
-}
-
-/* 模型分析结果 */
-.model-analysis {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-
-.section-tabs {
-    display: flex;
-    gap: 10px;
-}
-
-.tab {
-    padding: 8px 15px;
-    border-radius: 4px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.tab:hover {
-    background: #f1f5f9;
-}
-
-.tab.active {
-    background: #00c8ff;
-    color: white;
-}
-
-.tab-content {
-    margin-top: 20px;
-}
-
-.tab-pane {
-    display: none;
-}
-
-.tab-pane.active {
-    display: block;
-}
-
-.model-result-card {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-}
-
-.model-result-item {
-    background: #f8fafc;
-    border-radius: 6px;
-    padding: 20px;
-    text-align: center;
-}
-
-.result-label {
-    font-size: 14px;
-    color: #64748b;
-    margin-bottom: 10px;
-}
-
-.result-value {
-    font-size: 24px;
-    font-weight: 600;
-    color: #1e293b;
-}
-
-.result-value.danger {
-    color: #dc2626;
-}
-
-.result-value.success {
-    color: #059669;
-}
-
-.model-error {
-    text-align: center;
-    padding: 30px;
-    color: #64748b;
-}
-
-.model-error i {
-    font-size: 40px;
-    color: #cbd5e1;
-    margin-bottom: 15px;
-}
-
-.error-hint {
-    font-size: 14px;
-    color: #94a3b8;
-    margin-top: 10px;
-}
-
-/* LLM分析 */
-.llm-analysis {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.llm-section {
-    background: #f8fafc;
-    border-radius: 6px;
-    overflow: hidden;
-}
-
-.llm-section-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 15px;
-    background: #f1f5f9;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.llm-section-header i {
-    color: #00c8ff;
-}
-
-.llm-section-header h4 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: #1e293b;
-}
-
-.llm-section-content {
-    padding: 15px;
-}
-
-.llm-item {
-    margin-bottom: 10px;
-}
-
-.llm-label {
-    font-weight: 500;
-    color: #64748b;
-    margin-right: 8px;
-}
-
-.llm-value {
-    color: #1e293b;
-}
-
-.features-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.features-table th,
-.features-table td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.features-table th {
-    font-weight: 600;
-    color: #64748b;
-    background: #f1f5f9;
-}
-
-.advice-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.advice-list li {
-    display: flex;
-    align-items: flex-start;
-    margin-bottom: 10px;
-    line-height: 1.5;
-}
-
-.advice-list li i {
-    color: #00c8ff;
-    margin-right: 10px;
-    margin-top: 3px;
-}
-
-.no-data {
-    color: #94a3b8;
-    font-style: italic;
-    text-align: center;
-    padding: 20px;
-}
-
-/* 特征分析 */
-.features-analysis {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
-}
-
-.features-chart {
-    width: 100%;
-    height: 300px;
-}
-
-.features-list {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.feature-item {
-    display: flex;
-    align-items: center;
-}
-
-.feature-name {
-    width: 150px;
-    font-size: 14px;
-    color: #64748b;
-}
-
-.feature-bar {
-    flex: 1;
-    height: 8px;
-    background: #e2e8f0;
-    border-radius: 4px;
-    margin: 0 15px;
-    overflow: hidden;
-}
-
-.feature-progress {
-    height: 100%;
-    background: linear-gradient(90deg, #00c8ff 0%, #0077ff 100%);
-    border-radius: 4px;
-}
-
-.feature-value {
-    width: 50px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #1e293b;
-    text-align: right;
-}
-
-/* 漏洞详情 */
-.vulnerability-detail {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-
-.code-meta-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.meta-item {
-    display: flex;
-    flex-direction: column;
-}
-
-.meta-item.full-width {
-    grid-column: 1 / -1;
-}
-
-.meta-label {
-    font-size: 14px;
-    color: #64748b;
-    margin-bottom: 5px;
-}
-
-.meta-value {
-    font-weight: 500;
-    color: #1e293b;
-}
-
-.code-snippet {
-    background: #1a1f36;
-    border-radius: 6px;
-    overflow: hidden;
-}
-
-.code-header {
-    padding: 10px 15px;
-    background: #2a3042;
-    color: #e2e8f0;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.code-snippet pre {
-    margin: 0;
-    padding: 15px;
-    overflow-x: auto;
-}
-
-.code-snippet code {
-    font-family: 'Courier New', Courier, monospace;
-    color: #e2e8f0;
-    font-size: 14px;
-}
-
-/* 操作按钮 */
-.action-buttons {
-    display: flex;
-    gap: 15px;
-    margin-top: 30px;
-}
-
-.btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-weight: 500;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    border: none;
-    cursor: pointer;
-}
-
-.btn-primary {
-    background: #00c8ff;
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #0099cc;
-}
-
-.btn-secondary {
-    background: #64748b;
-    color: white;
-}
-
-.btn-secondary:hover {
-    background: #475569;
-}
-
-.btn-danger {
-    background: #dc2626;
-    color: white;
-}
-
-.btn-danger:hover {
-    background: #b91c1c;
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-    .threat-header {
-        flex-direction: column;
-    }
-    
-    .threat-score-container {
-        padding: 20px;
-    }
-    
-    .model-result-card {
-=======
     color: #e2e8f0;
 }
 
@@ -1656,7 +632,6 @@ body {
     }
     
     .scan-info {
->>>>>>> 7f1897f (latest)
         grid-template-columns: 1fr;
     }
     
@@ -1664,12 +639,6 @@ body {
         flex-direction: column;
     }
     
-<<<<<<< HEAD
-    .btn {
-        width: 100%;
-        justify-content: center;
-    }
-=======
     .code-meta-grid {
         grid-template-columns: 1fr;
     }
@@ -1711,5 +680,4 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--primary-blue);
->>>>>>> 7f1897f (latest)
 } 

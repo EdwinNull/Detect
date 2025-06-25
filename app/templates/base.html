@@ -1,54 +1,9 @@
 <!DOCTYPE html>
-<<<<<<< HEAD
-<html lang="zh-CN" data-theme="light">
-=======
 <html lang="zh-CN">
->>>>>>> 7f1897f (latest)
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}开源组件包安全检测平台{% endblock %}</title>
-<<<<<<< HEAD
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
-    {% if request.path.startswith('/community') %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
-    {% endif %}
-    {% block extra_css %}{% endblock %}
-    <style>
-        :root {
-            --bg-color: #f5f6fa;
-            --card-bg: #fff;
-            --text-color: #333;
-            --text-color-light: #666;
-            --border-color: #e2e8f0;
-            --primary-color: #00c8ff;
-            --primary-color-dark: #00a6d6;
-            --secondary-color: #1a1f36;
-            --navbar-bg: #1a1f36;
-            --navbar-text: #adb5bd;
-            --navbar-text-active: #fff;
-            --navbar-hover: rgba(255,255,255,0.1);
-            --card-shadow: 0 2px 12px rgba(0,0,0,0.08);
-        }
-
-        [data-theme="dark"] {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-color: #e2e8f0;
-            --text-color-light: #a0aec0;
-            --border-color: #2d3748;
-            --primary-color: #00c8ff;
-            --primary-color-dark: #00a6d6;
-            --secondary-color: #e2e8f0;
-            --navbar-bg: #0f172a;
-            --navbar-text: #94a3b8;
-            --navbar-text-active: #e2e8f0;
-            --navbar-hover: rgba(255,255,255,0.05);
-            --card-shadow: 0 2px 12px rgba(0,0,0,0.2);
-        }
-        
-=======
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v={{ range(1, 10000) | random }}">
     {% block extra_css %}{% endblock %}
     <style>
@@ -70,7 +25,6 @@
             --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
->>>>>>> 7f1897f (latest)
         * {
             margin: 0;
             padding: 0;
@@ -79,22 +33,6 @@
         
         body {
             font-family: 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-<<<<<<< HEAD
-            background: var(--bg-color);
-            min-height: 100vh;
-            color: var(--text-color);
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        
-        .navbar {
-            background: var(--navbar-bg);
-            padding: 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            transition: background-color 0.3s ease;
-=======
             background: var(--gradient-secondary);
             min-height: 100vh;
             color: var(--text-primary);
@@ -109,7 +47,6 @@
             top: 0;
             z-index: 100;
             border-bottom: 2px solid var(--secondary-blue);
->>>>>>> 7f1897f (latest)
         }
         
         .navbar-content {
@@ -119,24 +56,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-<<<<<<< HEAD
-            height: 60px;
-        }
-        
-        .logo {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--navbar-text-active);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-        }
-        
-        .logo i {
-            color: var(--primary-color);
-            margin-right: 10px;
-            font-size: 22px;
-=======
         }
         
         .logo {
@@ -157,33 +76,10 @@
             height: 2px;
             background: var(--gradient-primary);
             border-radius: 1px;
->>>>>>> 7f1897f (latest)
         }
         
         .nav-links {
             display: flex;
-<<<<<<< HEAD
-            gap: 5px;
-            list-style: none;
-            height: 100%;
-        }
-        
-        .nav-links li {
-            height: 100%;
-            display: flex;
-            align-items: center;
-        }
-        
-        .nav-links a {
-            color: var(--navbar-text);
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            padding: 0 15px;
-            height: 100%;
-            display: flex;
-            align-items: center;
-=======
             gap: 10px;
             list-style: none;
         }
@@ -198,15 +94,10 @@
             position: relative;
             gap: 6px;
             font-size: 15px;
->>>>>>> 7f1897f (latest)
         }
         
         .nav-links a:hover,
         .nav-links a.active {
-<<<<<<< HEAD
-            color: var(--navbar-text-active);
-            background-color: var(--navbar-hover);
-=======
             color: var(--text-primary);
             background: rgba(59, 130, 246, 0.2);
             box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
@@ -214,15 +105,10 @@
         
         .nav-links a .nav-icon {
             font-size: 1.0em;
->>>>>>> 7f1897f (latest)
         }
         
         .nav-item.dropdown {
             position: relative;
-<<<<<<< HEAD
-            height: 100%;
-=======
->>>>>>> 7f1897f (latest)
         }
 
         .dropdown-menu {
@@ -230,29 +116,6 @@
             position: absolute;
             top: 100%;
             left: 0;
-<<<<<<< HEAD
-            background-color: var(--navbar-bg);
-            border-radius: 0 0 8px 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            z-index: 1000;
-            min-width: 180px;
-            padding: 8px 0;
-            transition: background-color 0.3s ease;
-        }
-
-        .dropdown-menu a {
-            color: var(--navbar-text);
-            padding: 10px 20px;
-            display: block;
-            text-decoration: none;
-            font-size: 14px;
-            height: auto;
-        }
-
-        .dropdown-menu a:hover {
-            background-color: var(--navbar-hover);
-            color: var(--navbar-text-active);
-=======
             background: var(--card-bg);
             border-radius: 12px;
             box-shadow: var(--shadow-card);
@@ -280,78 +143,17 @@
             background: rgba(59, 130, 246, 0.2);
             color: var(--text-primary);
             padding-left: 25px;
->>>>>>> 7f1897f (latest)
         }
 
         .nav-item.dropdown:hover .dropdown-menu {
             display: block;
-<<<<<<< HEAD
-=======
             opacity: 1;
             transform: translateY(0);
->>>>>>> 7f1897f (latest)
         }
         
         .user-menu {
             display: flex;
             align-items: center;
-<<<<<<< HEAD
-            gap: 15px;
-        }
-        
-        .user-info {
-            color: var(--navbar-text);
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .user-info i {
-            margin-right: 6px;
-            color: var(--primary-color);
-        }
-        
-        .theme-toggle {
-            background: none;
-            border: none;
-            color: var(--navbar-text);
-            cursor: pointer;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            transition: all 0.3s ease;
-        }
-        
-        .theme-toggle:hover {
-            background-color: var(--navbar-hover);
-            color: var(--navbar-text-active);
-        }
-        
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-block;
-        }
-        
-        .btn-primary {
-            background: var(--primary-color);
-            color: var(--secondary-color);
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 200, 255, 0.3);
-=======
             gap: 10px;
         }
         
@@ -400,30 +202,10 @@
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
->>>>>>> 7f1897f (latest)
         }
         
         .btn-outline {
             background: transparent;
-<<<<<<< HEAD
-            color: var(--primary-color);
-            border: 1px solid var(--primary-color);
-        }
-        
-        .btn-outline:hover {
-            background: rgba(0, 200, 255, 0.1);
-        }
-        
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-            border: 1px solid #dc3545;
-        }
-        
-        .btn-danger:hover {
-            background: #c82333;
-            border-color: #c82333;
-=======
             color: var(--text-primary);
             border: 2px solid var(--secondary-blue);
             padding: 8px 16px;
@@ -445,7 +227,6 @@
             background: #dc2626;
             border-color: #dc2626;
             transform: translateY(-2px);
->>>>>>> 7f1897f (latest)
         }
         
         .container {
@@ -459,63 +240,6 @@
         }
         
         .flash-message {
-<<<<<<< HEAD
-            padding: 12px 20px;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-        }
-        
-        .flash-message i {
-            margin-right: 10px;
-        }
-        
-        .flash-success {
-            background: #d4edda;
-            color: #155724;
-            border-left: 4px solid #28a745;
-        }
-        
-        .flash-error {
-            background: #f8d7da;
-            color: #721c24;
-            border-left: 4px solid #dc3545;
-        }
-        
-        .flash-info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border-left: 4px solid #17a2b8;
-        }
-        
-        .card {
-            background: var(--card-bg);
-            border-radius: 6px;
-            box-shadow: var(--card-shadow);
-            margin-bottom: 20px;
-            overflow: hidden;
-            transition: background-color 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .card-header {
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border-color);
-            background: var(--bg-color);
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-        }
-        
-        .card-body {
-            padding: 20px;
-        }
-        
-        .card-footer {
-            padding: 15px 20px;
-            border-top: 1px solid var(--border-color);
-            background: var(--bg-color);
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-=======
             padding: 15px 20px;
             border-radius: 12px;
             margin-bottom: 15px;
@@ -558,46 +282,23 @@
 
         ::-webkit-scrollbar-thumb:hover {
             background: var(--primary-blue);
->>>>>>> 7f1897f (latest)
         }
         
         @media (max-width: 768px) {
             .navbar-content {
                 flex-direction: column;
                 gap: 15px;
-<<<<<<< HEAD
-                height: auto;
-                padding: 15px 20px;
-            }
-            
-            .nav-links {
-                width: 100%;
-=======
             }
             
             .nav-links {
                 gap: 20px;
->>>>>>> 7f1897f (latest)
                 flex-wrap: wrap;
                 justify-content: center;
             }
             
-<<<<<<< HEAD
-            .nav-links li {
-                height: 40px;
-            }
-            
-            .user-menu {
-                width: 100%;
-                flex-wrap: wrap;
-                justify-content: center;
-                padding-top: 10px;
-                border-top: 1px solid rgba(255,255,255,0.1);
-=======
             .user-menu {
                 flex-wrap: wrap;
                 justify-content: center;
->>>>>>> 7f1897f (latest)
             }
         }
     </style>
@@ -607,28 +308,6 @@
     <nav class="navbar">
         <div class="navbar-content">
             <a href="{{ url_for('user.index') }}" class="logo">
-<<<<<<< HEAD
-                <i class="fas fa-shield-alt"></i>安全检测平台
-            </a>
-            
-            <ul class="nav-links">
-                <li><a href="{{ url_for('user.index') }}" {% if request.path == '/' %}class="active"{% endif %}><i class="fas fa-home"></i> 首页</a></li>
-                <li><a href="{{ url_for('scan.scan') }}" {% if request.path == '/scan' %}class="active"{% endif %}><i class="fas fa-search"></i> 扫描</a></li>
-                <li><a href="{{ url_for('user.history') }}" {% if request.path == '/history' %}class="active"{% endif %}><i class="fas fa-history"></i> 历史记录</a></li>
-                <li class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle {% if request.path.startswith('/knowledge') or request.path.startswith('/package_encyclopedia') %}active{% endif %}">
-                        <i class="fas fa-book"></i> 学习中心
-                    </a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{{ url_for('user.package_encyclopedia') }}"><i class="fas fa-box"></i> 包的百科</a>
-                        <a class="dropdown-item" href="{{ url_for('user.knowledge') }}"><i class="fas fa-graduation-cap"></i> 知识库</a>
-                    </div>
-                </li>
-                <li><a href="{{ url_for('community.index') }}" class="{% if request.path.startswith('/community') %}active{% endif %}"><i class="fas fa-users"></i> 安全社区</a></li>
-                <li><a href="{{ url_for('user.guide') }}" {% if request.path == '/guide' %}class="active"{% endif %}><i class="fas fa-map-signs"></i> 快速上手</a></li>
-                {% if session.role == 'admin' %}
-                <li><a href="{{ url_for('admin.admin') }}" class="{% if request.path == '/admin/' %}active{% endif %}"><i class="fas fa-cog"></i> 系统管理</a></li>
-=======
                 <span class="logo-icon">🔒</span>
                 安全检测平台
             </a>
@@ -662,18 +341,10 @@
                         <a href="{{ url_for('admin.model_management') }}">模型管理</a>
                     </div>
                 </li>
->>>>>>> 7f1897f (latest)
                 {% endif %}
             </ul>
             
             <div class="user-menu">
-<<<<<<< HEAD
-                <button id="themeToggle" class="theme-toggle" title="切换主题">
-                    <i class="fas fa-sun"></i>
-                </button>
-                <span class="user-info"><i class="fas fa-user-circle"></i> {{ session.username }}</span>
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline"><i class="fas fa-sign-out-alt"></i> 退出</a>
-=======
                 {% if 'user_id' in session %}
                     <div class="user-info">
                         欢迎, {{ session.get('username', '用户') }}
@@ -683,7 +354,6 @@
                     <a href="{{ url_for('auth.login') }}" class="btn btn-primary">登录</a>
                     <a href="{{ url_for('auth.register') }}" class="btn btn-outline">注册</a>
                 {% endif %}
->>>>>>> 7f1897f (latest)
             </div>
         </div>
     </nav>
@@ -694,18 +364,7 @@
             {% if messages %}
                 <div class="flash-messages">
                     {% for category, message in messages %}
-<<<<<<< HEAD
-                        <div class="flash-message flash-{{ category if category in ['success', 'error', 'info'] else 'info' }}">
-                            {% if category == 'success' %}
-                                <i class="fas fa-check-circle"></i>
-                            {% elif category == 'error' %}
-                                <i class="fas fa-exclamation-circle"></i>
-                            {% else %}
-                                <i class="fas fa-info-circle"></i>
-                            {% endif %}
-=======
                         <div class="alert alert-{{ category if category in ['success', 'error', 'info', 'warning'] else 'info' }}">
->>>>>>> 7f1897f (latest)
                             {{ message }}
                         </div>
                     {% endfor %}
@@ -716,48 +375,6 @@
         {% block content %}{% endblock %}
     </div>
     
-<<<<<<< HEAD
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const themeToggle = document.getElementById('themeToggle');
-            const htmlElement = document.documentElement;
-            
-            // 检查本地存储中是否有保存的主题
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                htmlElement.setAttribute('data-theme', savedTheme);
-                updateThemeIcon(savedTheme);
-            }
-            
-            // 切换主题
-            themeToggle.addEventListener('click', function() {
-                const currentTheme = htmlElement.getAttribute('data-theme');
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                
-                htmlElement.setAttribute('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-                
-                updateThemeIcon(newTheme);
-            });
-            
-            // 更新主题图标
-            function updateThemeIcon(theme) {
-                const icon = themeToggle.querySelector('i');
-                if (theme === 'dark') {
-                    icon.className = 'fas fa-moon';
-                    themeToggle.title = '切换到白天模式';
-                } else {
-                    icon.className = 'fas fa-sun';
-                    themeToggle.title = '切换到暗夜模式';
-                }
-            }
-        });
-    </script>
-    
     {% block extra_js %}{% endblock %}
-    {% block scripts %}{% endblock %}
-=======
-    {% block extra_js %}{% endblock %}
->>>>>>> 7f1897f (latest)
 </body>
 </html> 

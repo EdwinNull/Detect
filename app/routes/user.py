@@ -58,19 +58,6 @@ def index():
         ''')
         recent_malicious_packages = cursor.fetchall()
         
-<<<<<<< HEAD
-        # 获取最近的扫描记录（所有用户）
-        cursor.execute('''
-            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type
-            FROM scan_records 
-            WHERE scan_status = 'completed' 
-            ORDER BY created_at DESC 
-            LIMIT 5
-        ''')
-        recent_scans_rows = cursor.fetchall()
-        
-=======
->>>>>>> 7f1897f (latest)
         # 管理员统计信息
         cursor.execute('SELECT COUNT(*) FROM users')
         total_users = cursor.fetchone()[0]
@@ -92,15 +79,6 @@ def index():
         ''')
         total_scans = cursor.fetchone()[0]
         
-<<<<<<< HEAD
-        # 获取今日扫描次数
-        cursor.execute('''
-            SELECT COUNT(*) FROM scan_records 
-            WHERE scan_status = 'completed'
-            AND date(created_at) = date('now')
-        ''')
-        today_scans = cursor.fetchone()[0]
-=======
         # 获取安全包数量
         cursor.execute('''
             SELECT COUNT(*) FROM scan_records 
@@ -118,37 +96,18 @@ def index():
         ''')
         recent_scans = cursor.fetchall()
         
->>>>>>> 7f1897f (latest)
     else:
         # 普通用户只能看到自己的数据
         cursor.execute('''
             SELECT id, filename, file_size, risk_level, confidence, created_at, package_type
             FROM scan_records 
             WHERE user_id = ?
-<<<<<<< HEAD
-            AND risk_level = 'high'
-=======
->>>>>>> 7f1897f (latest)
             AND scan_status = 'completed' 
             ORDER BY created_at DESC 
             LIMIT 5
         ''', (session['user_id'],))
         recent_malicious_packages = cursor.fetchall()
         
-<<<<<<< HEAD
-        # 获取用户最近的扫描记录
-        cursor.execute('''
-            SELECT id, filename, file_size, risk_level, confidence, created_at, package_type
-            FROM scan_records 
-            WHERE user_id = ?
-            AND scan_status = 'completed' 
-            ORDER BY created_at DESC 
-            LIMIT 5
-        ''', (session['user_id'],))
-        recent_scans_rows = cursor.fetchall()
-        
-=======
->>>>>>> 7f1897f (latest)
         # 用户自己的统计信息
         cursor.execute('''
             SELECT COUNT(*) FROM scan_records 
@@ -162,15 +121,6 @@ def index():
         ''', (session['user_id'],))
         total_scans = cursor.fetchone()[0]
         
-<<<<<<< HEAD
-        # 获取用户今日扫描次数
-        cursor.execute('''
-            SELECT COUNT(*) FROM scan_records 
-            WHERE user_id = ? AND scan_status = 'completed'
-            AND date(created_at) = date('now')
-        ''', (session['user_id'],))
-        today_scans = cursor.fetchone()[0]
-=======
         # 获取安全包数量
         cursor.execute('''
             SELECT COUNT(*) FROM scan_records 
@@ -187,7 +137,6 @@ def index():
             LIMIT 5
         ''', (session['user_id'],))
         recent_scans = cursor.fetchall()
->>>>>>> 7f1897f (latest)
         
         total_users = None
         total_samples = None
@@ -195,20 +144,12 @@ def index():
     # 获取最新的异常上报
     latest_anomalies = AnomalyReport.get_latest(limit=5)
 
-<<<<<<< HEAD
-    # 格式化恶意包数据
-=======
     # 格式化数据
->>>>>>> 7f1897f (latest)
     malicious_packages = []
     for pkg in recent_malicious_packages:
         malicious_packages.append({
             'id': pkg['id'],
-<<<<<<< HEAD
-            'filename': pkg['filename'],
-=======
             'package_name': pkg['filename'],
->>>>>>> 7f1897f (latest)
             'file_size': format_size(pkg['file_size']) if pkg['file_size'] else "未知",
             'risk_level': pkg['risk_level'],
             'confidence': pkg['confidence'] * 100 if pkg['confidence'] else 0,
@@ -218,23 +159,6 @@ def index():
         })
     
     # 格式化最近扫描记录
-<<<<<<< HEAD
-    recent_scans = []
-    for scan in recent_scans_rows:
-        recent_scans.append({
-            'id': scan['id'],
-            'filename': scan['filename'],
-            'scan_time': scan['created_at'],
-            'package_type': scan['package_type'] if scan['package_type'] else 'unknown',
-            'is_malicious': scan['risk_level'] == 'high'
-        })
-    
-    conn.close()
-    
-    return render_template('index.html', 
-                          malicious_packages=malicious_packages,
-                          recent_scans=recent_scans,
-=======
     formatted_recent_scans = []
     for scan in recent_scans:
         formatted_recent_scans.append({
@@ -261,15 +185,10 @@ def index():
                           stats=stats,
                           malicious_packages=malicious_packages,
                           recent_scans=formatted_recent_scans,
->>>>>>> 7f1897f (latest)
                           total_malicious=total_malicious,
                           total_scans=total_scans,
                           total_users=total_users,
                           total_samples=total_samples,
-<<<<<<< HEAD
-                          today_scans=today_scans,
-=======
->>>>>>> 7f1897f (latest)
                           is_admin=is_admin,
                           latest_anomalies=latest_anomalies)
 
@@ -1166,12 +1085,9 @@ def delete_package(package_id):
         flash(f'删除失败: {str(e)}', 'error')
     
     return redirect(url_for('user.package_encyclopedia'))
-<<<<<<< HEAD
-=======
 
 @user_bp.route('/demo')
 @login_required
 def demo():
     """界面演示页面"""
     return render_template('demo.html')
->>>>>>> 7f1897f (latest)

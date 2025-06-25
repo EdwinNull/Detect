@@ -3,52 +3,6 @@
 {% block title %}异常情况上报{% endblock %}
 
 {% block extra_css %}
-<<<<<<< HEAD
-<link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
-<style>
-    .report-container {
-        max-width: 800px;
-        margin: 50px auto;
-        padding: 20px;
-    }
-    
-    .report-header {
-        background: linear-gradient(135deg, rgba(220, 53, 69, 0.9) 0%, rgba(173, 20, 87, 0.9) 100%);
-        color: white;
-        padding: 30px;
-        border-radius: 15px;
-        margin-bottom: 30px;
-        text-align: center;
-        box-shadow: var(--card-shadow);
-        transition: transform 0.3s ease;
-    }
-    
-    .report-header:hover {
-        transform: translateY(-5px);
-    }
-    
-    .report-header h2 {
-        font-size: 24px;
-        font-weight: 700;
-        margin-bottom: 10px;
-    }
-    
-    .report-form {
-        background: var(--card-bg-color);
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: var(--card-shadow);
-        border: 1px solid var(--border-color);
-        transition: background-color 0.3s ease, border-color 0.3s ease;
-    }
-    
-    .submit-btn {
-        background: linear-gradient(135deg, rgba(220, 53, 69, 0.9) 0%, rgba(173, 20, 87, 0.9) 100%);
-        color: white;
-        padding: 12px 30px;
-        border: none;
-        border-radius: 12px;
-=======
 <style>
     body {
         background-color: #7952b3 !important; /* Purple background override */
@@ -119,23 +73,10 @@
         padding: 12px 30px;
         border: none;
         border-radius: 8px;
->>>>>>> 7f1897f (latest)
         font-size: 16px;
         font-weight: 600;
         cursor: pointer;
         width: 100%;
-<<<<<<< HEAD
-        transition: all 0.3s ease;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .submit-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 20px rgba(220, 53, 69, 0.4);
-=======
         transition: background-color 0.2s;
     }
     .submit-btn:hover {
@@ -150,7 +91,6 @@
     }
     .back-link:hover {
         text-decoration: underline;
->>>>>>> 7f1897f (latest)
     }
 </style>
 {% endblock %}
@@ -158,61 +98,6 @@
 {% block content %}
 <div class="report-container">
     <div class="report-header">
-<<<<<<< HEAD
-        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
-        <h2>异常情况上报</h2>
-        <p>感谢您为平台安全做出贡献！请在此处详细描述您发现的任何异常情况、安全漏洞或可疑行为。</p>
-    </div>
-    
-    <div class="report-form">
-        {% if scan_record %}
-        <div class="scan-info">
-            <h4><i class="fas fa-box-open"></i> 关联检测记录</h4>
-            <div class="scan-details">
-                <div class="scan-detail">
-                    <span>文件名：</span>
-                    <span>{{ scan_record.filename }}</span>
-                </div>
-                <div class="scan-detail">
-                    <span>包类型：</span>
-                    <span>{{ scan_record.package_type or '未知' }}</span>
-                </div>
-                <div class="scan-detail">
-                    <span>风险等级：</span>
-                    <span class="risk-badge risk-{{ scan_record.risk_level or 'low' }}">
-                        {{ scan_record.risk_level or '未知' }}
-                    </span>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-        
-        <form method="post" action="{{ url_for('user.report_issue', scan_id=(scan_record.id if scan_record else '')) }}">
-            <div class="form-group">
-                <label for="title" class="form-label">异常标题 <span style="color: #f56c6c">*</span></label>
-                <input type="text" id="title" name="title" class="form-input" 
-                       placeholder="例如：某某包存在命令执行漏洞" value="{{ title or '' }}" required>
-            </div>
-
-            <div class="form-group">
-                <label for="description" class="form-label">详细描述 <span style="color: #f56c6c">*</span></label>
-                <textarea id="description" name="description" class="form-textarea" 
-                          placeholder="请详细说明您发现的问题，包括复现步骤、影响等。" required>{{ description or '' }}</textarea>
-            </div>
-            
-            <div class="form-actions">
-                <div>
-                    <a href="{{ url_for('community.index') }}" class="action-btn">
-                        <i class="fas fa-arrow-left"></i> 返回社区
-                    </a>
-                </div>
-                <button type="submit" class="submit-btn">
-                    <i class="fas fa-paper-plane"></i> 提交报告
-                </button>
-            </div>
-        </form>
-    </div>
-=======
         <i class="fas fa-exclamation-triangle"></i>
         <div>
             <h2>异常情况上报</h2>
@@ -237,6 +122,5 @@
         </button>
     </form>
     <a href="{{ url_for('community.index') }}" class="back-link">返回社区首页</a>
->>>>>>> 7f1897f (latest)
 </div>
 {% endblock %} 

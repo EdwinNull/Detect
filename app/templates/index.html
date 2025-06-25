@@ -1,10 +1,6 @@
 {% extends "base.html" %}
 
 {% block extra_css %}
-<<<<<<< HEAD
-<link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
-=======
->>>>>>> 7f1897f (latest)
 <style>
     .dashboard-container {
         max-width: 1200px;
@@ -12,11 +8,7 @@
         padding: 0 20px;
         display: grid;
         grid-template-columns: 1fr;
-<<<<<<< HEAD
-        grid-gap: 20px;
-=======
         grid-gap: 25px;
->>>>>>> 7f1897f (latest)
     }
     
     @media (min-width: 768px) {
@@ -31,113 +23,6 @@
         }
     }
     
-<<<<<<< HEAD
-    .welcome-banner {
-        background: linear-gradient(135deg, #1a1f36 0%, #2a3042 100%);
-        border-radius: var(--card-border-radius);
-        padding: 25px;
-        color: white;
-        margin-bottom: 20px;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    }
-    
-    .welcome-banner::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 300px;
-        height: 100%;
-        background: url('https://cdn-icons-png.flaticon.com/512/2092/2092757.png') no-repeat right center;
-        background-size: contain;
-        opacity: 0.1;
-    }
-    
-    .welcome-title {
-        font-size: 24px;
-        font-weight: 600;
-        margin-bottom: 10px;
-    }
-    
-    .welcome-subtitle {
-        font-size: 16px;
-        opacity: 0.8;
-        margin-bottom: 20px;
-        max-width: 600px;
-    }
-    
-    .welcome-actions {
-        display: flex;
-        gap: 10px;
-    }
-    
-    .stats-container {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-gap: 15px;
-        margin-bottom: 20px;
-    }
-    
-    .stat-card {
-        background: white;
-        padding: 20px;
-        border-radius: var(--card-border-radius);
-        box-shadow: var(--card-shadow);
-        text-align: center;
-        border: 1px solid var(--border-color);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .stat-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        background: rgba(0, 200, 255, 0.1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 10px;
-    }
-    
-    .stat-icon i {
-        font-size: 20px;
-        color: var(--primary-color);
-    }
-    
-    .stat-value {
-        font-size: 24px;
-        font-weight: 700;
-        margin: 5px 0;
-        color: var(--secondary-color);
-    }
-    
-    .stat-label {
-        color: var(--text-color-light);
-        font-size: 14px;
-    }
-    
-    .quick-guide-small-btn {
-        display: inline-flex;
-        align-items: center;
-        padding: 8px 15px;
-        background: rgba(0, 200, 255, 0.1);
-        color: var(--primary-color);
-        text-decoration: none;
-        border-radius: 4px;
-        font-weight: 500;
-        font-size: 14px;
-        transition: all 0.2s ease;
-        border: 1px solid rgba(0, 200, 255, 0.3);
-    }
-    
-    .quick-guide-small-btn:hover {
-        background: rgba(0, 200, 255, 0.2);
-        transform: translateY(-2px);
-=======
     .stats-container {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -207,7 +92,6 @@
         background: rgba(59, 130, 246, 0.3);
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
->>>>>>> 7f1897f (latest)
     }
     
     .guide-icon {
@@ -216,63 +100,6 @@
     }
     
     .malicious-packages {
-<<<<<<< HEAD
-        background: white;
-        padding: 20px;
-        border-radius: var(--card-border-radius);
-        box-shadow: var(--card-shadow);
-        border: 1px solid var(--border-color);
-    }
-    
-    .section-header {
-        margin-bottom: 20px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid var(--border-color);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .section-header h2 {
-        color: var(--secondary-color);
-        font-size: 18px;
-        font-weight: 600;
-        margin: 0;
-        display: flex;
-        align-items: center;
-    }
-    
-    .section-header h2 i {
-        color: var(--primary-color);
-        margin-right: 8px;
-    }
-    
-    .section-header .subtitle {
-        color: var(--text-color-light);
-        font-size: 14px;
-        margin-top: 4px;
-    }
-    
-    .package-list {
-        margin-bottom: 20px;
-    }
-    
-    .package-item {
-        background: var(--bg-color);
-        border-radius: 4px;
-        padding: 15px;
-        margin-bottom: 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        border: 1px solid var(--border-color);
-    }
-    
-    .package-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-=======
         background: var(--card-bg);
         backdrop-filter: blur(15px);
         padding: 30px;
@@ -332,7 +159,6 @@
         transform: translateY(-3px);
         box-shadow: var(--shadow-glow);
         border-color: var(--secondary-blue);
->>>>>>> 7f1897f (latest)
     }
     
     .package-info {
@@ -341,25 +167,6 @@
     
     .package-name {
         font-weight: 600;
-<<<<<<< HEAD
-        margin-bottom: 5px;
-        color: var(--secondary-color);
-        display: flex;
-        align-items: center;
-    }
-    
-    .package-name i {
-        color: var(--danger-color);
-        margin-right: 6px;
-        font-size: 14px;
-    }
-    
-    .package-meta {
-        color: var(--text-color-light);
-        font-size: 13px;
-        display: flex;
-        gap: 15px;
-=======
         margin-bottom: 8px;
         color: var(--text-primary);
         font-size: 16px;
@@ -370,61 +177,10 @@
         font-size: 13px;
         display: flex;
         gap: 20px;
->>>>>>> 7f1897f (latest)
     }
     
     .risk-badge {
         display: inline-block;
-<<<<<<< HEAD
-        padding: 3px 8px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-    
-    .risk-high {
-        background: rgba(220, 53, 69, 0.15);
-        color: var(--danger-color);
-    }
-    
-    .risk-medium {
-        background: rgba(255, 193, 7, 0.15);
-        color: #d39e00;
-    }
-    
-    .risk-low {
-        background: rgba(40, 167, 69, 0.15);
-        color: var(--success-color);
-    }
-    
-    .upload-container {
-        background: white;
-        padding: 20px;
-        border-radius: var(--card-border-radius);
-        box-shadow: var(--card-shadow);
-        border: 1px solid var(--border-color);
-    }
-    
-    .upload-area {
-        border: 2px dashed var(--primary-color);
-        border-radius: 6px;
-        padding: 30px 20px;
-        text-align: center;
-        background: rgba(0, 200, 255, 0.03);
-        margin-bottom: 20px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    
-    .upload-area:hover {
-        border-color: var(--primary-color-dark);
-        background: rgba(0, 200, 255, 0.05);
-    }
-    
-    .upload-area.dragover {
-        border-color: var(--primary-color-dark);
-        background: rgba(0, 200, 255, 0.05);
-=======
         padding: 6px 14px;
         border-radius: 20px;
         font-size: 12px;
@@ -507,38 +263,10 @@
     .upload-area.dragover {
         border-color: var(--accent-orange);
         background: rgba(249, 115, 22, 0.2);
->>>>>>> 7f1897f (latest)
         transform: scale(1.02);
     }
     
     .upload-icon {
-<<<<<<< HEAD
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: rgba(0, 200, 255, 0.1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 20px;
-    }
-    
-    .upload-icon i {
-        font-size: 24px;
-        color: var(--primary-color);
-    }
-    
-    .upload-text {
-        font-size: 16px;
-        color: var(--secondary-color);
-        margin-bottom: 10px;
-        font-weight: 500;
-    }
-    
-    .upload-hint {
-        color: var(--text-color-light);
-        font-size: 14px;
-=======
         font-size: 60px;
         color: var(--secondary-blue);
         margin-bottom: 25px;
@@ -556,67 +284,12 @@
         color: var(--text-secondary);
         font-size: 14px;
         line-height: 1.6;
->>>>>>> 7f1897f (latest)
     }
     
     .file-input {
         display: none;
     }
     
-<<<<<<< HEAD
-    .recent-scans {
-        background: white;
-        padding: 20px;
-        border-radius: var(--card-border-radius);
-        box-shadow: var(--card-shadow);
-        margin-bottom: 20px;
-        border: 1px solid var(--border-color);
-    }
-    
-    .scan-item {
-        display: flex;
-        padding: 12px 0;
-        border-bottom: 1px solid var(--border-color);
-    }
-    
-    .scan-item:last-child {
-        border-bottom: none;
-    }
-    
-    .scan-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 4px;
-        background: rgba(0, 200, 255, 0.1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 12px;
-    }
-    
-    .scan-icon i {
-        font-size: 18px;
-        color: var(--primary-color);
-    }
-    
-    .scan-info {
-        flex: 1;
-    }
-    
-    .scan-name {
-        font-weight: 500;
-        color: var(--secondary-color);
-        margin-bottom: 2px;
-    }
-    
-    .scan-meta {
-        color: var(--text-color-light);
-        font-size: 12px;
-    }
-    
-    .scan-status {
-        align-self: center;
-=======
     .upload-btn {
         background: var(--gradient-primary);
         color: var(--text-primary);
@@ -808,136 +481,11 @@
         .upload-text {
             font-size: 18px;
         }
->>>>>>> 7f1897f (latest)
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<<<<<<< HEAD
-<div class="welcome-banner">
-    <div class="welcome-title">欢迎使用开源组件包安全检测平台</div>
-    <div class="welcome-subtitle">快速检测开源组件包中的恶意代码和安全风险，保障您的软件供应链安全</div>
-    <div class="welcome-actions">
-        <a href="{{ url_for('scan.scan') }}" class="btn btn-primary"><i class="fas fa-search"></i> 立即扫描</a>
-        <a href="{{ url_for('user.guide') }}" class="btn btn-outline"><i class="fas fa-book"></i> 使用指南</a>
-    </div>
-</div>
-
-<div class="dashboard-container">
-    <div class="main-content">
-    <!-- 统计信息 -->
-        <div class="stats-container">
-        <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-            <div class="stat-value">{{ total_scans }}</div>
-                <div class="stat-label">总扫描次数</div>
-        </div>
-        <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-            <div class="stat-value">{{ total_malicious }}</div>
-                <div class="stat-label">检出恶意包</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-calendar-check"></i>
-                </div>
-                <div class="stat-value">{{ today_scans|default(0) }}</div>
-                <div class="stat-label">今日扫描</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-database"></i>
-        </div>
-                <div class="stat-value">{{ total_samples|default(0) }}</div>
-                <div class="stat-label">样本库规模</div>
-    </div>
-        </div>
-        
-        <!-- 最近扫描 -->
-        <div class="recent-scans">
-            <div class="section-header">
-                <div>
-                    <h2><i class="fas fa-history"></i> 最近扫描</h2>
-                    <div class="subtitle">您最近的扫描记录</div>
-                </div>
-                <a href="{{ url_for('user.history') }}" class="btn btn-sm btn-outline">查看全部</a>
-            </div>
-            
-            <div class="scan-list">
-                {% if recent_scans|default([]) %}
-                    {% for scan in recent_scans %}
-                    <div class="scan-item">
-                        <div class="scan-icon">
-                            {% if scan.is_malicious %}
-                            <i class="fas fa-exclamation-circle" style="color: var(--danger-color);"></i>
-                            {% else %}
-                            <i class="fas fa-check-circle" style="color: var(--success-color);"></i>
-                            {% endif %}
-                        </div>
-                        <div class="scan-info">
-                            <div class="scan-name">{{ scan.filename }}</div>
-                            <div class="scan-meta">
-                                <span>{{ scan.scan_time }}</span> | 
-                                <span>{{ scan.package_type }}</span>
-                            </div>
-                        </div>
-                        <div class="scan-status">
-                            {% if scan.is_malicious %}
-                            <span class="badge badge-danger">恶意</span>
-                            {% else %}
-                            <span class="badge badge-success">安全</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                <div style="text-align: center; padding: 20px 0; color: var(--text-color-light);">
-                    <i class="fas fa-info-circle"></i> 暂无扫描记录
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        
-        <!-- 最新恶意包 -->
-        <div class="malicious-packages">
-            <div class="section-header">
-                <div>
-                    <h2><i class="fas fa-exclamation-triangle"></i> 最新威胁</h2>
-                    <div class="subtitle">最近检测到的恶意组件包</div>
-                </div>
-                <a href="{{ url_for('community.index') }}" class="btn btn-sm btn-outline">查看更多</a>
-            </div>
-            
-            <div class="package-list">
-                {% if malicious_packages|default([]) %}
-                    {% for package in malicious_packages %}
-                    <div class="package-item">
-                        <div class="package-info">
-                            <div class="package-name">
-                                <i class="fas fa-bug"></i> {{ package.filename }}
-                            </div>
-                            <div class="package-meta">
-                                <span>{{ package.package_type }}</span>
-                                <span>检出时间: {{ package.created_at }}</span>
-                        </div>
-                    </div>
-                    <div>
-                            <span class="risk-badge risk-{{ package.risk_level }}">{{ package.risk_level }}</span>
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div style="text-align: center; padding: 20px 0; color: var(--text-color-light);">
-                    <i class="fas fa-info-circle"></i> 暂无恶意包数据
-                </div>
-            {% endif %}
-        </div>
-=======
 <div class="dashboard-container">
     <div class="main-content">
         <div class="stats-container">
@@ -994,61 +542,10 @@
                     <span class="guide-icon">📋</span>查看完整历史
                 </a>
             </div>
->>>>>>> 7f1897f (latest)
         </div>
     </div>
     
     <div class="sidebar">
-<<<<<<< HEAD
-        <!-- 上传扫描 -->
-        <div class="upload-container">
-            <div class="section-header">
-                <h2><i class="fas fa-cloud-upload-alt"></i> 快速扫描</h2>
-            </div>
-            
-            <div id="uploadArea" class="upload-area">
-                <div class="upload-icon">
-                    <i class="fas fa-file-upload"></i>
-            </div>
-                <div class="upload-text">拖放文件或点击上传</div>
-                <div class="upload-hint">支持 .zip, .tar.gz, .whl, .jar, .tgz, .npm 等格式</div>
-                <input type="file" id="fileInput" class="file-input">
-            </div>
-            
-            <button id="scanButton" class="btn btn-primary" style="width: 100%;">
-                <i class="fas fa-search"></i> 开始扫描
-            </button>
-            
-            <div id="uploadProgress" style="display: none; margin-top: 15px;">
-                <div class="progress">
-                    <div class="progress-bar" role="progressbar" style="width: 0%"></div>
-                </div>
-                <div id="uploadStatus" style="text-align: center; margin-top: 8px; font-size: 14px;">
-                    准备上传...
-                </div>
-            </div>
-        </div>
-
-        <!-- 快速指南 -->
-        <div class="container-card">
-            <div class="section-header">
-                <h2><i class="fas fa-map-signs"></i> 快速指南</h2>
-            </div>
-            
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-                <a href="{{ url_for('user.guide') }}#upload" class="quick-guide-small-btn">
-                    <i class="fas fa-upload guide-icon"></i> 如何上传文件
-                </a>
-                <a href="{{ url_for('user.guide') }}#results" class="quick-guide-small-btn">
-                    <i class="fas fa-chart-bar guide-icon"></i> 如何解读结果
-                </a>
-                <a href="{{ url_for('user.guide') }}#security" class="quick-guide-small-btn">
-                    <i class="fas fa-shield-alt guide-icon"></i> 安全最佳实践
-                </a>
-                <a href="{{ url_for('user.guide') }}#faq" class="quick-guide-small-btn">
-                    <i class="fas fa-question-circle guide-icon"></i> 常见问题
-                </a>
-=======
         <div class="upload-container">
             <div class="section-header">
                 <h2>🔍 开始扫描</h2>
@@ -1105,29 +602,12 @@
                         <div>暂无扫描记录</div>
                     </div>
                 {% endif %}
->>>>>>> 7f1897f (latest)
             </div>
         </div>
     </div>
 </div>
 
 <script>
-<<<<<<< HEAD
-    // 上传功能
-    const uploadArea = document.getElementById('uploadArea');
-    const fileInput = document.getElementById('fileInput');
-    const scanButton = document.getElementById('scanButton');
-    const uploadProgress = document.getElementById('uploadProgress');
-    const progressBar = document.querySelector('.progress-bar');
-    const uploadStatus = document.getElementById('uploadStatus');
-    
-    // 点击上传区域触发文件选择
-    uploadArea.addEventListener('click', () => {
-        fileInput.click();
-    });
-    
-    // 拖拽效果
-=======
 document.addEventListener('DOMContentLoaded', function() {
     const uploadArea = document.getElementById('uploadArea');
     const fileInput = document.getElementById('fileInput');
@@ -1143,70 +623,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // 拖拽功能
->>>>>>> 7f1897f (latest)
     uploadArea.addEventListener('dragover', (e) => {
         e.preventDefault();
         uploadArea.classList.add('dragover');
     });
-<<<<<<< HEAD
-    
-    uploadArea.addEventListener('dragleave', () => {
-        uploadArea.classList.remove('dragover');
-    });
-    
-    uploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove('dragover');
-    
-        if (e.dataTransfer.files.length) {
-            fileInput.files = e.dataTransfer.files;
-            // 显示文件名
-            uploadArea.querySelector('.upload-text').textContent = `已选择: ${fileInput.files[0].name}`;
-        }
-    });
-    
-    // 文件选择变化
-    fileInput.addEventListener('change', () => {
-        if (fileInput.files.length) {
-            uploadArea.querySelector('.upload-text').textContent = `已选择: ${fileInput.files[0].name}`;
-            }
-    });
-
-    // 扫描按钮点击
-    scanButton.addEventListener('click', () => {
-        if (!fileInput.files.length) {
-            alert('请先选择文件');
-            return;
-        }
-    
-    const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
-    
-        // 显示进度条
-        uploadProgress.style.display = 'block';
-        scanButton.disabled = true;
-    
-    fetch('/upload', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-                progressBar.style.width = '100%';
-                uploadStatus.textContent = data.message;
-            // 重定向到进度页面
-            window.location.href = '/progress/' + data.scan_id;
-        } else {
-                uploadStatus.textContent = data.error || '上传失败';
-                scanButton.disabled = false;
-        }
-    })
-    .catch(error => {
-            console.error('Error:', error);
-            uploadStatus.textContent = '上传失败: ' + error.message;
-            scanButton.disabled = false;
-=======
 
     uploadArea.addEventListener('dragleave', () => {
         uploadArea.classList.remove('dragover');
@@ -1275,7 +695,6 @@ document.addEventListener('DOMContentLoaded', function() {
             uploadBtn.disabled = false;
             uploadBtn.textContent = '🚀 重新检测';
         }
->>>>>>> 7f1897f (latest)
     });
 });
 </script>
