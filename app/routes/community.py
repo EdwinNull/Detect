@@ -41,6 +41,7 @@ community_bp = Blueprint('community', __name__, url_prefix='/community')
 def index():
     """社区首页"""
     page = request.args.get('page', 1, type=int)
+<<<<<<< HEAD
     category = request.args.get('category', None)
     sort = request.args.get('sort', 'recent')
     
@@ -108,10 +109,19 @@ def index():
         anomaly_count=anomaly_count,
         user_liked_posts=user_liked_posts
     )
+=======
+    filter_type = request.args.get('type', None)
+    order_by = request.args.get('order', 'created_at')
+    
+    posts = CommunityPost.get_posts(page=page, per_page=10, order_by=order_by, filter_type=filter_type)
+    
+    return render_template('community/index.html', posts=posts, current_page=page, filter_type=filter_type)
+>>>>>>> 7f1897f (latest)
 
 @community_bp.route('/anomalies')
 def anomaly_list():
     """异常报告中心"""
+<<<<<<< HEAD
     page = request.args.get('page', 1, type=int)
     status = request.args.get('status', None)
     per_page = 10
@@ -176,6 +186,10 @@ def anomaly_list():
         page=page, 
         total_pages=total_pages
     )
+=======
+    reports = AnomalyReport.get_all()
+    return render_template('community/anomaly_list.html', reports=reports)
+>>>>>>> 7f1897f (latest)
 
 @community_bp.route('/post/<int:post_id>')
 def post_detail(post_id):
@@ -185,6 +199,7 @@ def post_detail(post_id):
         flash('帖子不存在')
         return redirect(url_for('community.index'))
     
+<<<<<<< HEAD
     # 增加浏览次数
     conn = sqlite3.connect(Config.DATABASE_PATH)
     cursor = conn.cursor()
@@ -213,6 +228,11 @@ def post_detail(post_id):
         comments=comments,
         user_liked=user_liked
     )
+=======
+    comments = CommunityComment.get_comments_by_post_id(post_id)
+    
+    return render_template('community/post_detail.html', post=post, comments=comments)
+>>>>>>> 7f1897f (latest)
 
 @community_bp.route('/create', methods=['GET', 'POST'])
 @login_required
@@ -222,7 +242,10 @@ def create_post():
         title = request.form.get('title', '').strip()
         content = request.form.get('content', '').strip()
         scan_id = request.form.get('scan_id', type=int)
+<<<<<<< HEAD
         category = request.form.get('category', 'discovery')
+=======
+>>>>>>> 7f1897f (latest)
         
         if not title or not content:
             flash('标题和内容不能为空')
@@ -250,8 +273,12 @@ def create_post():
             package_type=package_type,
             risk_level=risk_level,
             confidence=confidence,
+<<<<<<< HEAD
             scan_id=scan_id,
             category=category
+=======
+            scan_id=scan_id
+>>>>>>> 7f1897f (latest)
         )
         
         flash('帖子发布成功！')
@@ -387,6 +414,7 @@ def report_anomaly(scan_id):
     """
     重定向到新的独立上报页面
     """
+<<<<<<< HEAD
     return redirect(url_for('user.report_issue', scan_id=scan_id))
 
 @community_bp.route('/post/<int:post_id>/edit', methods=['GET', 'POST'])
@@ -503,3 +531,6 @@ def submit_report(post_id):
     
     flash('举报已提交，管理员会尽快处理')
     return redirect(url_for('community.post_detail', post_id=post_id)) 
+=======
+    return redirect(url_for('user.report_issue', scan_id=scan_id)) 
+>>>>>>> 7f1897f (latest)

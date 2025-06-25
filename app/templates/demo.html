@@ -1,0 +1,459 @@
+{% extends "base.html" %}
+
+{% block title %}界面演示 - 奇安信天擎风格{% endblock %}
+
+{% block extra_css %}
+<style>
+    .demo-container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 0 20px;
+    }
+    
+    .demo-section {
+        margin-bottom: 40px;
+    }
+    
+    .demo-title {
+        color: var(--text-primary);
+        font-size: 2em;
+        font-weight: 700;
+        margin-bottom: 20px;
+        text-align: center;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    .demo-subtitle {
+        color: var(--text-secondary);
+        font-size: 1.1em;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .demo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+        margin-bottom: 30px;
+    }
+    
+    .demo-card {
+        background: var(--card-bg);
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .demo-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+    }
+    
+    .demo-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-glow);
+    }
+    
+    .demo-card h3 {
+        color: var(--text-primary);
+        font-size: 1.3em;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .demo-card p {
+        color: var(--text-secondary);
+        margin-bottom: 20px;
+        line-height: 1.6;
+    }
+    
+    .demo-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .demo-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .demo-stat {
+        background: var(--card-bg);
+        border-radius: 16px;
+        padding: 25px;
+        text-align: center;
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .demo-stat::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+    }
+    
+    .demo-stat:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-glow);
+    }
+    
+    .demo-stat-value {
+        font-size: 2.5em;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 10px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    .demo-stat-label {
+        color: var(--text-secondary);
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .demo-table-container {
+        background: var(--card-bg);
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .demo-table-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+    }
+    
+    .demo-form {
+        background: var(--card-bg);
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: var(--shadow-card);
+        border: 1px solid var(--border-color);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .demo-form::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+    }
+    
+    .demo-form h3 {
+        color: var(--text-primary);
+        font-size: 1.5em;
+        margin-bottom: 25px;
+        text-align: center;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .demo-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .demo-stats {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="demo-container">
+    <div class="demo-section">
+        <h1 class="demo-title">🔒 奇安信天擎风格界面演示</h1>
+        <p class="demo-subtitle">基于奇安信天擎配色方案的安全检测平台界面</p>
+        
+        <div class="demo-stats">
+            <div class="demo-stat">
+                <div class="demo-stat-value">1,234</div>
+                <div class="demo-stat-label">总扫描次数</div>
+            </div>
+            <div class="demo-stat">
+                <div class="demo-stat-value">56</div>
+                <div class="demo-stat-label">恶意包数量</div>
+            </div>
+            <div class="demo-stat">
+                <div class="demo-stat-value">98.5%</div>
+                <div class="demo-stat-label">检测准确率</div>
+            </div>
+            <div class="demo-stat">
+                <div class="demo-stat-value">789</div>
+                <div class="demo-stat-label">安全包数量</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2 class="demo-title">🎨 组件展示</h2>
+        
+        <div class="demo-grid">
+            <div class="demo-card">
+                <h3>🚀 按钮组件</h3>
+                <p>多种样式的按钮组件，支持悬停动画效果</p>
+                <div class="demo-buttons">
+                    <button class="btn btn-primary">主要按钮</button>
+                    <button class="btn btn-secondary">次要按钮</button>
+                    <button class="btn btn-outline">轮廓按钮</button>
+                    <button class="btn btn-danger">危险按钮</button>
+                    <button class="btn btn-success">成功按钮</button>
+                </div>
+            </div>
+            
+            <div class="demo-card">
+                <h3>🏷️ 徽章组件</h3>
+                <p>用于显示状态和标签的徽章组件</p>
+                <div class="demo-buttons">
+                    <span class="badge badge-primary">主要</span>
+                    <span class="badge badge-success">成功</span>
+                    <span class="badge badge-warning">警告</span>
+                    <span class="badge badge-danger">危险</span>
+                    <span class="badge badge-secondary">次要</span>
+                </div>
+            </div>
+            
+            <div class="demo-card">
+                <h3>⚠️ 警告框组件</h3>
+                <p>不同类型的警告和提示信息</p>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div class="alert alert-success">✅ 操作成功完成！</div>
+                    <div class="alert alert-danger">❌ 检测到安全风险！</div>
+                    <div class="alert alert-warning">⚠️ 请注意安全事项</div>
+                    <div class="alert alert-info">ℹ️ 系统信息提示</div>
+                </div>
+            </div>
+            
+            <div class="demo-card">
+                <h3>📊 进度条组件</h3>
+                <p>显示操作进度的进度条组件</p>
+                <div style="margin-bottom: 15px;">
+                    <div class="progress">
+                        <div class="progress-bar" style="width: 75%"></div>
+                    </div>
+                    <div style="text-align: center; color: var(--text-secondary); font-size: 12px;">75% 完成</div>
+                </div>
+                <div>
+                    <div class="progress">
+                        <div class="progress-bar" style="width: 45%"></div>
+                    </div>
+                    <div style="text-align: center; color: var(--text-secondary); font-size: 12px;">45% 完成</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2 class="demo-title">📋 表格展示</h2>
+        
+        <div class="demo-table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>包名称</th>
+                        <th>类型</th>
+                        <th>版本</th>
+                        <th>风险等级</th>
+                        <th>检测时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>requests</td>
+                        <td>Python</td>
+                        <td>2.31.0</td>
+                        <td><span class="badge badge-success">安全</span></td>
+                        <td>2024-01-15 14:30</td>
+                        <td><button class="btn btn-outline" style="padding: 4px 8px; font-size: 11px;">查看</button></td>
+                    </tr>
+                    <tr>
+                        <td>malicious-pkg</td>
+                        <td>JavaScript</td>
+                        <td>1.2.3</td>
+                        <td><span class="badge badge-danger">高风险</span></td>
+                        <td>2024-01-15 13:45</td>
+                        <td><button class="btn btn-outline" style="padding: 4px 8px; font-size: 11px;">查看</button></td>
+                    </tr>
+                    <tr>
+                        <td>lodash</td>
+                        <td>JavaScript</td>
+                        <td>4.17.21</td>
+                        <td><span class="badge badge-warning">中风险</span></td>
+                        <td>2024-01-15 12:20</td>
+                        <td><button class="btn btn-outline" style="padding: 4px 8px; font-size: 11px;">查看</button></td>
+                    </tr>
+                    <tr>
+                        <td>numpy</td>
+                        <td>Python</td>
+                        <td>1.26.4</td>
+                        <td><span class="badge badge-success">安全</span></td>
+                        <td>2024-01-15 11:15</td>
+                        <td><button class="btn btn-outline" style="padding: 4px 8px; font-size: 11px;">查看</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2 class="demo-title">📝 表单展示</h2>
+        
+        <div class="demo-form">
+            <h3>🔍 扫描配置</h3>
+            <form>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">包名称</label>
+                        <input type="text" class="form-control" placeholder="输入包名称">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">包类型</label>
+                        <select class="form-control">
+                            <option>Python</option>
+                            <option>JavaScript</option>
+                            <option>Java</option>
+                            <option>其他</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">版本号</label>
+                        <input type="text" class="form-control" placeholder="输入版本号">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">检测模式</label>
+                        <select class="form-control">
+                            <option>快速检测</option>
+                            <option>深度检测</option>
+                            <option>完整检测</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">描述信息</label>
+                    <textarea class="form-control" rows="3" placeholder="输入包描述信息"></textarea>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button type="submit" class="btn btn-primary">🚀 开始扫描</button>
+                    <button type="button" class="btn btn-secondary">🔄 重置</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2 class="demo-title">🎯 特色功能</h2>
+        
+        <div class="demo-grid">
+            <div class="demo-card">
+                <h3>🔒 安全防护</h3>
+                <p>基于奇安信天擎的安全理念，提供全方位的软件包安全检测服务</p>
+                <div class="demo-buttons">
+                    <button class="btn btn-primary">了解更多</button>
+                </div>
+            </div>
+            
+            <div class="demo-card">
+                <h3>🤖 AI 检测</h3>
+                <p>采用先进的机器学习算法，智能识别恶意代码和潜在安全风险</p>
+                <div class="demo-buttons">
+                    <button class="btn btn-primary">查看算法</button>
+                </div>
+            </div>
+            
+            <div class="demo-card">
+                <h3>📊 实时监控</h3>
+                <p>实时监控软件包安全状态，及时发现和预警潜在威胁</p>
+                <div class="demo-buttons">
+                    <button class="btn btn-primary">监控面板</button>
+                </div>
+            </div>
+            
+            <div class="demo-card">
+                <h3>👥 社区协作</h3>
+                <p>安全社区协作机制，共同维护开源软件生态安全</p>
+                <div class="demo-buttons">
+                    <button class="btn btn-primary">加入社区</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 添加一些交互效果
+    const cards = document.querySelectorAll('.demo-card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-8px)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+    
+    // 按钮点击效果
+    const buttons = document.querySelectorAll('.btn');
+    buttons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 150);
+        });
+    });
+});
+</script>
+{% endblock %} 

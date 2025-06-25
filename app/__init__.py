@@ -38,8 +38,11 @@ def create_app(config_class=Config):
             return text.replace('\n', '<br>')
         return text
     
+<<<<<<< HEAD
     # 添加全局函数到Jinja2环境
     app.jinja_env.globals.update(max=max)
     app.jinja_env.globals.update(min=min)
     
+=======
+>>>>>>> 7f1897f (latest)
     return app

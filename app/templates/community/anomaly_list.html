@@ -3,7 +3,10 @@
 {% block title %}异常报告中心 - 安全社区{% endblock %}
 
 {% block extra_css %}
+<<<<<<< HEAD
 <link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+=======
+>>>>>>> 7f1897f (latest)
 <style>
     .anomaly-center-container {
         max-width: 1100px;
@@ -87,6 +90,7 @@
 
 {% block content %}
 <div class="anomaly-center-container">
+<<<<<<< HEAD
     <div class="community-header">
         <h1><i class="fas fa-exclamation-triangle"></i> 异常报告中心</h1>
         <p>这里汇总了社区用户提交的所有检测结果异常报告，共建更安全的开源生态</p>
@@ -113,6 +117,15 @@
     </div>
     
     <div class="report-table-container" style="border-radius: 15px; overflow: hidden;">
+=======
+    <div class="page-header">
+        <h1>异常报告中心</h1>
+        <p>这里汇总了社区用户提交的所有检测结果异常报告。感谢每一位贡献者！</p>
+    </div>
+
+    <div class="report-list">
+        {% if reports %}
+>>>>>>> 7f1897f (latest)
         <table class="report-table">
             <thead>
                 <tr>
@@ -130,7 +143,10 @@
                     <td><strong>{{ report.scan_record.filename if report.scan_record else 'N/A' }}</strong></td>
                     <td>
                         <div class="user-info">
+<<<<<<< HEAD
                             <i class="fas fa-user"></i>
+=======
+>>>>>>> 7f1897f (latest)
                             <span>{{ report.user.username if report.user else '匿名' }}</span>
                         </div>
                     </td>
@@ -138,6 +154,7 @@
                     <td>{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                     <td><span class="status-badge status-{{ report.status }}">{{ report.status }}</span></td>
                     <td>
+<<<<<<< HEAD
                         <div style="display: flex; gap: 8px;">
                             <a href="{{ url_for('scan.result', scan_id=report.scan_record_id) if report.scan_record_id else '#' }}" 
                                class="action-btn" {% if not report.scan_record_id %}disabled{% endif %}>
@@ -149,11 +166,15 @@
                             </a>
                             {% endif %}
                         </div>
+=======
+                        <a href="{{ url_for('scan.result', scan_id=report.scan_record_id) }}" class="action-btn">查看扫描</a>
+>>>>>>> 7f1897f (latest)
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+<<<<<<< HEAD
     </div>
     
     {% if total_pages > 1 %}
@@ -213,5 +234,13 @@
             });
         });
     </script>
+=======
+        {% else %}
+        <div class="text-center" style="padding: 40px; background: white; border-radius: 15px;">
+            <p>太棒了！目前没有需要处理的异常报告。</p>
+        </div>
+        {% endif %}
+    </div>
+>>>>>>> 7f1897f (latest)
 </div>
 {% endblock %} 
