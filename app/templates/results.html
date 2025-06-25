@@ -4,11 +4,15 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/results.css') }}">
+<<<<<<< HEAD
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+=======
+>>>>>>> 7f1897f (latest)
 {% endblock %}
 
 {% block content %}
 <div class="results-container">
+<<<<<<< HEAD
     <!-- 威胁评分与基本信息 -->
     <div class="threat-header">
         <div class="threat-score-container">
@@ -33,10 +37,32 @@
                     <span class="meta-label">威胁标签:</span>
                     <span class="meta-tag">{{ scan_data.package_type or '未知' }}</span>
                 </div>
+=======
+    <div class="results-header">
+        <h2>检测结果</h2>
+        <div class="scan-info">
+            <p><strong>文件名：</strong>{{ scan_data.filename }}</p>
+            <p><strong>文件大小：</strong>{{ scan_data.file_size }}</p>
+            <p><strong>检测时间：</strong>{{ scan_data.scan_time|round(2) if scan_data.scan_time else 'N/A' }}秒</p>
+        </div>
+    </div>
+
+    <div class="risk-summary">
+        <div class="risk-level risk-{{ scan_data.risk_level|lower if scan_data.risk_level else 'unknown' }}">
+            <h3>风险等级</h3>
+            <div class="risk-badge">{{ scan_data.risk_level|upper if scan_data.risk_level else '未知' }}</div>
+        </div>
+        
+        <div class="confidence-score">
+            <h3>检测置信度</h3>
+            <div class="score-circle">
+                <div class="score">{{ "%.1f"|format(scan_data.confidence * 100) if scan_data.confidence else 'N/A' }}%</div>
+>>>>>>> 7f1897f (latest)
             </div>
         </div>
     </div>
 
+<<<<<<< HEAD
     <!-- 威胁详情卡片 -->
     <div class="threat-details-card">
         <div class="threat-details-grid">
@@ -252,10 +278,41 @@
                                 <span class="llm-label">理由:</span>
                                 <span class="llm-value">{{ scan_data.llm_result.reason or '无' }}</span>
                             </div>
+=======
+    <div class="detection-details">
+        <h3>检测详情</h3>
+        
+        <div class="model-results">
+            <div class="model-section">
+                <h4>XGBoost模型分析</h4>
+                {% if scan_data.xgboost_result and scan_data.xgboost_result is mapping %}
+                <p><strong>预测结果：</strong>{{ '恶意' if scan_data.xgboost_result.prediction == 1 else '良性' }}</p>
+                <p><strong>置信度：</strong>{{ "%.1f"|format(scan_data.xgboost_result.confidence * 100) if scan_data.xgboost_result.confidence is not none else 'N/A' }}%</p>
+                <p><strong>风险分数：</strong>{{ "%.2f"|format(scan_data.xgboost_result.risk_score) if scan_data.xgboost_result.risk_score is not none else 'N/A' }}</p>
+                {% else %}
+                <p>模型分析失败</p>
+                {% endif %}
+            </div>
+            
+            <div class="model-section">
+                <h4>大模型分析</h4>
+                {% if scan_data.llm_result %}
+                <div class="llm-analysis-card">
+                    <div class="llm-section">
+                        <h3>🛡️ 恶意类型判断</h3>
+                        <div class="mal-type">
+                            <span class="mal-label">类型：</span>
+                            <span class="mal-value">{{ scan_data.llm_result.type or '未知' }}</span>
+                        </div>
+                        <div class="mal-reason">
+                            <span class="mal-label">理由：</span>
+                            <span class="mal-value">{{ scan_data.llm_result.reason or '无' }}</span>
+>>>>>>> 7f1897f (latest)
                         </div>
                     </div>
                     
                     <div class="llm-section">
+<<<<<<< HEAD
                         <div class="llm-section-header">
                             <i class="fas fa-search"></i>
                             <h4>主要可疑特征（Top 5）</h4>
@@ -357,6 +414,120 @@
             </div>
         </div>
         <div class="vulnerability-content">
+=======
+                        <h3>🔍 主要可疑特征（Top 5）</h3>
+                        {% if scan_data.llm_result.top_features %}
+                        <table class="mal-table">
+                            <thead>
+                                <tr>
+                                    <th>特征名称</th>
+                                    <th>数值</th>
+                                    <th>描述/风险点</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for feature in scan_data.llm_result.top_features %}
+                                {% if feature.name != '---' %}
+                                <tr>
+                                    <td>{{ feature.name }}</td>
+                                    <td>{{ feature.value }}</td>
+                                    <td>{{ feature.desc }}</td>
+                                </tr>
+                                {% endif %}
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <p class="no-data">暂无可疑特征数据</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="llm-section">
+                        <h3>⚠️ 风险等级评估</h3>
+                        <div class="risk-level">
+                            <span class="mal-label">风险等级：</span>
+                            <span class="mal-value risk-{{ scan_data.llm_result.risk_level|lower if scan_data.llm_result.risk_level else 'unknown' }}">
+                                {{ scan_data.llm_result.risk_level|upper if scan_data.llm_result.risk_level else '未知' }}
+                            </span>
+                        </div>
+                        {% if scan_data.llm_result.raw_analysis %}
+                        <div class="risk-points">
+                            <span class="mal-label">主要风险点：</span>
+                            <div class="mal-value risk-points-list">
+                                {% for point in scan_data.llm_result.raw_analysis.split('\n') %}
+                                    {% if point.strip().startswith('1.') or point.strip().startswith('2.') or point.strip().startswith('3.') %}
+                                        <p>{{ point.strip() }}</p>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="llm-section">
+                        <h3>💡 安全建议</h3>
+                        {% if scan_data.llm_result.advice_list %}
+                        <ul class="mal-advice">
+                            {% for advice in scan_data.llm_result.advice_list %}
+                                <li>{{ advice }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% elif scan_data.llm_result.raw_analysis %}
+                        <ul class="mal-advice">
+                            {% for line in scan_data.llm_result.raw_analysis.split('\n') %}
+                                {% if line.strip().startswith('- 建议') or line.strip().startswith('建议') or line.strip().startswith('- ') %}
+                                    <li>{{ line.strip().replace('- 建议', '').replace('建议', '').replace('- ', '').strip(':：').strip() }}</li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="no-data">暂无安全建议</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="llm-analysis-card">
+                    <div class="llm-section">
+                        <h3>🛡️ 大模型分析</h3>
+                        <p class="error-message">大模型分析暂时不可用，请稍后重试。</p>
+                        <p class="error-hint">您仍然可以参考XGBoost模型的分析结果。</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if scan_data.features %}
+        <div class="feature-analysis">
+            <h4>特征分析</h4>
+            <div class="feature-groups">
+                {% for group, importance in scan_data.xgboost_result.feature_importance.items() %}
+                <div class="feature-group">
+                    <h5>{{ group|replace('_', ' ')|title }}</h5>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ importance * 100 }}%;"
+                             aria-valuenow="{{ importance * 100 }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            {{ "%.1f"|format(importance * 100) }}%
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if scan_data.malicious_code_snippet %}
+    <div class="card-item malicious-code-card">
+        <div class="card-header">
+            <i class="fas fa-bug"></i>
+            <h3>恶意代码片段</h3>
+        </div>
+        <div class="card-content">
+>>>>>>> 7f1897f (latest)
             <div class="code-meta-grid">
                 <div class="meta-item">
                     <span class="meta-label">代码位置:</span>
@@ -370,6 +541,7 @@
                     <span class="meta-label">技术细节:</span>
                     <span class="meta-value">{{ scan_data.technical_details or 'AI未提供' }}</span>
                 </div>
+<<<<<<< HEAD
             </div>
             <div class="code-snippet">
                 <div class="code-header">
@@ -377,11 +549,19 @@
                 </div>
                 <pre><code class="language-js">{{ scan_data.malicious_code_snippet }}</code></pre>
             </div>
+=======
+                <div class="meta-item full-width">
+                     <span class="meta-label">恶意代码:</span>
+                </div>
+            </div>
+            <pre><code class="language-js">{{ scan_data.malicious_code_snippet }}</code></pre>
+>>>>>>> 7f1897f (latest)
         </div>
     </div>
     {% endif %}
 
     <div class="action-buttons">
+<<<<<<< HEAD
         <a href="/" class="btn btn-primary"><i class="fas fa-home"></i> 返回首页</a>
         <a href="/download_report/{{ scan_data.id }}/json" class="btn btn-secondary"><i class="fas fa-download"></i> 下载JSON报告</a>
         <a href="/download_report/{{ scan_data.id }}/pdf" class="btn btn-danger"><i class="fas fa-file-pdf"></i> 下载PDF报告</a>
@@ -498,4 +678,10 @@ document.addEventListener('DOMContentLoaded', function() {
     {% endif %}
 });
 </script>
+=======
+        <a href="/" class="btn btn-primary">返回首页</a>
+        <a href="/download_report/{{ scan_data.id }}/json" class="btn btn-secondary">下载JSON报告</a>
+    </div>
+</div>
+>>>>>>> 7f1897f (latest)
 {% endblock %} 

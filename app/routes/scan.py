@@ -28,7 +28,10 @@ import joblib
 from xgboost import XGBClassifier
 import warnings
 import subprocess
+<<<<<<< HEAD
 import sys
+=======
+>>>>>>> 7f1897f (latest)
 warnings.filterwarnings('ignore')
 
 scan_bp = Blueprint('scan', __name__)
@@ -41,6 +44,7 @@ def scan():
 @scan_bp.route('/upload', methods=['POST'])
 @login_required
 def upload_file():
+<<<<<<< HEAD
     try:
         if 'user_id' not in session:
             return jsonify({'error': '请先登录'}), 401
@@ -137,6 +141,51 @@ def upload_file():
     except Exception as e:
         print(f"上传处理过程中发生未捕获的错误: {str(e)}")
         return jsonify({'error': '上传过程中发生错误，请重试'}), 500
+=======
+    if 'user_id' not in session:
+        return jsonify({'error': '请先登录'}), 401
+    if 'file' not in request.files:
+        return jsonify({'error': '没有选择文件'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': '没有选择文件'}), 400
+        
+    if file:
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(Config.UPLOAD_FOLDER, filename)
+        file.save(file_path)
+        # 计算文件哈希
+        with open(file_path, 'rb') as f:
+            file_hash = hashlib.md5(f.read()).hexdigest()
+        file_size = os.path.getsize(file_path)
+        # 检测包类型
+        package_type = detect_package_type(file_path)
+        # 创建扫描记录
+        conn = sqlite3.connect(Config.DATABASE_PATH)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO scan_records (user_id, filename, file_size, file_hash, scan_status, package_type)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (session['user_id'], filename, file_size, file_hash, 'pending', package_type))
+        scan_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        # 初始化任务状态
+        scan_tasks[scan_id] = {
+            'status': 'pending',
+            'progress': 0,
+            'current_task': '开始检测'
+        }
+        # 启动后台扫描任务
+        thread = threading.Thread(target=background_scan, args=(scan_id, file_path, session['user_id']))
+        thread.daemon = True
+        thread.start()
+        return jsonify({
+            'success': True,
+            'scan_id': scan_id,
+            'message': '文件上传成功，开始检测'
+        })
+>>>>>>> 7f1897f (latest)
 
 @scan_bp.route('/scan_status/<int:scan_id>')
 @login_required
@@ -377,6 +426,7 @@ def delete_record(scan_id):
     
     return jsonify({'success': True, 'message': '记录已删除'})
 
+<<<<<<< HEAD
 @scan_bp.route('/crawl_packages', methods=['GET', 'POST'])
 @login_required
 def crawl_packages():
@@ -404,3 +454,97 @@ def crawl_packages():
         except Exception as e:
             result = f'抓取失败: {e}'
     return render_template('crawl_packages.html', result=result)
+=======
+# 辅助函数：下载包并返回路径
+def download_package(pkg_name, pkg_version, pkg_type):
+    download_dir = Config.UPLOAD_FOLDER
+    
+    if pkg_type == 'pypi':
+        cmd = f"pip download {pkg_name}=={pkg_version} --no-deps --no-binary=:all: -d {download_dir}"
+    elif pkg_type == 'npm':
+        cmd = f"npm pack {pkg_name}@{pkg_version}"
+    else:
+        return None, "不支持的包类型"
+
+    try:
+        # 使用 subprocess 运行命令
+        # 注意：在生产环境中，需要更严格的输入验证和错误处理
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=download_dir, timeout=300)
+        
+        if result.returncode != 0:
+            return None, result.stderr or "下载失败"
+
+        # 查找下载的文件
+        if pkg_type == 'pypi':
+            # pip download a.b.c 会下载 a-b-c.tar.gz
+            safe_name = pkg_name.replace('-', '_')
+            files = list(Path(download_dir).glob(f"{safe_name}-{pkg_version}*.tar.gz"))
+            if not files:
+                 files = list(Path(download_dir).glob(f"{pkg_name}-{pkg_version}*.tar.gz"))
+        else: # npm
+            # npm pack a-b-c 会下载 a-b-c-1.2.3.tgz
+            # npm pack @a/b-c 会下载 a-b-c-1.2.3.tgz
+            safe_name = pkg_name.replace('/', '-')
+            files = list(Path(download_dir).glob(f"{safe_name}-{pkg_version}.tgz"))
+
+        if files:
+            return str(files[0]), None
+        else:
+            return None, "未找到下载的包文件"
+            
+    except Exception as e:
+        return None, str(e)
+
+@scan_bp.route('/crawl_and_scan', methods=['POST'])
+@login_required
+def crawl_and_scan():
+    if 'user_id' not in session:
+        return jsonify({'error': '请先登录'}), 401
+
+    pkg_name = request.form.get('pkg_name')
+    pkg_version = request.form.get('pkg_version', 'latest')
+    pkg_type = request.form.get('pkg_type')
+
+    if not all([pkg_name, pkg_version, pkg_type]):
+        return jsonify({'error': '缺少必要参数'}), 400
+
+    # 下载包
+    file_path, error = download_package(pkg_name, pkg_version, pkg_type)
+
+    if error:
+        return jsonify({'error': f'抓取失败: {error}'}), 500
+    
+    filename = os.path.basename(file_path)
+    file_size = os.path.getsize(file_path)
+    with open(file_path, 'rb') as f:
+        file_hash = hashlib.md5(f.read()).hexdigest()
+
+    # 创建扫描记录
+    conn = sqlite3.connect(Config.DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO scan_records (user_id, filename, file_size, file_hash, scan_status, package_type)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (session['user_id'], filename, file_size, file_hash, 'pending', pkg_type))
+    scan_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+
+    # 初始化任务状态
+    scan_tasks[scan_id] = {
+        'status': 'pending',
+        'progress': 0,
+        'current_task': '开始检测'
+    }
+
+    # 启动后台扫描任务
+    thread = threading.Thread(target=background_scan, args=(scan_id, file_path, session['user_id']))
+    thread.daemon = True
+    thread.start()
+
+    return jsonify({
+        'success': True,
+        'scan_id': scan_id,
+        'message': '包抓取成功，已加入扫描队列'
+    })
+>>>>>>> 7f1897f (latest)

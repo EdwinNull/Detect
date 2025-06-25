@@ -3,6 +3,7 @@
 {% block title %}扫描 - 开源组件包安全检测平台{% endblock %}
 
 {% block extra_css %}
+<<<<<<< HEAD
 <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
 <style>
     .scan-container {
@@ -166,12 +167,50 @@
         color: var(--text-color-light);
         font-size: 14px;
         line-height: 1.5;
+=======
+<style>
+    .scan-container {
+        max-width: 800px;
+        margin: 40px auto;
+        background: var(--card-bg);
+        padding: 40px;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-card);
+    }
+    .scan-tabs {
+        display: flex;
+        border-bottom: 2px solid var(--border-color);
+        margin-bottom: 30px;
+    }
+    .tab-link {
+        padding: 15px 25px;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: 16px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border-bottom: 3px solid transparent;
+    }
+    .tab-link.active {
+        color: var(--text-primary);
+        border-bottom-color: var(--secondary-blue);
+    }
+    .tab-content {
+        display: none;
+    }
+    .tab-content.active {
+        display: block;
+>>>>>>> 7f1897f (latest)
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="scan-container">
+<<<<<<< HEAD
     <div class="scan-grid">
         <!-- 扫描组件包区域 -->
         <div class="scan-card">
@@ -343,10 +382,60 @@
             </div>
         </div>
         {% endif %}
+=======
+    <div class="scan-tabs">
+        <button class="tab-link active" data-tab="upload">
+            <span class="nav-icon">📁</span> 上传文件扫描
+        </button>
+        <button class="tab-link" data-tab="crawl">
+            <span class="nav-icon">🌐</span> 在线抓取扫描
+        </button>
+    </div>
+
+    <!-- 上传文件 -->
+    <div id="upload" class="tab-content active">
+        <p style="margin-bottom: 25px; font-size: 16px; line-height: 1.6;">
+            上传你的组件包，系统将自动进行安全检测，识别潜在的恶意代码和风险。
+        </p>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file" class="form-label">选择要扫描的文件</label>
+                <input type="file" id="file" name="file" required class="form-control">
+                <div style="font-size: 13px; color: #666; margin-top: 6px;">支持 .zip, .tar.gz, .whl, .jar, .tgz 等格式</div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">开始扫描</button>
+        </form>
+    </div>
+
+    <!-- 在线抓取 -->
+    <div id="crawl" class="tab-content">
+        <p style="margin-bottom: 25px; font-size: 16px; line-height: 1.6;">
+            输入包名和版本号，系统将从官方源（PyPI, npm）抓取并进行安全检测。
+        </p>
+        <form id="crawlForm">
+            <div class="form-group">
+                <label for="pkg_name" class="form-label">包名称</label>
+                <input type="text" id="pkg_name" name="pkg_name" class="form-control" placeholder="例如: requests, express" required>
+            </div>
+            <div class="form-group">
+                <label for="pkg_version" class="form-label">包版本</label>
+                <input type="text" id="pkg_version" name="pkg_version" class="form-control" placeholder="例如: 2.26.0, latest" value="latest" required>
+            </div>
+            <div class="form-group">
+                <label for="pkg_type" class="form-label">包类型</label>
+                <select id="pkg_type" name="pkg_type" class="form-control">
+                    <option value="pypi">PyPI (Python)</option>
+                    <option value="npm">npm (JavaScript)</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">抓取并扫描</button>
+        </form>
+>>>>>>> 7f1897f (latest)
     </div>
 </div>
 
 <script>
+<<<<<<< HEAD
 document.getElementById('uploadForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -422,6 +511,78 @@ uploadArea.addEventListener('drop', function(e) {
         const fileName = fileInput.files[0].name;
         uploadArea.querySelector('.upload-text').textContent = '已选择: ' + fileName;
     }
+=======
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab切换逻辑
+    const tabLinks = document.querySelectorAll('.tab-link');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            tabLinks.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+            
+            const tabId = link.getAttribute('data-tab');
+            tabContents.forEach(content => {
+                content.id === tabId ? content.classList.add('active') : content.classList.remove('active');
+            });
+        });
+    });
+
+    // 上传表单提交
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData();
+        const fileInput = document.getElementById('file');
+        formData.append('file', fileInput.files[0]);
+        
+        // 此处可以添加进度条等UI反馈
+        
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/progress/' + data.scan_id;
+            } else {
+                alert(data.error || '上传失败');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('上传失败: ' + error.message);
+        });
+    });
+
+    // 抓取表单提交
+    document.getElementById('crawlForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const params = new URLSearchParams(formData);
+
+        // 此处可以添加加载中的UI反馈
+        
+        fetch('/crawl_and_scan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/progress/' + data.scan_id;
+            } else {
+                alert(data.error || '抓取失败');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('抓取失败: ' + error.message);
+        });
+    });
+>>>>>>> 7f1897f (latest)
 });
 </script>
 {% endblock %} 

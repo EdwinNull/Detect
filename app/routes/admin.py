@@ -302,8 +302,13 @@ def user_management():
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     
+<<<<<<< HEAD
     # 获取所有用户，注册时间代替创建时间
     cursor.execute('SELECT * FROM users ORDER BY register_time DESC')
+=======
+    # 获取所有用户
+    cursor.execute('SELECT * FROM users ORDER BY created_at DESC')
+>>>>>>> 7f1897f (latest)
     users = cursor.fetchall()
     
     # 统计信息
@@ -358,7 +363,11 @@ def add_user():
     # 创建用户
     password_hash = generate_password_hash(password)
     cursor.execute(
+<<<<<<< HEAD
         'INSERT INTO users (username, email, password_hash, role, register_time) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)',
+=======
+        'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
+>>>>>>> 7f1897f (latest)
         (username, email, password_hash, role)
     )
     conn.commit()
@@ -525,4 +534,31 @@ def settings():
     settings = cursor.fetchall()
     conn.close()
     
+<<<<<<< HEAD
     return render_template('settings.html', settings=settings)
+=======
+    return render_template('settings.html', settings=settings)
+
+@admin_bp.route('/crawl_packages', methods=['GET', 'POST'])
+@admin_required
+def crawl_packages():
+    result = None
+    if request.method == 'POST':
+        pkg_type = request.form.get('pkg_type', 'npm')
+        limit = request.form.get('limit', 5)
+        try:
+            limit = int(limit)
+        except Exception:
+            limit = 5
+        # 构造命令
+        script_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'package_crawler.py')
+        if pkg_type not in ['npm', 'pypi']:
+            pkg_type = 'npm'
+        cmd = [sys.executable, script_path, pkg_type, str(limit)]
+        try:
+            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            result = proc.stdout + '\n' + proc.stderr
+        except Exception as e:
+            result = f'抓取失败: {e}'
+    return render_template('crawl_packages.html', result=result)
+>>>>>>> 7f1897f (latest)
