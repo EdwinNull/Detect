@@ -6,8 +6,7 @@ class Config:
     MAX_CONTENT_LENGTH = 100 * 1024 * 1024  # 100MB
     
     # DeepSeek API配置
-    DEEPSEEK_API_KEY = "REDACTED_DEEPSEEK_API_KEY"
-    print("当前DEEPSEEK_API_KEY:", DEEPSEEK_API_KEY)
+    DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY', '')
     DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
     DATABASE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'security_scanner.db')
 

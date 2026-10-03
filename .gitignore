@@ -69,3 +69,6 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *,cover 
+# 本地环境变量/密钥
+.env
+.env.*

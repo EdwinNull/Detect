@@ -47,7 +47,7 @@ pip install -r requirements.txt
 
 <<<<<<< HEAD
 ### 3. 配置DeepSeek API
-- 在 `app.py` 中更新 `DEEPSEEK_API_KEY` 为您的API密钥
+- 通过环境变量 `DEEPSEEK_API_KEY` 提供您的API密钥(例如 `export DEEPSEEK_API_KEY=...`),切勿将密钥写入代码或提交到仓库
 - 当前使用的密钥: `************************`
 =======
 4. 初始化数据库
